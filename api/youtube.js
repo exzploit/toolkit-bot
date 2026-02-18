@@ -1,4 +1,4 @@
-const ytdl = require('ytdl-core');
+const ytdl = require('@distube/ytdl-core');
 const FormData = require('form-data');
 
 module.exports = async (req, res) => {
@@ -17,16 +17,23 @@ module.exports = async (req, res) => {
         const info = await ytdl.getInfo(url);
         const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
         
-        let options = {};
+        let options = {
+            requestOptions: {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                }
+            }
+        };
+
         let method = 'sendVideo';
         let field = 'video';
         
         if (format === 'mp3') {
-            options = { filter: 'audioonly', quality: 'highestaudio' };
+            options = { ...options, filter: 'audioonly', quality: 'highestaudio' };
             method = 'sendAudio';
             field = 'audio';
         } else {
-            options = { quality: quality || 'highest' };
+            options = { ...options, quality: quality || 'highest' };
         }
 
         const stream = ytdl(url, options);
@@ -34,7 +41,6 @@ module.exports = async (req, res) => {
         form.append('chat_id', chatId);
         form.append(field, stream, { filename: `${title}.${format === 'mp3' ? 'mp3' : 'mp4'}` });
 
-        // Use built-in fetch (Node 18+)
         const tgRes = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
             method: 'POST',
             body: form,
