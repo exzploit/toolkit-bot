@@ -1,4 +1,4 @@
-const { instagram } = require('priyansh-ig-downloader');
+const ig = require('priyansh-ig-downloader');
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
@@ -10,17 +10,20 @@ module.exports = async (req, res) => {
     if (!chatId) return res.status(400).json({ error: 'chatId missing' });
 
     try {
-        console.log('Fetching IG URL:', url);
-        const data = await instagram(url);
+        // Correcting the function call based on typical library export
+        // If it's a direct export or named export
+        const downloadFn = ig.instagram || ig.default || ig;
         
-        // Detailed logging for debugging (will show in server logs)
-        console.log('IG Library Response:', JSON.stringify(data));
+        if (typeof downloadFn !== 'function') {
+            throw new Error('Downloader function not found in library');
+        }
 
+        const data = await downloadFn(url);
+        
         if (!data || (Array.isArray(data) && data.length === 0)) {
             return res.status(404).json({ error: 'No media found. Check if the link is correct or the account is public.' });
         }
 
-        // Handle different possible response formats
         let mediaUrl = '';
         if (Array.isArray(data)) {
             mediaUrl = data[0].url || data[0].download_link;
@@ -34,8 +37,7 @@ module.exports = async (req, res) => {
             return res.status(404).json({ error: 'Could not extract a valid download link.' });
         }
 
-        const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('video') || (typeof data[0]?.type === 'string' && data[0].type.includes('video'));
-        
+        const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('video');
         const method = isVideo ? 'sendVideo' : 'sendPhoto';
         const field = isVideo ? 'video' : 'photo';
 
@@ -59,7 +61,6 @@ module.exports = async (req, res) => {
 
     } catch (err) {
         console.error('IG Error Details:', err);
-        // Send actual error message to help us fix it
         res.status(500).json({ error: `IG processing failed: ${err.message}` });
     }
 };
