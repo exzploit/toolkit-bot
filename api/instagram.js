@@ -10,15 +10,31 @@ module.exports = async (req, res) => {
     if (!chatId) return res.status(400).json({ error: 'chatId missing' });
 
     try {
+        console.log('Fetching IG URL:', url);
         const data = await instagram(url);
         
-        if (!data || data.length === 0) {
-            return res.status(404).json({ error: 'No media found. Is the profile private?' });
+        // Detailed logging for debugging (will show in server logs)
+        console.log('IG Library Response:', JSON.stringify(data));
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+            return res.status(404).json({ error: 'No media found. Check if the link is correct or the account is public.' });
         }
 
-        // Send the first media found
-        const mediaUrl = data[0].url;
-        const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('video');
+        // Handle different possible response formats
+        let mediaUrl = '';
+        if (Array.isArray(data)) {
+            mediaUrl = data[0].url || data[0].download_link;
+        } else if (data.url) {
+            mediaUrl = data.url;
+        } else if (data.download_link) {
+            mediaUrl = data.download_link;
+        }
+
+        if (!mediaUrl) {
+            return res.status(404).json({ error: 'Could not extract a valid download link.' });
+        }
+
+        const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('video') || (typeof data[0]?.type === 'string' && data[0].type.includes('video'));
         
         const method = isVideo ? 'sendVideo' : 'sendPhoto';
         const field = isVideo ? 'video' : 'photo';
@@ -29,7 +45,7 @@ module.exports = async (req, res) => {
             body: JSON.stringify({
                 chat_id: chatId,
                 [field]: mediaUrl,
-                caption: 'Downloaded from Instagram via Toolkit Bot 🛡️'
+                caption: 'Downloaded via Toolkit Bot 🛡️'
             })
         });
 
@@ -42,7 +58,8 @@ module.exports = async (req, res) => {
         }
 
     } catch (err) {
-        console.error('IG Error:', err);
-        res.status(500).json({ error: 'Failed to process Instagram link' });
+        console.error('IG Error Details:', err);
+        // Send actual error message to help us fix it
+        res.status(500).json({ error: `IG processing failed: ${err.message}` });
     }
 };
