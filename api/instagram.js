@@ -1,4 +1,4 @@
-const ig = require('priyansh-ig-downloader');
+const instagramGetUrl = require('instagram-url-direct');
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
@@ -10,34 +10,20 @@ module.exports = async (req, res) => {
     if (!chatId) return res.status(400).json({ error: 'chatId missing' });
 
     try {
-        // Correcting the function call based on typical library export
-        // If it's a direct export or named export
-        const downloadFn = ig.instagram || ig.default || ig;
+        console.log('Fetching IG URL with instagram-url-direct:', url);
+        const result = await instagramGetUrl(url);
         
-        if (typeof downloadFn !== 'function') {
-            throw new Error('Downloader function not found in library');
+        console.log('IG Result:', JSON.stringify(result));
+
+        if (!result || !result.url_list || result.url_list.length === 0) {
+            return res.status(404).json({ error: 'No media found. Account might be private or link is invalid.' });
         }
 
-        const data = await downloadFn(url);
+        const mediaUrl = result.url_list[0];
+        // The library usually detects if it's a video or image in result.type or similar, 
+        // but we can also check the URL or the library's metadata.
+        const isVideo = mediaUrl.includes('.mp4') || (result.results && result.results[0] && result.results[0].type === 'video');
         
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-            return res.status(404).json({ error: 'No media found. Check if the link is correct or the account is public.' });
-        }
-
-        let mediaUrl = '';
-        if (Array.isArray(data)) {
-            mediaUrl = data[0].url || data[0].download_link;
-        } else if (data.url) {
-            mediaUrl = data.url;
-        } else if (data.download_link) {
-            mediaUrl = data.download_link;
-        }
-
-        if (!mediaUrl) {
-            return res.status(404).json({ error: 'Could not extract a valid download link.' });
-        }
-
-        const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('video');
         const method = isVideo ? 'sendVideo' : 'sendPhoto';
         const field = isVideo ? 'video' : 'photo';
 
@@ -56,6 +42,7 @@ module.exports = async (req, res) => {
         if (tgData.ok) {
             res.status(200).json({ success: true });
         } else {
+            console.error('Telegram Error:', tgData);
             res.status(500).json({ error: `Telegram: ${tgData.description}` });
         }
 
