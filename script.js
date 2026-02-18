@@ -403,8 +403,20 @@ async function downloadYouTube() {
     status.style.color = "var(--primary-color)";
 
     try {
-        const apiUrl = `${window.location.origin}/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`;
+        // More robust URL construction
+        const baseUrl = window.location.origin && window.location.origin !== 'null' 
+            ? window.location.origin 
+            : '';
+        
+        const apiUrl = `${baseUrl}/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`;
+        
         const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -415,7 +427,7 @@ async function downloadYouTube() {
             throw new Error(data.error || "Failed to download");
         }
     } catch (err) {
-        console.error("YT Fetch Error:", err);
+        console.error("YT Download Error:", err);
         status.innerText = "❌ Error: " + err.message;
         status.style.color = "#f44336";
         haptic.notificationOccurred('error');

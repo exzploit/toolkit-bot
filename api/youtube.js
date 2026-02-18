@@ -1,15 +1,21 @@
 const ytdl = require('@ybd-project/ytdl-core');
+const FormData = require('form-data');
+const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
     const { url, quality, format, chatId } = req.query;
     const token = process.env.BOT_TOKEN;
 
     if (!token || token === 'your_bot_token_here') {
-        return res.status(500).json({ error: 'BOT_TOKEN is not configured in environment variables' });
+        return res.status(500).json({ error: 'BOT_TOKEN is not configured' });
     }
 
     if (!url || !ytdl.validateURL(url)) {
         return res.status(400).json({ error: 'Invalid YouTube URL' });
+    }
+
+    if (!chatId) {
+        return res.status(400).json({ error: 'Missing Chat ID' });
     }
 
     try {
@@ -36,23 +42,22 @@ module.exports = async (req, res) => {
             options = { ...options, quality: quality || 'highest' };
         }
 
-        // Collect stream into Buffer (more reliable for serverless fetch)
-        const chunks = [];
+        // Get the stream
         const stream = ytdl(url, options);
         
-        for await (const chunk of stream) {
-            chunks.push(chunk);
-        }
-        const buffer = Buffer.concat(chunks);
-        const fileBlob = new Blob([buffer]);
+        // Prepare FormData
+        const form = new FormData();
+        form.append('chat_id', chatId);
+        form.append(field, stream, { 
+            filename: `${title}.${extension}`,
+            contentType: format === 'mp3' ? 'audio/mpeg' : 'video/mp4'
+        });
 
-        const formData = new FormData();
-        formData.append('chat_id', chatId);
-        formData.append(field, fileBlob, `${title}.${extension}`);
-
+        // Send to Telegram using node-fetch
         const tgRes = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
             method: 'POST',
-            body: formData
+            body: form,
+            headers: form.getHeaders()
         });
 
         const tgData = await tgRes.json();
@@ -60,6 +65,7 @@ module.exports = async (req, res) => {
         if (tgData.ok) {
             res.status(200).json({ success: true });
         } else {
+            console.error('Telegram API Error:', tgData);
             res.status(500).json({ error: `Telegram: ${tgData.description}` });
         }
 
