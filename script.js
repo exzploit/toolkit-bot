@@ -1,4 +1,5 @@
 const tg = window.Telegram.WebApp;
+const haptic = tg.HapticFeedback;
 tg.expand();
 
 // Theme Management
@@ -10,6 +11,7 @@ function initTheme() {
 }
 
 function toggleTheme() {
+    haptic.impactOccurred('light');
     document.body.classList.toggle('dark-mode');
     updateThemeIcon();
 }
@@ -23,6 +25,7 @@ function updateThemeIcon() {
 initTheme();
 
 function showTool(toolName) {
+    haptic.impactOccurred('medium');
     document.getElementById('menu').style.display = 'none';
     document.getElementById('tool-container').style.display = 'block';
     const content = document.getElementById('tool-content');
@@ -72,36 +75,56 @@ function showTool(toolName) {
                 <div class="options-container">
                     <div style="margin-bottom: 15px;">
                         <label>Length: <span id="length-val" class="length-display">12</span></label>
-                        <input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText = this.value; generateComplexPassword();">
+                        <input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText = this.value; generateComplexPassword(true);">
                     </div>
                     
                     <div class="option-row">
                         <label for="pass-upper">Uppercase (A-Z)</label>
-                        <input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword()">
+                        <input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)">
                     </div>
                     
                     <div class="option-row">
                         <label for="pass-numbers">Numbers (0-9)</label>
-                        <input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword()">
+                        <input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)">
                     </div>
                     
                     <div class="option-row">
                         <label for="pass-symbols">Symbols (!@#$%^&*)</label>
-                        <input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword()">
+                        <input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)">
                     </div>
                 </div>
                 
-                <button class="tool-btn" onclick="generateComplexPassword()">🔄 Generate New</button>
+                <button class="tool-btn" onclick="generateComplexPassword(true)">🔄 Generate New</button>
             </div>`;
-        generateComplexPassword();
+        generateComplexPassword(false);
     }
 
     if (toolName === 'ipinfo') {
-        // ... rest of the code stays the same
+        content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">🔍 Fetching IP Info...</div>`;
+        fetch('https://ipapi.co/json/')
+            .then(res => res.json())
+            .then(data => {
+                haptic.notificationOccurred('success');
+                content.innerHTML = `
+                    <div style="text-align: left; padding: 10px; line-height: 1.6;">
+                        <h3 style="margin-top:0;">Your Connection Info</h3>
+                        <p><strong>IP:</strong> ${data.ip}</p>
+                        <p><strong>City:</strong> ${data.city}</p>
+                        <p><strong>Region:</strong> ${data.region}</p>
+                        <p><strong>Country:</strong> ${data.country_name}</p>
+                        <p><strong>ISP:</strong> ${data.org}</p>
+                    </div>`;
+            })
+            .catch(() => {
+                haptic.notificationOccurred('error');
+                content.innerHTML = `<p style="color: red;">Failed to fetch IP info. Please try again.</p>`;
+            });
     }
 }
 
-function generateComplexPassword() {
+function generateComplexPassword(isUserAction) {
+    if (isUserAction) haptic.impactOccurred('light');
+    
     const length = document.getElementById('pass-length').value;
     const hasUpper = document.getElementById('pass-upper').checked;
     const hasNumbers = document.getElementById('pass-numbers').checked;
@@ -123,7 +146,6 @@ function generateComplexPassword() {
         password += charset[randomIndex];
     }
 
-    // Ensure at least one of each selected type is present (basic version)
     document.getElementById('password-display').innerText = password;
 }
 
@@ -168,6 +190,7 @@ async function runSpeedTest() {
         const jitter = Math.max(...pings) - Math.min(...pings);
         pingDisplay.innerText = avgPing.toFixed(0) + ' ms';
         jitterDisplay.innerText = jitter.toFixed(0) + ' ms';
+        haptic.impactOccurred('soft');
 
         statusText.innerText = 'Testing Download Speed...';
         let dlReceived = 0;
@@ -190,6 +213,7 @@ async function runSpeedTest() {
             if (performance.now() - startDlTime >= TEST_DURATION) break;
         }
         downloadDisplay.innerText = speedDisplay.innerText + ' Mbps';
+        haptic.impactOccurred('soft');
 
         statusText.innerText = 'Testing Upload Speed...';
         let ulSent = 0;
@@ -215,15 +239,18 @@ async function runSpeedTest() {
         progressBar.style.width = '100%';
         statusText.innerText = 'Test Complete';
         restartBtn.style.display = 'block';
+        haptic.notificationOccurred('success');
 
     } catch (error) {
         console.error(error);
+        haptic.notificationOccurred('error');
         if (statusText) statusText.innerText = 'Test Failed. Check connection.';
         if (restartBtn) restartBtn.style.display = 'block';
     }
 }
 
 function goBack() {
+    haptic.impactOccurred('light');
     document.getElementById('menu').style.display = 'block';
     document.getElementById('tool-container').style.display = 'none';
     document.getElementById('tool-content').innerHTML = "";
