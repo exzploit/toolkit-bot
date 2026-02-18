@@ -381,20 +381,21 @@ function toggleYTQuality() {
 
 async function downloadYouTube() {
     haptic.impactOccurred('light');
-    const url = document.getElementById('yt-url').value;
+    const urlInput = document.getElementById('yt-url').value.trim();
     const format = document.getElementById('yt-format').value;
     const quality = document.getElementById('yt-quality').value;
     const status = document.getElementById('yt-status');
     const chatId = tg.initDataUnsafe?.user?.id;
 
-    if (!url) {
+    if (!urlInput) {
         status.innerText = "❌ Please enter a URL";
         haptic.notificationOccurred('error');
         return;
     }
 
     if (!chatId) {
-        status.innerText = "❌ Chat ID not found. Open from Telegram!";
+        status.innerText = "❌ User ID not found. Use Telegram!";
+        haptic.notificationOccurred('error');
         return;
     }
 
@@ -402,7 +403,8 @@ async function downloadYouTube() {
     status.style.color = "var(--primary-color)";
 
     try {
-        const response = await fetch(`/api/youtube?url=${encodeURIComponent(url)}&format=${format}&quality=${quality}&chatId=${chatId}`);
+        const apiUrl = `${window.location.origin}/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`;
+        const response = await fetch(apiUrl);
         const data = await response.json();
 
         if (data.success) {
@@ -413,6 +415,7 @@ async function downloadYouTube() {
             throw new Error(data.error || "Failed to download");
         }
     } catch (err) {
+        console.error("YT Fetch Error:", err);
         status.innerText = "❌ Error: " + err.message;
         status.style.color = "#f44336";
         haptic.notificationOccurred('error');

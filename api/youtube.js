@@ -1,20 +1,15 @@
 const ytdl = require('@ybd-project/ytdl-core');
-const { Readable } = require('stream');
 
 module.exports = async (req, res) => {
     const { url, quality, format, chatId } = req.query;
     const token = process.env.BOT_TOKEN;
 
-    if (!token) {
-        return res.status(500).json({ error: 'Server configuration error: BOT_TOKEN is missing' });
+    if (!token || token === 'your_bot_token_here') {
+        return res.status(500).json({ error: 'BOT_TOKEN is not configured in environment variables' });
     }
 
     if (!url || !ytdl.validateURL(url)) {
         return res.status(400).json({ error: 'Invalid YouTube URL' });
-    }
-
-    if (!chatId) {
-        return res.status(400).json({ error: 'Missing Chat ID' });
     }
 
     try {
@@ -41,16 +36,19 @@ module.exports = async (req, res) => {
             options = { ...options, quality: quality || 'highest' };
         }
 
+        // Collect stream into Buffer (more reliable for serverless fetch)
+        const chunks = [];
         const stream = ytdl(url, options);
         
-        // Convert Node stream to Web Stream for built-in fetch
-        const webStream = Readable.toWeb(stream);
-        
+        for await (const chunk of stream) {
+            chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+        const fileBlob = new Blob([buffer]);
+
         const formData = new FormData();
         formData.append('chat_id', chatId);
-        
-        // Use a Blob-like object for the file in FormData
-        formData.append(field, new Response(webStream).body, `${title}.${extension}`);
+        formData.append(field, fileBlob, `${title}.${extension}`);
 
         const tgRes = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
             method: 'POST',
@@ -62,7 +60,7 @@ module.exports = async (req, res) => {
         if (tgData.ok) {
             res.status(200).json({ success: true });
         } else {
-            res.status(500).json({ error: `Telegram API: ${tgData.description}` });
+            res.status(500).json({ error: `Telegram: ${tgData.description}` });
         }
 
     } catch (err) {
