@@ -191,3 +191,72 @@ input[type="checkbox"] {
     font-weight: bold;
     color: var(--primary-color);
 }
+
+/* Tool Input Styles */
+.text-input, .text-area, .select-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid var(--progress-bg);
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 16px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+}
+
+.text-input:focus, .text-area:focus, .select-input:focus {
+    border-color: var(--primary-color);
+}
+
+.text-area {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.qr-container {
+    background: white;
+    padding: 15px;
+    border-radius: 15px;
+    display: inline-block;
+    margin: 15px 0;
+}
+
+.qr-container img {
+    display: block;
+    max-width: 200px;
+}
+
+.util-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.small-btn {
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: none;
+    background-color: var(--stat-card-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.small-btn:active {
+    background-color: var(--progress-bg);
+}
+
+.stats-info {
+    font-size: 12px;
+    color: var(--secondary-text);
+    margin-top: -10px;
+    margin-bottom: 15px;
+    display: block;
+}

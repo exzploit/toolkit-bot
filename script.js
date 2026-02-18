@@ -99,6 +99,67 @@ function showTool(toolName) {
         generateComplexPassword(false);
     }
 
+    if (toolName === 'qrcode') {
+        content.innerHTML = `
+            <div class="pass-box">
+                <h3 style="margin-top:0;">QR Generator</h3>
+                <input type="text" id="qr-input" class="text-input" placeholder="Type link or text here..." oninput="updateQR()">
+                <div class="qr-container" id="qr-result">
+                    <p style="color: #888; margin: 40px 0;">QR will appear here</p>
+                </div>
+                <button id="download-qr" class="tool-btn" style="display:none;" onclick="downloadQR()">📥 Download PNG</button>
+            </div>`;
+    }
+
+    if (toolName === 'textutils') {
+        content.innerHTML = `
+            <div class="pass-box">
+                <h3 style="margin-top:0;">Text Utilities</h3>
+                <span id="text-stats" class="stats-info">Chars: 0 | Words: 0</span>
+                <textarea id="text-input" class="text-area" placeholder="Enter text here..." oninput="updateTextStats()"></textarea>
+                
+                <div class="util-grid">
+                    <button class="small-btn" onclick="processText('upper')">UPPERCASE</button>
+                    <button class="small-btn" onclick="processText('lower')">lowercase</button>
+                    <button class="small-btn" onclick="processText('title')">Title Case</button>
+                    <button class="small-btn" onclick="processText('b64e')">Base64 Enc</button>
+                    <button class="small-btn" onclick="processText('b64d')">Base64 Dec</button>
+                    <button class="small-btn" onclick="processText('clear')">Clear</button>
+                </div>
+            </div>`;
+    }
+
+    if (toolName === 'ytdown') {
+        content.innerHTML = `
+            <div class="pass-box">
+                <h3 style="margin-top:0;">YouTube Downloader</h3>
+                <input type="text" id="yt-url" class="text-input" placeholder="Paste YouTube link here...">
+                
+                <div class="options-container">
+                    <div class="option-row">
+                        <label>Format</label>
+                        <select id="yt-format" class="select-input" style="width: 120px; margin:0;" onchange="toggleYTQuality()">
+                            <option value="mp4">Video (MP4)</option>
+                            <option value="mp3">Audio (MP3)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-row" id="yt-quality-row">
+                        <label>Quality</label>
+                        <select id="yt-quality" class="select-input" style="width: 120px; margin:0;">
+                            <option value="highest">Highest</option>
+                            <option value="720p">720p</option>
+                            <option value="360p">360p</option>
+                            <option value="lowest">Lowest</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="tool-btn" onclick="downloadYouTube()">🚀 Download & Send</button>
+                <div id="yt-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
+            </div>`;
+    }
+
     if (toolName === 'ipinfo') {
         content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">🔍 Fetching IP Info...</div>`;
         fetch('https://ipapi.co/json/')
@@ -120,6 +181,61 @@ function showTool(toolName) {
                 content.innerHTML = `<p style="color: red;">Failed to fetch IP info. Please try again.</p>`;
             });
     }
+}
+
+// QR Functions
+function updateQR() {
+    const input = document.getElementById('qr-input').value;
+    const result = document.getElementById('qr-result');
+    const dlBtn = document.getElementById('download-qr');
+    
+    if (!input.trim()) {
+        result.innerHTML = '<p style="color: #888; margin: 40px 0;">QR will appear here</p>';
+        dlBtn.style.display = 'none';
+        return;
+    }
+
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}`;
+    result.innerHTML = `<img src="${url}" alt="QR Code">`;
+    dlBtn.style.display = 'block';
+}
+
+function downloadQR() {
+    haptic.impactOccurred('light');
+    const img = document.querySelector('#qr-result img');
+    if (img) {
+        window.open(img.src, '_blank');
+    }
+}
+
+// Text Utils Functions
+function updateTextStats() {
+    const text = document.getElementById('text-input').value;
+    const stats = document.getElementById('text-stats');
+    const chars = text.length;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    stats.innerText = `Chars: ${chars} | Words: ${words}`;
+}
+
+function processText(mode) {
+    haptic.impactOccurred('light');
+    const input = document.getElementById('text-input');
+    let text = input.value;
+
+    if (mode === 'upper') text = text.toUpperCase();
+    if (mode === 'lower') text = text.toLowerCase();
+    if (mode === 'title') text = text.replace(/\b\w/g, l => l.toUpperCase());
+    if (mode === 'clear') text = "";
+    
+    if (mode === 'b64e') {
+        try { text = btoa(text); } catch(e) { haptic.notificationOccurred('error'); return; }
+    }
+    if (mode === 'b64d') {
+        try { text = atob(text); } catch(e) { haptic.notificationOccurred('error'); return; }
+    }
+
+    input.value = text;
+    updateTextStats();
 }
 
 function generateComplexPassword(isUserAction) {
@@ -254,4 +370,51 @@ function goBack() {
     document.getElementById('menu').style.display = 'block';
     document.getElementById('tool-container').style.display = 'none';
     document.getElementById('tool-content').innerHTML = "";
+}
+
+// YT Downloader Functions
+function toggleYTQuality() {
+    const format = document.getElementById('yt-format').value;
+    const qualityRow = document.getElementById('yt-quality-row');
+    qualityRow.style.display = (format === 'mp3') ? 'none' : 'flex';
+}
+
+async function downloadYouTube() {
+    haptic.impactOccurred('light');
+    const url = document.getElementById('yt-url').value;
+    const format = document.getElementById('yt-format').value;
+    const quality = document.getElementById('yt-quality').value;
+    const status = document.getElementById('yt-status');
+    const chatId = tg.initDataUnsafe?.user?.id;
+
+    if (!url) {
+        status.innerText = "❌ Please enter a URL";
+        haptic.notificationOccurred('error');
+        return;
+    }
+
+    if (!chatId) {
+        status.innerText = "❌ Chat ID not found. Open from Telegram!";
+        return;
+    }
+
+    status.innerText = "⏳ Processing... This may take a minute.";
+    status.style.color = "var(--primary-color)";
+
+    try {
+        const response = await fetch(`/api/youtube?url=${encodeURIComponent(url)}&format=${format}&quality=${quality}&chatId=${chatId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            status.innerText = "✅ Sent to your chat!";
+            status.style.color = "#4caf50";
+            haptic.notificationOccurred('success');
+        } else {
+            throw new Error(data.error || "Failed to download");
+        }
+    } catch (err) {
+        status.innerText = "❌ Error: " + err.message;
+        status.style.color = "#f44336";
+        haptic.notificationOccurred('error');
+    }
 }
