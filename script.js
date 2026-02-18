@@ -29,8 +29,10 @@ function showTool(toolName) {
     document.getElementById('menu').style.display = 'none';
     document.getElementById('tool-container').style.display = 'block';
     const content = document.getElementById('tool-content');
+    const title = document.getElementById('tool-title');
 
     if (toolName === 'speedtest') {
+        title.innerText = "Speed Test";
         content.innerHTML = `
             <div id="speedtest-ui">
                 <div id="meta-info" style="font-size: 12px; color: var(--secondary-text); margin-bottom: 10px;">Initializing...</div>
@@ -67,9 +69,9 @@ function showTool(toolName) {
     } 
     
     if (toolName === 'password') {
+        title.innerText = "Password Generator";
         content.innerHTML = `
             <div class="pass-box">
-                <h3 style="margin-top:0;">Password Generator</h3>
                 <h2 id="password-display" style="color: var(--primary-color); word-break: break-all; min-height: 1.2em;">-</h2>
                 
                 <div class="options-container">
@@ -100,9 +102,9 @@ function showTool(toolName) {
     }
 
     if (toolName === 'qrcode') {
+        title.innerText = "QR Generator";
         content.innerHTML = `
             <div class="pass-box">
-                <h3 style="margin-top:0;">QR Generator</h3>
                 <input type="text" id="qr-input" class="text-input" placeholder="Type link or text here..." oninput="updateQR()">
                 <div class="qr-container" id="qr-result">
                     <p style="color: #888; margin: 40px 0;">QR will appear here</p>
@@ -112,9 +114,9 @@ function showTool(toolName) {
     }
 
     if (toolName === 'textutils') {
+        title.innerText = "Text Utilities";
         content.innerHTML = `
             <div class="pass-box">
-                <h3 style="margin-top:0;">Text Utilities</h3>
                 <span id="text-stats" class="stats-info">Chars: 0 | Words: 0</span>
                 <textarea id="text-input" class="text-area" placeholder="Enter text here..." oninput="updateTextStats()"></textarea>
                 
@@ -129,38 +131,20 @@ function showTool(toolName) {
             </div>`;
     }
 
-    if (toolName === 'ytdown') {
+    if (toolName === 'downloaders') {
+        title.innerText = "Downloaders";
         content.innerHTML = `
-            <div class="pass-box">
-                <h3 style="margin-top:0;">YouTube Downloader</h3>
-                <input type="text" id="yt-url" class="text-input" placeholder="Paste YouTube link here...">
-                
-                <div class="options-container">
-                    <div class="option-row">
-                        <label>Format</label>
-                        <select id="yt-format" class="select-input" style="width: 120px; margin:0;" onchange="toggleYTQuality()">
-                            <option value="mp4">Video (MP4)</option>
-                            <option value="mp3">Audio (MP3)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="option-row" id="yt-quality-row">
-                        <label>Quality</label>
-                        <select id="yt-quality" class="select-input" style="width: 120px; margin:0;">
-                            <option value="highest">Highest</option>
-                            <option value="720p">720p</option>
-                            <option value="360p">360p</option>
-                            <option value="lowest">Lowest</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <button class="tool-btn" onclick="downloadYouTube()">🚀 Download & Send</button>
-                <div id="yt-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
-            </div>`;
+            <div class="tab-container">
+                <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')">YouTube</button>
+                <button id="tab-ig" class="tab-btn" onclick="showDownloader('ig')">Instagram</button>
+            </div>
+            <div id="downloader-content"></div>
+        `;
+        showDownloader('yt');
     }
 
     if (toolName === 'ipinfo') {
+        title.innerText = "IP Information";
         content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">🔍 Fetching IP Info...</div>`;
         fetch('https://ipapi.co/json/')
             .then(res => res.json())
@@ -180,6 +164,89 @@ function showTool(toolName) {
                 haptic.notificationOccurred('error');
                 content.innerHTML = `<p style="color: red;">Failed to fetch IP info. Please try again.</p>`;
             });
+    }
+}
+
+function showDownloader(type) {
+    haptic.impactOccurred('light');
+    const content = document.getElementById('downloader-content');
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(t => t.classList.remove('active'));
+    
+    if (type === 'yt') {
+        document.getElementById('tab-yt').classList.add('active');
+        content.innerHTML = `
+            <div class="pass-box">
+                <input type="text" id="yt-url" class="text-input" placeholder="Paste YouTube link here...">
+                <div class="options-container">
+                    <div class="option-row">
+                        <label>Format</label>
+                        <select id="yt-format" class="select-input" style="width: 120px; margin:0;" onchange="toggleYTQuality()">
+                            <option value="mp4">Video (MP4)</option>
+                            <option value="mp3">Audio (MP3)</option>
+                        </select>
+                    </div>
+                    <div class="option-row" id="yt-quality-row">
+                        <label>Quality</label>
+                        <select id="yt-quality" class="select-input" style="width: 120px; margin:0;">
+                            <option value="highest">Highest</option>
+                            <option value="720p">720p</option>
+                            <option value="360p">360p</option>
+                            <option value="lowest">Lowest</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="tool-btn" onclick="downloadYouTube()">🚀 Download & Send</button>
+                <div id="yt-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
+            </div>`;
+    } else {
+        document.getElementById('tab-ig').classList.add('active');
+        content.innerHTML = `
+            <div class="pass-box">
+                <input type="text" id="ig-url" class="text-input" placeholder="Paste Instagram Reel/Post link...">
+                <button class="tool-btn" onclick="downloadInstagram()">📸 Download & Send</button>
+                <div id="ig-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
+            </div>`;
+    }
+}
+
+async function downloadInstagram() {
+    haptic.impactOccurred('light');
+    const status = document.getElementById('ig-status');
+    const urlInput = document.getElementById('ig-url').value.trim();
+    const chatId = tg.initDataUnsafe?.user?.id;
+
+    if (!urlInput) {
+        status.innerText = "❌ Please enter a URL";
+        haptic.notificationOccurred('error');
+        return;
+    }
+
+    if (!chatId) {
+        status.innerText = "❌ User ID not found. Use Telegram!";
+        haptic.notificationOccurred('error');
+        return;
+    }
+
+    status.innerText = "⏳ Processing IG request...";
+    status.style.color = "var(--primary-color)";
+
+    try {
+        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
+        const response = await fetch(`${baseUrl}/api/instagram?url=${encodeURIComponent(urlInput)}&chatId=${chatId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            status.innerText = "✅ Sent to your chat!";
+            status.style.color = "#4caf50";
+            haptic.notificationOccurred('success');
+        } else {
+            throw new Error(data.error || "Failed to download");
+        }
+    } catch (err) {
+        status.innerText = "❌ Error: " + err.message;
+        status.style.color = "#f44336";
+        haptic.notificationOccurred('error');
     }
 }
 
@@ -376,14 +443,14 @@ function goBack() {
 function toggleYTQuality() {
     const format = document.getElementById('yt-format').value;
     const qualityRow = document.getElementById('yt-quality-row');
-    qualityRow.style.display = (format === 'mp3') ? 'none' : 'flex';
+    if (qualityRow) qualityRow.style.display = (format === 'mp3') ? 'none' : 'flex';
 }
 
 async function downloadYouTube() {
     haptic.impactOccurred('light');
     const urlInput = document.getElementById('yt-url').value.trim();
     const format = document.getElementById('yt-format').value;
-    const quality = document.getElementById('yt-quality').value;
+    const quality = document.getElementById('yt-quality')?.value || 'highest';
     const status = document.getElementById('yt-status');
     const chatId = tg.initDataUnsafe?.user?.id;
 
@@ -403,22 +470,14 @@ async function downloadYouTube() {
     status.style.color = "var(--primary-color)";
 
     try {
-        // More robust URL construction
-        const baseUrl = window.location.origin && window.location.origin !== 'null' 
-            ? window.location.origin 
-            : '';
-        
+        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
         const apiUrl = `${baseUrl}/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`;
-        
         const response = await fetch(apiUrl);
-        
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || `Server error: ${response.status}`);
         }
-
         const data = await response.json();
-
         if (data.success) {
             status.innerText = "✅ Sent to your chat!";
             status.style.color = "#4caf50";

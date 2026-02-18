@@ -17,14 +17,17 @@
         <div id="menu">
             <button class="tool-btn" onclick="showTool('speedtest')">🚀 Speed Test</button>
             <button class="tool-btn" onclick="showTool('password')">🔐 Password Gen</button>
+            <button class="tool-btn" onclick="showTool('downloaders')">📥 Downloaders</button>
             <button class="tool-btn" onclick="showTool('qrcode')">🔲 QR Generator</button>
             <button class="tool-btn" onclick="showTool('textutils')">📝 Text Utils</button>
-            <button class="tool-btn" onclick="showTool('ytdown')">📹 YT Downloader</button>
             <button class="tool-btn" onclick="showTool('ipinfo')">🌐 IP Info</button>
         </div>
         
         <div id="tool-container" style="display:none;">
-            <button onclick="goBack()" class="back-btn">⬅ Back</button>
+            <div id="tool-header" class="tool-header">
+                <button onclick="goBack()" class="back-btn">⬅ Back</button>
+                <h3 id="tool-title" style="margin:0; font-size: 18px; flex-grow: 1; text-align: center; margin-right: 40px;">Tool</h3>
+            </div>
             <div id="tool-content"></div>
         </div>
     </div>
