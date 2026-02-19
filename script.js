@@ -29,7 +29,7 @@ const i18n = {
         scanning: "Scanning...", open: "OPEN", closed: "CLOSED", target: "Target IP/Host",
         secureVault: "Secure Vault", encrypt: "Encrypt File", decrypt: "Decrypt File",
         password: "Password", dropFile: "Drop file or click", success: "Success!",
-        server: "Server", summarizer: "Summarizer"
+        server: "Server", disguise: "Disguise Text", redirectType: "Redirect Type"
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -51,7 +51,7 @@ const i18n = {
         scanning: "Se scanează...", open: "DESCHIS", closed: "ÎNCHIS", target: "IP sau Gazdă",
         secureVault: "Seif Securizat", encrypt: "Criptează Fișier", decrypt: "Decriptează Fișier",
         password: "Parolă", dropFile: "Trage fișierul sau apasă", success: "Succes!",
-        server: "Server", summarizer: "Rezumat Web"
+        server: "Server", disguise: "Text Mascare", redirectType: "Tip Redirecționare"
     }
 };
 
@@ -130,10 +130,9 @@ function updateUIVocabulary() {
     if (toolsMenu) {
         toolsMenu.children[0].innerHTML = `<i data-lucide="shield-check"></i> ${t('passgen')}`;
         toolsMenu.children[1].innerHTML = `<i data-lucide="lock"></i> ${t('secureVault')}`;
-        toolsMenu.children[2].innerHTML = `<i data-lucide="file-text"></i> ${t('summarizer')}`;
-        toolsMenu.children[3].innerHTML = `<i data-lucide="ghost"></i> ${t('rickroll')}`;
-        toolsMenu.children[4].innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
-        toolsMenu.children[5].innerHTML = `<i data-lucide="type"></i> ${t('textutils')}`;
+        toolsMenu.children[2].innerHTML = `<i data-lucide="frown"></i> ${t('rickroll')}`;
+        toolsMenu.children[3].innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
+        toolsMenu.children[4].innerHTML = `<i data-lucide="type"></i> ${t('textutils')}`;
     }
     
     const networkMenu = document.getElementById('menu-network');
@@ -171,10 +170,7 @@ function showTool(toolName) {
         title.innerText = t('speedtest');
         content.innerHTML = `<div class="pass-box" style="padding-top: 10px;">
             <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 15px; height: 20px;">${t('systemReady')}</div>
-            <div class="speed-gauge">
-                <span id="speed-display" class="speed-value">0.0</span>
-                <span class="speed-unit">Mbps</span>
-            </div>
+            <div class="speed-gauge"><span id="speed-display" class="speed-value">0.0</span><span class="speed-unit">Mbps</span></div>
             <div id="test-status" style="color: var(--secondary-text); font-size: 14px; font-weight: 600; margin-bottom: 10px;">${t('standby')}</div>
             <div class="progress-container" style="margin: 10px 0 25px 0;"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
             <div class="stats-grid">
@@ -187,28 +183,24 @@ function showTool(toolName) {
         </div>`;
     }
 
-    if (toolName === 'password') {
-        title.innerText = t('passgen');
-        content.innerHTML = `<div class="pass-box">
-            <h2 id="password-display" style="color: var(--primary-color); word-break: break-all; min-height: 1.2em; font-size: 28px; margin-bottom: 25px;">-</h2>
-            <div class="options-container">
-                <div class="option-row"><label>${t('length')} <span id="length-val">12</span></label><input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText=this.value; generateComplexPassword(true)"></div>
-                <div class="option-row"><label>${t('uppercase')}</label><input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)"></div>
-                <div class="option-row"><label>${t('numbers')}</label><input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)"></div>
-                <div class="option-row"><label>${t('symbols')}</label><input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)"></div>
-            </div>
-            <button class="tool-btn" style="justify-content:center;" onclick="generateComplexPassword(true)">${t('generate')}</button>
-        </div>`;
-        generateComplexPassword(false);
-    }
-
     if (toolName === 'rickroll') {
         title.innerText = t('rickroll');
         content.innerHTML = `<div class="pass-box">
-            <input type="text" id="rick-alias" class="text-input" placeholder="Disguise (e.g. Free Nitro)">
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px;">${t('disguise')}</label>
+                <input type="text" id="rick-alias" class="text-input" placeholder="e.g. Free Nitro, Secret Document">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px;">${t('redirectType')}</label>
+                <select id="rick-type" class="select-input">
+                    <option value="youtube">YouTube (Official Video)</option>
+                    <option value="spotify">Spotify (Never Gonna Give You Up)</option>
+                    <option value="tiktok">TikTok (Viral Rickroll)</option>
+                </select>
+            </div>
             <button class="tool-btn" style="justify-content:center" onclick="generateRickroll()">${t('generate')}</button>
             <div id="rick-result" style="display:none">
-                <div class="rick-preview" id="rick-url"></div>
+                <div class="rick-preview" id="rick-url" style="background:var(--progress-bg); padding:15px; border-radius:10px; font-size:12px; word-break:break-all; margin:15px 0;"></div>
                 <button class="tool-btn" style="justify-content:center" onclick="copyRickroll()"><i data-lucide="copy"></i> ${t('copy')}</button>
             </div>
         </div>`;
@@ -231,13 +223,19 @@ function showTool(toolName) {
         </div>`;
     }
 
-    if (toolName === 'summarizer') {
-        title.innerText = t('summarizer');
+    if (toolName === 'password') {
+        title.innerText = t('passgen');
         content.innerHTML = `<div class="pass-box">
-            <input type="text" id="sum-url" class="text-input" placeholder="Website URL">
-            <button class="tool-btn" style="justify-content:center" onclick="runSummarizer()">Summarize</button>
-            <div id="sum-result" style="margin-top:20px;"></div>
+            <h2 id="password-display" style="color: var(--primary-color); word-break: break-all; min-height: 1.2em; font-size: 28px; margin-bottom: 25px;">-</h2>
+            <div class="options-container">
+                <div class="option-row"><label>${t('length')} <span id="length-val">12</span></label><input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText=this.value; generateComplexPassword(true)"></div>
+                <div class="option-row"><label>${t('uppercase')}</label><input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)"></div>
+                <div class="option-row"><label>${t('numbers')}</label><input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)"></div>
+                <div class="option-row"><label>${t('symbols')}</label><input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)"></div>
+            </div>
+            <button class="tool-btn" style="justify-content:center;" onclick="generateComplexPassword(true)">${t('generate')}</button>
         </div>`;
+        generateComplexPassword(false);
     }
 
     if (toolName === 'ipinfo') {
@@ -245,10 +243,7 @@ function showTool(toolName) {
         content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">${t('query')}</div>`;
         fetch('https://ipapi.co/json/').then(r => r.json()).then(data => {
             haptic.notificationOccurred('success');
-            content.innerHTML = `<div class="stats-grid">
-                <div class="stat-card" style="grid-column: span 2;"><span class="stat-label">IPv4 Address</span><span class="stat-value">${data.ip}</span></div>
-                <div class="stat-card" style="grid-column: span 2;"><span class="stat-label">${t('provider')}</span><span class="stat-value">${data.org}</span></div>
-            </div>`;
+            content.innerHTML = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">IPv4 Address</span><span class="stat-value">${data.ip}</span></div><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">${t('provider')}</span><span class="stat-value">${data.org}</span></div></div>`;
         }).catch(() => haptic.notificationOccurred('error'));
     }
     
@@ -262,7 +257,7 @@ function showTool(toolName) {
     }
     if (toolName === 'textutils') {
         title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div></div>`;
+        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div></div>`;
     }
     lucide.createIcons();
 }
@@ -271,6 +266,63 @@ function hideTool() {
     document.getElementById('tool-container').style.display = 'none';
     stopMetronome();
     stopSound('loading');
+}
+
+function generateRickroll() {
+    const alias = document.getElementById('rick-alias').value.trim() || 'Click Me';
+    const type = document.getElementById('rick-type').value;
+    
+    const targets = {
+        youtube: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        spotify: "https://open.spotify.com/track/4cOdK2wGvWyR9m7UNvy9oE",
+        tiktok: "https://www.tiktok.com/@rickastlyofficial/video/6884381585451126018"
+    };
+
+    // Use a redirect service wrapper to make it look less like a Rickroll
+    const finalUrl = `https://www.google.com/url?q=${encodeURIComponent(targets[type])}&disguise=${encodeURIComponent(alias)}`;
+    
+    document.getElementById('rick-url').innerText = finalUrl;
+    document.getElementById('rick-result').style.display = 'block';
+    playSound('success');
+    haptic.notificationOccurred('success');
+}
+
+function copyRickroll() {
+    const text = document.getElementById('rick-url').innerText;
+    navigator.clipboard.writeText(text);
+    playSound('click');
+    haptic.impactOccurred('medium');
+    tg.MainButton.setText('Copied!').show();
+    setTimeout(() => tg.MainButton.hide(), 2000);
+}
+
+async function runPortScan() {
+    const target = document.getElementById('scan-target').value.trim();
+    const resultDiv = document.getElementById('scan-results');
+    if (!target) return;
+    resultDiv.innerHTML = `<p>${t('scanning')}</p>`;
+    playSound('loading');
+    haptic.impactOccurred('medium');
+    try {
+        const response = await fetch(`/api/scan?target=${encodeURIComponent(target)}`);
+        const data = await response.json();
+        stopSound('loading');
+        let html = `<div style="display:grid; gap:8px;">`;
+        data.results.sort((a,b) => a.port - b.port).forEach(r => {
+            const color = r.open ? '#34c759' : '#ff3b30';
+            const status = r.open ? t('open') : t('closed');
+            html += `<div class="settings-cell" style="background:var(--secondary-bg); border-radius:8px; padding:10px 15px;"><span style="font-weight:600">Port ${r.port}</span><span style="color:${color}; font-weight:800; font-size:12px;">${status}</span></div>`;
+        });
+        html += `</div>`;
+        resultDiv.innerHTML = html;
+        playSound('success');
+        haptic.notificationOccurred('success');
+    } catch (e) {
+        stopSound('loading');
+        resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`;
+        playSound('error');
+        haptic.notificationOccurred('error');
+    }
 }
 
 async function runSpeedTest() {
@@ -291,12 +343,11 @@ async function runSpeedTest() {
     statusText.innerText = t('testing') + "...";
     
     try {
-        const TEST_DURATION = 10000;
-        const metaRes = await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
-        const colo = metaRes.headers.get('cf-meta-colo') || 'UKN';
-        metaInfo.innerText = `Server: ${colo}`;
-        
-        // Latency & Jitter
+        const locateRes = await fetch('https://locate.measurementlab.net/v2/nearest/ndt/ndt7');
+        const locateData = await locateRes.json();
+        const server = locateData.results[0];
+        if (metaInfo) metaInfo.innerText = `Server: ${server.location.city} (${server.machine})`;
+
         let pings = [];
         for (let i = 0; i < 15; i++) {
             const start = performance.now();
@@ -309,7 +360,6 @@ async function runSpeedTest() {
         pingDisplay.innerText = minPing.toFixed(0) + ' ms';
         jitterDisplay.innerText = (maxPing - minPing).toFixed(0) + ' ms';
 
-        // Download
         let dlReceived = 0;
         const dlStart = performance.now();
         const dlResponse = await fetch(`https://speed.cloudflare.com/__down?bytes=25000000`, { cache: 'no-store' });
@@ -326,7 +376,6 @@ async function runSpeedTest() {
         }
         downloadDisplay.innerText = speedDisplay.innerText + ' Mbps';
 
-        // Upload
         const ulData = new Uint8Array(5000000);
         const ulStart = performance.now();
         await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: ulData, cache: 'no-store' });
@@ -338,7 +387,7 @@ async function runSpeedTest() {
         
         statusText.innerText = t('complete');
         stopSound('loading');
-        playSound('click');
+        playSound('success');
         haptic.notificationOccurred('success');
     } catch (e) { statusText.innerText = t('failed'); stopSound('loading'); playSound('error'); haptic.notificationOccurred('error'); }
     if (btn) { btn.disabled = false; btn.innerText = t('testAgain'); }
@@ -379,7 +428,7 @@ function setMediaTab(tab) {
         showDownloaderUI('yt');
     } else if (tab === 'conv') {
         content.innerHTML = `<div class="pass-box">
-            <div class="upload-box" onclick="document.getElementById('audio-upload').click()">
+            <div class="upload-box" style="border: 2px dashed var(--border-color); background:var(--secondary-bg); padding:40px 20px; border-radius:16px; text-align:center; cursor:pointer;" onclick="document.getElementById('audio-upload').click()">
                 <i data-lucide="music" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i>
                 <span style="display:block; font-weight:600">${t('selectFile')}</span>
                 <input type="file" id="audio-upload" style="display:none" onchange="handleAudioFile(this)">
@@ -430,7 +479,7 @@ async function processDownload(type) {
         const response = await fetch(`/api/${type === 'yt' ? 'youtube' : (type === 'ig' ? 'instagram' : 'tiktok')}?url=${encodeURIComponent(url)}&format=${format}&chatId=${chatId}`);
         const data = await response.json();
         stopSound('loading');
-        if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('click'); haptic.notificationOccurred('success'); }
+        if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); }
         else throw new Error();
     } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); }
 }
@@ -480,14 +529,11 @@ function handleVaultFile(input) { if (input.files && input.files[0]) { vaultFile
 async function processVault(action) { const password = document.getElementById('vault-pass').value; const status = document.getElementById('vault-status'); if (!vaultFile || !password) { status.innerText = "Please select file & password"; status.style.color = "#ff3b30"; playSound('error'); haptic.notificationOccurred('error'); return; } status.innerText = t('processing') + "..."; status.style.color = "var(--secondary-text)"; playSound('loading'); try { await new Promise(r => setTimeout(r, 1500)); status.innerText = t('success'); status.style.color = "#34c759"; stopSound('loading'); playSound('success'); haptic.notificationOccurred('success'); } catch (e) { stopSound('loading'); status.innerText = t('failed'); status.style.color = "#ff3b30"; playSound('error'); haptic.notificationOccurred('error'); } }
 function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; const info = document.getElementById('audio-info'); info.innerText = `Selected: ${selectedAudioFile.name}`; info.style.display = 'block'; document.getElementById('conv-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
 async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'); const chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('loading'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }); const data = await response.json(); stopSound('loading'); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
-async function lookupDomain() { const domainInput = document.getElementById('dom-url'); if (!domainInput) return; const domain = domainInput.value.trim(); const resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; playSound('click'); try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`); const data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('click'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
+async function lookupDomain() { const domainInput = document.getElementById('dom-url'); if (!domainInput) return; const domain = domainInput.value.trim(); const resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; playSound('click'); try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`); const data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('success'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
 function updateQR() { const inputEl = document.getElementById('qr-input'); if (!inputEl) return; const input = inputEl.value; const result = document.getElementById('qr-result'); const dlBtn = document.getElementById('download-qr'); if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; } result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`; dlBtn.style.display = 'flex'; }
 function downloadQR() { const img = document.querySelector('#qr-result img'); if (img) window.open(img.src, '_blank'); }
 function updateTextStats() { const textInput = document.getElementById('text-input'); if (!textInput) return; const text = textInput.value; document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
 function processText(mode) { const input = document.getElementById('text-input'); if (!input) return; if (mode === 'upper') input.value = input.value.toUpperCase(); else if (mode === 'lower') input.value = input.value.toLowerCase(); else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase()); else if (mode === 'clear') input.value = ""; updateTextStats(); playSound('click'); }
-async function runSummarizer() { const urlInput = document.getElementById('sum-url'); if (!urlInput) return; const url = urlInput.value.trim(); const resultDiv = document.getElementById('sum-result'); if (!url) return; resultDiv.innerHTML = "Summarizing..."; playSound('loading'); try { const res = await fetch(`/api/summarize?url=${encodeURIComponent(url)}`); const data = await res.json(); stopSound('loading'); if (data.success) { resultDiv.innerHTML = `<h4 style="margin-bottom:10px">${data.title}</h4><p style="font-size:14px; line-height:1.5">${data.summary}</p>`; playSound('success'); } else throw new Error(); } catch(e) { stopSound('loading'); resultDiv.innerHTML = "Error"; playSound('error'); } }
-function generateRickroll() { const alias = document.getElementById('rick-alias').value.trim() || 'Click Me'; const finalUrl = `https://www.google.com/url?q=https://www.youtube.com/watch?v=dQw4w9WgXcQ&source=gmail&ust=1700000000000&usg=AOvVaw0&disguise=${encodeURIComponent(alias)}`; document.getElementById('rick-url').innerText = finalUrl; document.getElementById('rick-result').style.display = 'block'; playSound('click'); haptic.notificationOccurred('success'); }
-function copyRickroll() { const text = document.getElementById('rick-url').innerText; navigator.clipboard.writeText(text); playSound('click'); haptic.impactOccurred('medium'); }
 
 initTheme();
 switchView('tools');
