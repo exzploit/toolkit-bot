@@ -138,6 +138,50 @@ function showTool(toolName) {
             </div>`;
     }
 
+    if (toolName === 'currency') {
+        title.innerText = "Currency Converter";
+        content.innerHTML = `
+            <div class="pass-box">
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <input type="number" id="cur-amount" class="text-input" value="1" style="flex:1; margin:0;">
+                    <select id="cur-from" class="select-input" style="width: 100px; margin:0;">
+                        <option value="usd">USD</option>
+                        <option value="eur">EUR</option>
+                        <option value="gbp">GBP</option>
+                        <option value="btc">BTC</option>
+                        <option value="ton">TON</option>
+                        <option value="eth">ETH</option>
+                        <option value="rub">RUB</option>
+                        <option value="uah">UAH</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:15px; font-size: 24px;">⬇</div>
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <div id="cur-result-val" class="text-input" style="flex:1; margin:0; background: var(--stat-card-bg); line-height: 24px;">---</div>
+                    <select id="cur-to" class="select-input" style="width: 100px; margin:0;">
+                        <option value="eur">EUR</option>
+                        <option value="usd">USD</option>
+                        <option value="gbp">GBP</option>
+                        <option value="rub">RUB</option>
+                        <option value="uah">UAH</option>
+                        <option value="ton">TON</option>
+                    </select>
+                </div>
+                <button class="tool-btn" onclick="convertCurrency()">💹 Convert</button>
+                <div id="cur-status" style="margin-top: 10px; font-size: 12px; color: var(--secondary-text);"></div>
+            </div>`;
+    }
+
+    if (toolName === 'domain') {
+        title.innerText = "Domain Info";
+        content.innerHTML = `
+            <div class="pass-box">
+                <input type="text" id="dom-url" class="text-input" placeholder="example.com">
+                <button class="tool-btn" onclick="lookupDomain()">🔍 Lookup DNS/Whois</button>
+                <div id="dom-result" style="margin-top: 20px; text-align: left; font-size: 14px;"></div>
+            </div>`;
+    }
+
     if (toolName === 'ipinfo') {
         title.innerText = "IP Information";
         content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">🔍 Fetching IP Info...</div>`;
@@ -443,5 +487,63 @@ async function runSpeedTest() {
         haptic.notificationOccurred('error');
         if (statusText) statusText.innerText = 'Test Failed. Check connection.';
         if (restartBtn) restartBtn.style.display = 'block';
+    }
+}
+
+async function convertCurrency() {
+    haptic.impactOccurred('light');
+    const amount = document.getElementById('cur-amount').value;
+    const from = document.getElementById('cur-from').value;
+    const to = document.getElementById('cur-to').value;
+    const resultVal = document.getElementById('cur-result-val');
+    const status = document.getElementById('cur-status');
+
+    status.innerText = "⏳ Updating rates...";
+    try {
+        const response = await fetch(`/api/currency?from=${from}&to=${to}&amount=${amount}`);
+        const data = await response.json();
+        if (data.success) {
+            resultVal.innerText = data.result.toFixed(2);
+            status.innerText = `Last updated: ${data.date}`;
+            haptic.impactOccurred('medium');
+        } else throw new Error(data.error);
+    } catch (err) {
+        status.innerText = "❌ Error fetching rates";
+        haptic.notificationOccurred('error');
+    }
+}
+
+async function lookupDomain() {
+    haptic.impactOccurred('light');
+    const domain = document.getElementById('dom-url').value.trim();
+    const resultDiv = document.getElementById('dom-result');
+    if (!domain) return;
+
+    resultDiv.innerHTML = "⏳ Looking up...";
+    try {
+        const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`);
+        const data = await response.json();
+        
+        let html = `
+            <div style="background: var(--stat-card-bg); padding: 15px; border-radius: 10px;">
+                <p><strong>A Records:</strong><br>${data.dns.a.join(', ') || 'None'}</p>
+                <p><strong>MX Records:</strong><br>${data.dns.mx.map(m => m.exchange).join(', ') || 'None'}</p>
+        `;
+
+        if (data.whois) {
+            html += `
+                <hr style="border: 0; border-top: 1px solid var(--progress-bg); margin: 10px 0;">
+                <p><strong>Registrar:</strong> ${data.whois.registrar}</p>
+                <p><strong>Created:</strong> ${new Date(data.whois.created).toLocaleDateString()}</p>
+                <p><strong>Status:</strong> ${data.whois.status}</p>
+            `;
+        }
+
+        html += `</div>`;
+        resultDiv.innerHTML = html;
+        haptic.notificationOccurred('success');
+    } catch (err) {
+        resultDiv.innerHTML = "❌ Lookup failed: " + err.message;
+        haptic.notificationOccurred('error');
     }
 }
