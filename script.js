@@ -109,38 +109,6 @@ function showTool(toolName) {
         showDownloader('yt');
     }
 
-    if (toolName === 'ai') {
-        title.innerText = "AI Assistant";
-        content.innerHTML = `
-            <div class="chat-container" id="ai-chat">
-                <div class="message ai-message">Hello! I'm your AI assistant. How can I help you today?</div>
-            </div>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="ai-input" class="text-input" placeholder="Ask something..." style="margin:0;">
-                <button class="small-btn" onclick="askAI()" style="width: 60px; background: var(--primary-color); color: white;">Send</button>
-            </div>
-        `;
-    }
-
-    if (toolName === 'image') {
-        title.innerText = "Image Utils";
-        content.innerHTML = `
-            <div class="pass-box">
-                <div class="upload-box" onclick="document.getElementById('img-upload').click()">
-                    <span>📁 Tap to upload image</span>
-                    <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="handleImage(this)">
-                </div>
-                <img id="img-preview" class="image-preview">
-                <div id="img-actions" style="display:none;" class="util-grid">
-                    <button class="small-btn" onclick="processImage('bw')">Grayscale</button>
-                    <button class="small-btn" onclick="processImage('sepia')">Sepia</button>
-                    <button class="small-btn" onclick="processImage('clear')">Remove</button>
-                </div>
-                <button id="img-send" class="tool-btn" style="display:none;" onclick="sendImageToTelegram()">📤 Send to Chat</button>
-            </div>
-        `;
-    }
-
     if (toolName === 'qrcode') {
         title.innerText = "QR Generator";
         content.innerHTML = `
@@ -263,53 +231,6 @@ function showDownloader(type) {
     }
 }
 
-// Tool Implementation Functions
-async function askAI() {
-    const input = document.getElementById('ai-input');
-    const chat = document.getElementById('ai-chat');
-    const prompt = input.value.trim();
-    if (!prompt) return;
-
-    haptic.impactOccurred('light');
-    input.value = "";
-    chat.innerHTML += `<div class="message user-message">${prompt}</div>`;
-    chat.scrollTop = chat.scrollHeight;
-
-    const loadingMsg = document.createElement('div');
-    loadingMsg.className = "message ai-message";
-    loadingMsg.innerText = "thinking...";
-    chat.appendChild(loadingMsg);
-
-    try {
-        const response = await fetch('/api/ai', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
-        });
-        const data = await response.json();
-        loadingMsg.innerText = data.text || "I couldn't process that.";
-        haptic.notificationOccurred('success');
-    } catch (err) {
-        loadingMsg.innerText = "Error connecting to AI.";
-        haptic.notificationOccurred('error');
-    }
-    chat.scrollTop = chat.scrollHeight;
-}
-
-function handleImage(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('img-preview');
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            document.getElementById('img-actions').style.display = 'grid';
-            document.getElementById('img-send').style.display = 'block';
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
 async function downloadTikTok() {
     haptic.impactOccurred('light');
     const urlInput = document.getElementById('tt-url').value.trim();
@@ -342,7 +263,6 @@ function goBack() {
     document.getElementById('tool-content').innerHTML = "";
 }
 
-// ... include other utility functions (updateQR, downloadQR, updateTextStats, processText, generateComplexPassword, etc.) ...
 function updateQR() {
     const input = document.getElementById('qr-input').value;
     const result = document.getElementById('qr-result');
@@ -397,7 +317,6 @@ function generateComplexPassword(isUserAction) {
     document.getElementById('password-display').innerText = password;
 }
 
-// YouTube Downloader Logic
 function toggleYTQuality() {
     const format = document.getElementById('yt-format').value;
     const qualityRow = document.getElementById('yt-quality-row');
@@ -414,7 +333,13 @@ async function downloadYouTube() {
     if (!urlInput || !chatId) return;
     status.innerText = "⏳ Processing YouTube...";
     try {
-        const response = await fetch(`/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`);
+        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
+        const apiUrl = `${baseUrl}/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
         const data = await response.json();
         if (data.success) { status.innerText = "✅ Sent!"; haptic.notificationOccurred('success'); }
         else throw new Error(data.error);
@@ -430,9 +355,93 @@ async function downloadInstagram() {
     if (!urlInput || !chatId) return;
     status.innerText = "⏳ Processing IG...";
     try {
-        const response = await fetch(`/api/instagram?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
+        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
+        const response = await fetch(`${baseUrl}/api/instagram?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
         const data = await response.json();
         if (data.success) { status.innerText = "✅ Sent!"; haptic.notificationOccurred('success'); }
         else throw new Error(data.error);
     } catch (err) { status.innerText = "❌ " + err.message; haptic.notificationOccurred('error'); }
+}
+
+async function runSpeedTest() {
+    const speedDisplay = document.getElementById('speed-display');
+    const pingDisplay = document.getElementById('ping-display');
+    const jitterDisplay = document.getElementById('jitter-display');
+    const downloadDisplay = document.getElementById('download-display');
+    const uploadDisplay = document.getElementById('upload-display');
+    const progressBar = document.getElementById('progress-bar');
+    const statusText = document.getElementById('test-status');
+    const metaInfo = document.getElementById('meta-info');
+    const restartBtn = document.getElementById('restart-test');
+    if (!speedDisplay) return;
+    restartBtn.style.display = 'none';
+    progressBar.style.width = '0%';
+    speedDisplay.innerText = '0.0';
+    pingDisplay.innerText = '--';
+    jitterDisplay.innerText = '--';
+    downloadDisplay.innerText = '--';
+    uploadDisplay.innerText = '--';
+    try {
+        const TEST_DURATION = 10000;
+        const metaRes = await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
+        const colo = metaRes.headers.get('cf-meta-colo') || 'Unknown';
+        const country = metaRes.headers.get('cf-meta-country') || '';
+        metaInfo.innerText = `Server: ${colo} (${country}) • Provider: ${metaRes.headers.get('server') || 'Cloudflare'}`;
+        statusText.innerText = 'Measuring Latency...';
+        let pings = [];
+        for (let i = 0; i < 20; i++) {
+            const start = performance.now();
+            await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
+            pings.push(performance.now() - start);
+            progressBar.style.width = (i * 0.5) + '%';
+        }
+        const avgPing = pings.reduce((a,b) => a+b) / pings.length;
+        const jitter = Math.max(...pings) - Math.min(...pings);
+        pingDisplay.innerText = avgPing.toFixed(0) + ' ms';
+        jitterDisplay.innerText = jitter.toFixed(0) + ' ms';
+        haptic.impactOccurred('soft');
+        statusText.innerText = 'Testing Download Speed...';
+        let dlReceived = 0;
+        const startDlTime = performance.now();
+        while (performance.now() - startDlTime < TEST_DURATION) {
+            const response = await fetch(`https://speed.cloudflare.com/__down?bytes=25000000`, { cache: 'no-store' });
+            const reader = response.body.getReader();
+            while (true) {
+                const { done, value } = await reader.read();
+                const elapsed = performance.now() - startDlTime;
+                if (done || elapsed >= TEST_DURATION) break;
+                dlReceived += value.length;
+                const speedMbps = (dlReceived * 8) / (elapsed / 1000 * 1024 * 1024);
+                speedDisplay.innerText = speedMbps.toFixed(1);
+                progressBar.style.width = (10 + (elapsed / TEST_DURATION) * 40) + '%';
+            }
+            if (performance.now() - startDlTime >= TEST_DURATION) break;
+        }
+        downloadDisplay.innerText = speedDisplay.innerText + ' Mbps';
+        haptic.impactOccurred('soft');
+        statusText.innerText = 'Testing Upload Speed...';
+        let ulSent = 0;
+        const startUlTime = performance.now();
+        const ulChunkSize = 5 * 1024 * 1024;
+        const ulData = new Uint8Array(ulChunkSize);
+        while (performance.now() - startUlTime < TEST_DURATION) {
+            await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: ulData, cache: 'no-store' });
+            ulSent += ulChunkSize;
+            const elapsed = performance.now() - startUlTime;
+            const speedMbps = (ulSent * 8) / (elapsed / 1000 * 1024 * 1024);
+            speedDisplay.innerText = speedMbps.toFixed(1);
+            progressBar.style.width = (50 + (elapsed / TEST_DURATION) * 50) + '%';
+            if (elapsed >= TEST_DURATION) break;
+        }
+        uploadDisplay.innerText = speedDisplay.innerText + ' Mbps';
+        progressBar.style.width = '100%';
+        statusText.innerText = 'Test Complete';
+        restartBtn.style.display = 'block';
+        haptic.notificationOccurred('success');
+    } catch (error) {
+        console.error(error);
+        haptic.notificationOccurred('error');
+        if (statusText) statusText.innerText = 'Test Failed. Check connection.';
+        if (restartBtn) restartBtn.style.display = 'block';
+    }
 }
