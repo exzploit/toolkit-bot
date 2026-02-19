@@ -54,10 +54,13 @@ const sounds = {
     beat: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3')
 };
 
+// Pre-load sounds
+Object.values(sounds).forEach(s => s.load());
+
 function playSound(type) {
     if (soundsEnabled && sounds[type]) {
-        sounds[type].currentTime = 0;
-        sounds[type].play().catch(() => {});
+        const s = sounds[type].cloneNode();
+        s.play().catch(() => {});
     }
 }
 
@@ -96,7 +99,7 @@ function switchLang() {
 function toggleSounds() {
     soundsEnabled = !soundsEnabled;
     localStorage.setItem('toolkit_sounds', soundsEnabled);
-    playSound('click');
+    if (soundsEnabled) playSound('click');
     haptic.impactOccurred('light');
     renderSettings();
 }
@@ -112,14 +115,20 @@ function updateUIVocabulary() {
     document.getElementById('header-media').innerText = t('media');
     document.getElementById('header-settings').innerText = t('settings');
 
-    document.querySelector('#menu-tools button:nth-child(1)').innerHTML = `<i data-lucide="shield-check"></i> ${t('passgen')}`;
-    document.querySelector('#menu-tools button:nth-child(2)').innerHTML = `<i data-lucide="ghost"></i> ${t('rickroll')}`;
-    document.querySelector('#menu-tools button:nth-child(3)').innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
-    document.querySelector('#menu-tools button:nth-child(4)').innerHTML = `<i data-lucide="file-text"></i> ${t('textutils')}`;
+    const toolsMenu = document.getElementById('menu-tools');
+    if (toolsMenu) {
+        toolsMenu.children[0].innerHTML = `<i data-lucide="shield-check"></i> ${t('passgen')}`;
+        toolsMenu.children[1].innerHTML = `<i data-lucide="ghost"></i> ${t('rickroll')}`;
+        toolsMenu.children[2].innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
+        toolsMenu.children[3].innerHTML = `<i data-lucide="file-text"></i> ${t('textutils')}`;
+    }
     
-    document.querySelector('#menu-network button:nth-child(1)').innerHTML = `<i data-lucide="zap"></i> ${t('speedtest')}`;
-    document.querySelector('#menu-network button:nth-child(2)').innerHTML = `<i data-lucide="globe"></i> ${t('domain')}`;
-    document.querySelector('#menu-network button:nth-child(3)').innerHTML = `<i data-lucide="map-pin"></i> ${t('ipinfo')}`;
+    const networkMenu = document.getElementById('menu-network');
+    if (networkMenu) {
+        networkMenu.children[0].innerHTML = `<i data-lucide="zap"></i> ${t('speedtest')}`;
+        networkMenu.children[1].innerHTML = `<i data-lucide="globe"></i> ${t('domain')}`;
+        networkMenu.children[2].innerHTML = `<i data-lucide="map-pin"></i> ${t('ipinfo')}`;
+    }
     
     lucide.createIcons();
 }
@@ -148,20 +157,20 @@ function showTool(toolName) {
     if (toolName === 'speedtest') {
         title.innerText = t('speedtest');
         content.innerHTML = `<div class="pass-box" style="padding-top: 10px;">
-            <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 10px; height: 20px;">${t('systemReady')}</div>
+            <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 15px; height: 20px;">${t('systemReady')}</div>
             <div class="speed-gauge">
                 <span id="speed-display" class="speed-value">0.0</span>
                 <span class="speed-unit">Mbps</span>
             </div>
             <div id="test-status" style="color: var(--secondary-text); font-size: 14px; font-weight: 600; margin-bottom: 10px;">${t('standby')}</div>
-            <div class="progress-container"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
+            <div class="progress-container" style="margin: 10px 0 25px 0;"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
             <div class="stats-grid">
-                <div class="stat-card"><span class="stat-label">${t('latency')}</span><span id="ping-display" class="stat-value">-- ms</span></div>
-                <div class="stat-card"><span class="stat-label">${t('jitter')}</span><span id="jitter-display" class="stat-value">-- ms</span></div>
+                <div class="stat-card"><span class="stat-label">${t('latency')}</span><span id="ping-display" class="stat-value">--</span></div>
+                <div class="stat-card"><span class="stat-label">${t('jitter')}</span><span id="jitter-display" class="stat-value">--</span></div>
                 <div class="stat-card"><span class="stat-label">${t('download')}</span><span id="download-display" class="stat-value">--</span></div>
                 <div class="stat-card"><span class="stat-label">${t('upload')}</span><span id="upload-display" class="stat-value">--</span></div>
             </div>
-            <button class="tool-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
+            <button class="tool-btn" id="start-test-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
         </div>`;
     }
 
@@ -227,6 +236,82 @@ function showTool(toolName) {
 function hideTool() {
     document.getElementById('tool-container').style.display = 'none';
     stopMetronome();
+}
+
+async function runSpeedTest() {
+    const btn = document.getElementById('start-test-btn');
+    if (btn) btn.disabled = true;
+    
+    playSound('click');
+    const speedDisplay = document.getElementById('speed-display');
+    const pingDisplay = document.getElementById('ping-display');
+    const jitterDisplay = document.getElementById('jitter-display');
+    const downloadDisplay = document.getElementById('download-display');
+    const uploadDisplay = document.getElementById('upload-display');
+    const progressBar = document.getElementById('progress-bar');
+    const statusText = document.getElementById('test-status');
+    
+    if (!speedDisplay) return;
+    
+    progressBar.style.width = '0%';
+    statusText.innerText = t('testing') + "...";
+    
+    try {
+        const metaRes = await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
+        const colo = metaRes.headers.get('cf-meta-colo') || 'UKN';
+        document.getElementById('meta-info').innerText = `Server: ${colo}`;
+        
+        // Accurate Latency & Jitter
+        let pings = [];
+        for (let i = 0; i < 15; i++) {
+            const start = performance.now();
+            await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
+            pings.push(performance.now() - start);
+            progressBar.style.width = (i * 1) + '%';
+        }
+        const minPing = Math.min(...pings);
+        const maxPing = Math.max(...pings);
+        pingDisplay.innerText = minPing.toFixed(0) + ' ms';
+        jitterDisplay.innerText = (maxPing - minPing).toFixed(0) + ' ms';
+
+        // Download Test (10MB)
+        let dlReceived = 0;
+        const dlStart = performance.now();
+        const dlResponse = await fetch(`https://speed.cloudflare.com/__down?bytes=10000000`, { cache: 'no-store' });
+        const reader = dlResponse.body.getReader();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            dlReceived += value.length;
+            const elapsed = (performance.now() - dlStart) / 1000;
+            const speed = (dlReceived * 8) / (elapsed * 1024 * 1024);
+            speedDisplay.innerText = speed.toFixed(1);
+            progressBar.style.width = (15 + (dlReceived / 10000000) * 40) + '%';
+        }
+        downloadDisplay.innerText = speedDisplay.innerText + ' Mbps';
+
+        // Upload Test (5MB)
+        const ulData = new Uint8Array(5000000);
+        const ulStart = performance.now();
+        await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: ulData, cache: 'no-store' });
+        const ulElapsed = (performance.now() - ulStart) / 1000;
+        const ulSpeed = (5 * 8) / ulElapsed;
+        uploadDisplay.innerText = ulSpeed.toFixed(1) + ' Mbps';
+        speedDisplay.innerText = ulSpeed.toFixed(1);
+        progressBar.style.width = '100%';
+        
+        statusText.innerText = t('complete');
+        playSound('success');
+        haptic.notificationOccurred('success');
+    } catch (e) { 
+        statusText.innerText = t('failed'); 
+        playSound('error'); 
+        haptic.notificationOccurred('error'); 
+    }
+    if (btn) {
+        btn.disabled = false;
+        btn.innerText = t('testAgain');
+    }
 }
 
 function generateRickroll() {
@@ -315,54 +400,6 @@ function generateComplexPassword(isUserAction) {
     if (display) display.innerText = password;
 }
 
-async function runSpeedTest() {
-    playSound('click');
-    const speedDisplay = document.getElementById('speed-display');
-    const pingDisplay = document.getElementById('ping-display');
-    const progressBar = document.getElementById('progress-bar');
-    const statusText = document.getElementById('test-status');
-    if (!speedDisplay) return;
-    
-    progressBar.style.width = '0%';
-    statusText.innerText = t('testing') + "...";
-    
-    try {
-        const TEST_DURATION = 8000;
-        const metaRes = await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
-        const colo = metaRes.headers.get('cf-meta-colo') || 'UKN';
-        document.getElementById('meta-info').innerText = `Server: ${colo}`;
-        
-        let pings = [];
-        for (let i = 0; i < 15; i++) {
-            const start = performance.now();
-            await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
-            pings.push(performance.now() - start);
-            progressBar.style.width = (i * 1) + '%';
-        }
-        pingDisplay.innerText = Math.min(...pings).toFixed(0) + ' ms';
-
-        let dlReceived = 0;
-        const startDlTime = performance.now();
-        while (performance.now() - startDlTime < TEST_DURATION) {
-            const response = await fetch(`https://speed.cloudflare.com/__down?bytes=15000000`, { cache: 'no-store' });
-            const reader = response.body.getReader();
-            while (true) {
-                const { done, value } = await reader.read();
-                const elapsed = performance.now() - startDlTime;
-                if (done || elapsed >= TEST_DURATION) break;
-                dlReceived += value.length;
-                const speedMbps = (dlReceived * 8) / (elapsed / 1000 * 1024 * 1024);
-                speedDisplay.innerText = speedMbps.toFixed(1);
-                progressBar.style.width = (15 + (elapsed / TEST_DURATION) * 85) + '%';
-            }
-        }
-        document.getElementById('download-display').innerText = speedDisplay.innerText + ' Mbps';
-        statusText.innerText = t('complete');
-        playSound('success');
-        haptic.notificationOccurred('success');
-    } catch (e) { statusText.innerText = t('failed'); playSound('error'); haptic.notificationOccurred('error'); }
-}
-
 function renderSettings() {
     const container = document.getElementById('settings-content');
     container.innerHTML = `
@@ -385,7 +422,7 @@ function renderSettings() {
                 <span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span>
             </div>
         </div>
-        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.3 • [⌬]</p>
+        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.4 • [⌬]</p>
     `;
 }
 
@@ -401,7 +438,8 @@ function startMetronome() {
     }, (60 / bpm) * 1000);
 }
 
-// Global Helpers
+// Helpers
+let selectedAudioFile = null;
 function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; const info = document.getElementById('audio-info'); info.innerText = `Selected: ${selectedAudioFile.name}`; info.style.display = 'block'; document.getElementById('conv-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
 async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'); const chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('click'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }); const data = await response.json(); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
 function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
