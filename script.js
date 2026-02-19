@@ -187,12 +187,30 @@ function showTool(toolName) {
         </div>`;
     }
 
-    if (toolName === 'portscan') {
-        title.innerText = t('portscan');
+    if (toolName === 'password') {
+        title.innerText = t('passgen');
         content.innerHTML = `<div class="pass-box">
-            <input type="text" id="scan-target" class="text-input" placeholder="${t('target')}">
-            <button class="tool-btn" style="justify-content:center" onclick="runPortScan()"><i data-lucide="search"></i> ${t('generate')}</button>
-            <div id="scan-results" style="margin-top:20px;"></div>
+            <h2 id="password-display" style="color: var(--primary-color); word-break: break-all; min-height: 1.2em; font-size: 28px; margin-bottom: 25px;">-</h2>
+            <div class="options-container">
+                <div class="option-row"><label>${t('length')} <span id="length-val">12</span></label><input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText=this.value; generateComplexPassword(true)"></div>
+                <div class="option-row"><label>${t('uppercase')}</label><input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)"></div>
+                <div class="option-row"><label>${t('numbers')}</label><input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)"></div>
+                <div class="option-row"><label>${t('symbols')}</label><input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)"></div>
+            </div>
+            <button class="tool-btn" style="justify-content:center;" onclick="generateComplexPassword(true)">${t('generate')}</button>
+        </div>`;
+        generateComplexPassword(false);
+    }
+
+    if (toolName === 'rickroll') {
+        title.innerText = t('rickroll');
+        content.innerHTML = `<div class="pass-box">
+            <input type="text" id="rick-alias" class="text-input" placeholder="Disguise (e.g. Free Nitro)">
+            <button class="tool-btn" style="justify-content:center" onclick="generateRickroll()">${t('generate')}</button>
+            <div id="rick-result" style="display:none">
+                <div class="rick-preview" id="rick-url"></div>
+                <button class="tool-btn" style="justify-content:center" onclick="copyRickroll()"><i data-lucide="copy"></i> ${t('copy')}</button>
+            </div>
         </div>`;
     }
 
@@ -222,32 +240,15 @@ function showTool(toolName) {
         </div>`;
     }
 
-    if (toolName === 'password') {
-        title.innerText = t('passgen');
-        content.innerHTML = `<div class="pass-box">
-            <h2 id="password-display" style="color: var(--primary-color); word-break: break-all; min-height: 1.2em; font-size: 28px; margin-bottom: 25px;">-</h2>
-            <div class="options-container">
-                <div class="option-row"><label>${t('length')} <span id="length-val">12</span></label><input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText=this.value; generateComplexPassword(true)"></div>
-                <div class="option-row"><label>${t('uppercase')}</label><input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)"></div>
-                <div class="option-row"><label>${t('numbers')}</label><input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)"></div>
-                <div class="option-row"><label>${t('symbols')}</label><input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)"></div>
-            </div>
-            <button class="tool-btn" style="justify-content:center;" onclick="generateComplexPassword(true)">${t('generate')}</button>
-        </div>`;
-        generateComplexPassword(false);
-    }
-
-    if (toolName === 'rickroll') {
-        title.innerText = t('rickroll');
-        content.innerHTML = `<div class="pass-box"><input type="text" id="rick-alias" class="text-input" placeholder="Disguise (e.g. Free Nitro)"><button class="tool-btn" style="justify-content:center" onclick="generateRickroll()">${t('generate')}</button><div id="rick-result" style="display:none"><div class="rick-preview" id="rick-url"></div><button class="tool-btn" style="justify-content:center" onclick="copyRickroll()"><i data-lucide="copy"></i> ${t('copy')}</button></div></div>`;
-    }
-
     if (toolName === 'ipinfo') {
         title.innerText = t('ipinfo');
         content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">${t('query')}</div>`;
         fetch('https://ipapi.co/json/').then(r => r.json()).then(data => {
             haptic.notificationOccurred('success');
-            content.innerHTML = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">IPv4 Address</span><span class="stat-value">${data.ip}</span></div><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">${t('provider')}</span><span class="stat-value">${data.org}</span></div></div>`;
+            content.innerHTML = `<div class="stats-grid">
+                <div class="stat-card" style="grid-column: span 2;"><span class="stat-label">IPv4 Address</span><span class="stat-value">${data.ip}</span></div>
+                <div class="stat-card" style="grid-column: span 2;"><span class="stat-label">${t('provider')}</span><span class="stat-value">${data.org}</span></div>
+            </div>`;
         }).catch(() => haptic.notificationOccurred('error'));
     }
     
@@ -261,7 +262,7 @@ function showTool(toolName) {
     }
     if (toolName === 'textutils') {
         title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Text..." oninput="updateTextStats()" style="height:150px;"></textarea><div id="text-stats" style="font-size:12px; color:var(--secondary-text); margin-bottom:15px;"></div><div class="util-grid"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div></div>`;
+        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div></div>`;
     }
     lucide.createIcons();
 }
@@ -290,11 +291,12 @@ async function runSpeedTest() {
     statusText.innerText = t('testing') + "...";
     
     try {
-        const TEST_DURATION = 8000;
+        const TEST_DURATION = 10000;
         const metaRes = await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
         const colo = metaRes.headers.get('cf-meta-colo') || 'UKN';
         metaInfo.innerText = `Server: ${colo}`;
         
+        // Latency & Jitter
         let pings = [];
         for (let i = 0; i < 15; i++) {
             const start = performance.now();
@@ -307,9 +309,10 @@ async function runSpeedTest() {
         pingDisplay.innerText = minPing.toFixed(0) + ' ms';
         jitterDisplay.innerText = (maxPing - minPing).toFixed(0) + ' ms';
 
+        // Download
         let dlReceived = 0;
         const dlStart = performance.now();
-        const dlResponse = await fetch(`https://speed.cloudflare.com/__down?bytes=15000000`, { cache: 'no-store' });
+        const dlResponse = await fetch(`https://speed.cloudflare.com/__down?bytes=25000000`, { cache: 'no-store' });
         const reader = dlResponse.body.getReader();
         while (true) {
             const { done, value } = await reader.read();
@@ -318,11 +321,12 @@ async function runSpeedTest() {
             const elapsed = (performance.now() - dlStart) / 1000;
             const speed = (dlReceived * 8) / (elapsed * 1024 * 1024);
             speedDisplay.innerText = speed.toFixed(1);
-            progressBar.style.width = (15 + (dlReceived / 15000000) * 40) + '%';
+            progressBar.style.width = (15 + (dlReceived / 25000000) * 40) + '%';
             if (elapsed > 10) break;
         }
         downloadDisplay.innerText = speedDisplay.innerText + ' Mbps';
 
+        // Upload
         const ulData = new Uint8Array(5000000);
         const ulStart = performance.now();
         await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: ulData, cache: 'no-store' });
@@ -482,6 +486,8 @@ function downloadQR() { const img = document.querySelector('#qr-result img'); if
 function updateTextStats() { const textInput = document.getElementById('text-input'); if (!textInput) return; const text = textInput.value; document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
 function processText(mode) { const input = document.getElementById('text-input'); if (!input) return; if (mode === 'upper') input.value = input.value.toUpperCase(); else if (mode === 'lower') input.value = input.value.toLowerCase(); else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase()); else if (mode === 'clear') input.value = ""; updateTextStats(); playSound('click'); }
 async function runSummarizer() { const urlInput = document.getElementById('sum-url'); if (!urlInput) return; const url = urlInput.value.trim(); const resultDiv = document.getElementById('sum-result'); if (!url) return; resultDiv.innerHTML = "Summarizing..."; playSound('loading'); try { const res = await fetch(`/api/summarize?url=${encodeURIComponent(url)}`); const data = await res.json(); stopSound('loading'); if (data.success) { resultDiv.innerHTML = `<h4 style="margin-bottom:10px">${data.title}</h4><p style="font-size:14px; line-height:1.5">${data.summary}</p>`; playSound('success'); } else throw new Error(); } catch(e) { stopSound('loading'); resultDiv.innerHTML = "Error"; playSound('error'); } }
+function generateRickroll() { const alias = document.getElementById('rick-alias').value.trim() || 'Click Me'; const finalUrl = `https://www.google.com/url?q=https://www.youtube.com/watch?v=dQw4w9WgXcQ&source=gmail&ust=1700000000000&usg=AOvVaw0&disguise=${encodeURIComponent(alias)}`; document.getElementById('rick-url').innerText = finalUrl; document.getElementById('rick-result').style.display = 'block'; playSound('click'); haptic.notificationOccurred('success'); }
+function copyRickroll() { const text = document.getElementById('rick-url').innerText; navigator.clipboard.writeText(text); playSound('click'); haptic.impactOccurred('medium'); }
 
 initTheme();
 switchView('tools');
