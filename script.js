@@ -82,9 +82,9 @@ function showTool(toolName) {
         title.innerText = "Downloaders";
         content.innerHTML = `
             <div class="tab-container">
-                <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')">YouTube</button>
-                <button id="tab-ig" class="tab-btn" onclick="showDownloader('ig')">Instagram</button>
-                <button id="tab-tt" class="tab-btn" onclick="showDownloader('tt')">TikTok</button>
+                <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')"><i data-lucide="youtube"></i> YT</button>
+                <button id="tab-ig" class="tab-btn" onclick="showDownloader('ig')"><i data-lucide="instagram"></i> IG</button>
+                <button id="tab-tt" class="tab-btn" onclick="showDownloader('tt')"><i data-lucide="music"></i> TT</button>
             </div>
             <div id="downloader-content"></div>
         `;
@@ -206,11 +206,12 @@ function showDownloader(type) {
         content.innerHTML = `
             <div class="pass-box">
                 <input type="text" id="tt-url" class="text-input" placeholder="TikTok Link">
-                <select id="tt-format" class="select-input" style="margin-bottom:20px;"><option value="mp4">Video</option><option value="mp3">Audio Only</option></select>
+                <select id="tt-format" class="select-input" style="margin-bottom:20px;"><option value="mp4">Video (No WM)</option><option value="mp3">Audio Only</option></select>
                 <button class="tool-btn" onclick="downloadTikTok()" style="justify-content:center;">Download Video</button>
                 <div id="tt-status" style="margin-top: 15px; font-size: 13px; font-weight:500;"></div>
             </div>`;
     }
+    lucide.createIcons();
 }
 
 // Logic Functions
