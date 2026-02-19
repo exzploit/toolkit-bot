@@ -1,4 +1,4 @@
-const instagramGetUrl = require('instagram-url-direct');
+const { instagramGetUrl } = require('instagram-url-direct');
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
@@ -10,7 +10,9 @@ module.exports = async (req, res) => {
     if (!chatId) return res.status(400).json({ error: 'chatId missing' });
 
     try {
-        console.log('Fetching IG URL with instagram-url-direct:', url);
+        console.log('Fetching IG URL with instagram-url-direct (named export):', url);
+        
+        // Named export is 'instagramGetUrl'
         const result = await instagramGetUrl(url);
         
         console.log('IG Result:', JSON.stringify(result));
@@ -20,9 +22,7 @@ module.exports = async (req, res) => {
         }
 
         const mediaUrl = result.url_list[0];
-        // The library usually detects if it's a video or image in result.type or similar, 
-        // but we can also check the URL or the library's metadata.
-        const isVideo = mediaUrl.includes('.mp4') || (result.results && result.results[0] && result.results[0].type === 'video');
+        const isVideo = mediaUrl.includes('.mp4') || (result.media_details && result.media_details[0] && result.media_details[0].type === 'video');
         
         const method = isVideo ? 'sendVideo' : 'sendPhoto';
         const field = isVideo ? 'video' : 'photo';
