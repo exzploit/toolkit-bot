@@ -126,19 +126,8 @@ h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
     min-height: 100px;
 }
 
-.speed-value {
-    font-size: 52px;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--primary-color);
-}
-
-.speed-unit {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--secondary-text);
-    margin-top: 4px;
-}
+.speed-value { font-size: 52px; font-weight: 800; line-height: 1; color: var(--primary-color); }
+.speed-unit { font-size: 14px; font-weight: 600; color: var(--secondary-text); margin-top: 4px; }
 
 .stats-grid {
     display: grid;
@@ -155,15 +144,10 @@ h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
     display: flex;
     flex-direction: column;
     gap: 4px;
-    overflow: hidden; /* Prevent text overflow */
+    overflow: hidden; 
 }
 
-.stat-value {
-    font-size: 15px;
-    font-weight: 700;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
+.stat-value { font-size: 15px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
 
 /* Rickroll Generator Styles */
 .rick-preview {
@@ -180,6 +164,91 @@ h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
 
 .progress-container { height: 6px; border-radius: 3px; background: var(--progress-bg); margin: 25px 0; overflow: hidden; }
 .progress-bar { height: 100%; background: var(--primary-color); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Settings & Media UI Polish */
+.settings-group {
+    background: var(--secondary-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.settings-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 0.5px solid var(--border-color);
+    background: var(--secondary-bg);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.settings-cell:last-child { border-bottom: none; }
+.settings-cell:active { background-color: var(--progress-bg); }
+.settings-label { font-size: 17px; font-weight: 400; }
+
+.upload-box {
+    border: 2px dashed var(--border-color);
+    background: var(--secondary-bg);
+    padding: 40px 20px;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+}
+
+.upload-box:active { background-color: var(--progress-bg); border-color: var(--primary-color); }
+
+.tab-container {
+    display: flex;
+    background: var(--progress-bg);
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 8px;
+    color: var(--text-color);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+}
+
+.tab-btn i { width: 16px; height: 16px; }
+.tab-btn.active { background: var(--secondary-bg); box-shadow: 0 2px 6px rgba(0,0,0,0.1); color: var(--primary-color); }
+
+/* Metronome Polish */
+.metro-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--secondary-bg);
+    margin: 40px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--text-color);
+    box-shadow: var(--shadow);
+    border: 6px solid var(--progress-bg);
+    transition: transform 0.1s, border-color 0.1s;
+}
+
+.metro-active { border-color: var(--primary-color); transform: scale(1.05); }
 
 input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary-color); }
 input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 30px; }
