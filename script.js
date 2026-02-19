@@ -3,6 +3,7 @@ const haptic = tg.HapticFeedback;
 tg.expand();
 
 let currentLang = localStorage.getItem('toolkit_lang') || 'en';
+let soundsEnabled = localStorage.getItem('toolkit_sounds') !== 'false';
 let metronomeInterval = null;
 let isMetronomeRunning = false;
 let bpm = 120;
@@ -23,7 +24,8 @@ const i18n = {
         converting: "Converting...", sentChat: "Sent to chat!",
         failed: "Failed", query: "Querying...", provider: "Provider",
         link: "Link", processing: "Processing...", chars: "Chars", words: "Words",
-        clear: "Clear", title: "Title", upper: "Upper", lower: "Lower"
+        clear: "Clear", title: "Title", upper: "Upper", lower: "Lower",
+        rickroll: "Rickroll Gen", soundEffects: "Sound Effects", copy: "Copy Link"
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -40,9 +42,24 @@ const i18n = {
         converting: "Se convertește...", sentChat: "Trimis în chat!",
         failed: "Eroare", query: "Se caută...", provider: "Furnizor",
         link: "Link", processing: "Se procesează...", chars: "Caractere", words: "Cuvinte",
-        clear: "Șterge", title: "Titlu", upper: "Majuscule", lower: "Minuscule"
+        clear: "Șterge", title: "Titlu", upper: "Majuscule", lower: "Minuscule",
+        rickroll: "Gen. Rickroll", soundEffects: "Efecte Sonore", copy: "Copiază Link"
     }
 };
+
+const sounds = {
+    click: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
+    success: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
+    error: new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3'),
+    beat: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3')
+};
+
+function playSound(type) {
+    if (soundsEnabled && sounds[type]) {
+        sounds[type].currentTime = 0;
+        sounds[type].play().catch(() => {});
+    }
+}
 
 function t(key) { return i18n[currentLang][key] || key; }
 
@@ -60,18 +77,28 @@ function updateThemeIcon() {
 }
 
 function toggleTheme() {
+    playSound('click');
     haptic.impactOccurred('light');
     document.body.classList.toggle('dark-mode');
     updateThemeIcon();
 }
 
 function switchLang() {
+    playSound('click');
     currentLang = currentLang === 'en' ? 'ro' : 'en';
     localStorage.setItem('toolkit_lang', currentLang);
     haptic.notificationOccurred('success');
     updateUIVocabulary();
     renderSettings();
     if (document.getElementById('view-media').style.display !== 'none') renderMediaTabs();
+}
+
+function toggleSounds() {
+    soundsEnabled = !soundsEnabled;
+    localStorage.setItem('toolkit_sounds', soundsEnabled);
+    playSound('click');
+    haptic.impactOccurred('light');
+    renderSettings();
 }
 
 function updateUIVocabulary() {
@@ -85,10 +112,10 @@ function updateUIVocabulary() {
     document.getElementById('header-media').innerText = t('media');
     document.getElementById('header-settings').innerText = t('settings');
 
-    // Re-render buttons text
     document.querySelector('#menu-tools button:nth-child(1)').innerHTML = `<i data-lucide="shield-check"></i> ${t('passgen')}`;
-    document.querySelector('#menu-tools button:nth-child(2)').innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
-    document.querySelector('#menu-tools button:nth-child(3)').innerHTML = `<i data-lucide="file-text"></i> ${t('textutils')}`;
+    document.querySelector('#menu-tools button:nth-child(2)').innerHTML = `<i data-lucide="ghost"></i> ${t('rickroll')}`;
+    document.querySelector('#menu-tools button:nth-child(3)').innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
+    document.querySelector('#menu-tools button:nth-child(4)').innerHTML = `<i data-lucide="file-text"></i> ${t('textutils')}`;
     
     document.querySelector('#menu-network button:nth-child(1)').innerHTML = `<i data-lucide="zap"></i> ${t('speedtest')}`;
     document.querySelector('#menu-network button:nth-child(2)').innerHTML = `<i data-lucide="globe"></i> ${t('domain')}`;
@@ -98,6 +125,7 @@ function updateUIVocabulary() {
 }
 
 function switchView(viewId) {
+    playSound('click');
     haptic.impactOccurred('light');
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById(`view-${viewId}`).style.display = 'block';
@@ -111,6 +139,7 @@ function switchView(viewId) {
 }
 
 function showTool(toolName) {
+    playSound('click');
     haptic.impactOccurred('medium');
     document.getElementById('tool-container').style.display = 'block';
     const content = document.getElementById('tool-content');
@@ -119,13 +148,13 @@ function showTool(toolName) {
     if (toolName === 'speedtest') {
         title.innerText = t('speedtest');
         content.innerHTML = `<div class="pass-box" style="padding-top: 10px;">
-            <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 15px; height: 20px;">${t('systemReady')}</div>
-            <div class="speed-gauge" style="margin-bottom: 20px;">
+            <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 10px; height: 20px;">${t('systemReady')}</div>
+            <div class="speed-gauge">
                 <span id="speed-display" class="speed-value">0.0</span>
                 <span class="speed-unit">Mbps</span>
             </div>
             <div id="test-status" style="color: var(--secondary-text); font-size: 14px; font-weight: 600; margin-bottom: 10px;">${t('standby')}</div>
-            <div class="progress-container" style="margin: 10px 0 25px 0;"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
+            <div class="progress-container"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
             <div class="stats-grid">
                 <div class="stat-card"><span class="stat-label">${t('latency')}</span><span id="ping-display" class="stat-value">-- ms</span></div>
                 <div class="stat-card"><span class="stat-label">${t('jitter')}</span><span id="jitter-display" class="stat-value">-- ms</span></div>
@@ -151,16 +180,32 @@ function showTool(toolName) {
         generateComplexPassword(false);
     }
 
+    if (toolName === 'rickroll') {
+        title.innerText = t('rickroll');
+        content.innerHTML = `<div class="pass-box">
+            <input type="text" id="rick-alias" class="text-input" placeholder="Disguise text (e.g. Free Nitro)">
+            <button class="tool-btn" style="justify-content:center" onclick="generateRickroll()">${t('generate')}</button>
+            <div id="rick-result" style="display:none">
+                <div class="rick-preview" id="rick-url"></div>
+                <button class="tool-btn" style="justify-content:center" onclick="copyRickroll()"><i data-lucide="copy"></i> ${t('copy')}</button>
+            </div>
+        </div>`;
+    }
+
     if (toolName === 'ipinfo') {
         title.innerText = t('ipinfo');
         content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">${t('query')}</div>`;
         fetch('https://ipapi.co/json/').then(r => r.json()).then(data => {
+            playSound('success');
             haptic.notificationOccurred('success');
             content.innerHTML = `<div class="stats-grid">
                 <div class="stat-card" style="grid-column: span 2;"><span class="stat-label">IPv4 Address</span><span class="stat-value">${data.ip}</span></div>
                 <div class="stat-card" style="grid-column: span 2;"><span class="stat-label">${t('provider')}</span><span class="stat-value">${data.org}</span></div>
             </div>`;
-        }).catch(() => haptic.notificationOccurred('error'));
+        }).catch(() => {
+            playSound('error');
+            haptic.notificationOccurred('error');
+        });
     }
     
     if (toolName === 'domain') {
@@ -184,6 +229,24 @@ function hideTool() {
     stopMetronome();
 }
 
+function generateRickroll() {
+    const alias = document.getElementById('rick-alias').value.trim() || 'Click Me';
+    const finalUrl = `https://www.google.com/url?q=https://www.youtube.com/watch?v=dQw4w9WgXcQ&source=gmail&ust=1700000000000&usg=AOvVaw0&disguise=${encodeURIComponent(alias)}`;
+    document.getElementById('rick-url').innerText = finalUrl;
+    document.getElementById('rick-result').style.display = 'block';
+    playSound('success');
+    haptic.notificationOccurred('success');
+}
+
+function copyRickroll() {
+    const text = document.getElementById('rick-url').innerText;
+    navigator.clipboard.writeText(text);
+    playSound('click');
+    haptic.impactOccurred('medium');
+    tg.MainButton.setText('Copied!').show();
+    setTimeout(() => tg.MainButton.hide(), 2000);
+}
+
 function renderMediaTabs() {
     const container = document.getElementById('media-tabs-container');
     container.innerHTML = `
@@ -198,6 +261,7 @@ function renderMediaTabs() {
 }
 
 function setMediaTab(tab) {
+    playSound('click');
     haptic.impactOccurred('light');
     const content = document.getElementById('media-tab-content');
     document.querySelectorAll('#media-tabs-container .tab-btn').forEach(b => b.classList.remove('active'));
@@ -239,7 +303,7 @@ function setMediaTab(tab) {
 }
 
 function generateComplexPassword(isUserAction) {
-    if (isUserAction) haptic.impactOccurred('light');
+    if (isUserAction) { playSound('click'); haptic.impactOccurred('light'); }
     const lengthEl = document.getElementById('pass-length');
     if (!lengthEl) return;
     const length = parseInt(lengthEl.value);
@@ -252,6 +316,7 @@ function generateComplexPassword(isUserAction) {
 }
 
 async function runSpeedTest() {
+    playSound('click');
     const speedDisplay = document.getElementById('speed-display');
     const pingDisplay = document.getElementById('ping-display');
     const progressBar = document.getElementById('progress-bar');
@@ -293,8 +358,9 @@ async function runSpeedTest() {
         }
         document.getElementById('download-display').innerText = speedDisplay.innerText + ' Mbps';
         statusText.innerText = t('complete');
+        playSound('success');
         haptic.notificationOccurred('success');
-    } catch (e) { statusText.innerText = t('failed'); haptic.notificationOccurred('error'); }
+    } catch (e) { statusText.innerText = t('failed'); playSound('error'); haptic.notificationOccurred('error'); }
 }
 
 function renderSettings() {
@@ -304,6 +370,10 @@ function renderSettings() {
             <div class="settings-cell">
                 <span class="settings-label">${t('darkMode')}</span>
                 <input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()">
+            </div>
+            <div class="settings-cell">
+                <span class="settings-label">${t('soundEffects')}</span>
+                <input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()">
             </div>
             <div class="settings-cell" onclick="switchLang()">
                 <span class="settings-label">${t('language')}</span>
@@ -315,89 +385,35 @@ function renderSettings() {
                 <span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span>
             </div>
         </div>
-        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.2 • [⌬]</p>
+        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.3 • [⌬]</p>
     `;
 }
 
-function updateQR() {
-    const input = document.getElementById('qr-input').value;
-    const result = document.getElementById('qr-result');
-    const dlBtn = document.getElementById('download-qr');
-    if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; }
-    result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`;
-    dlBtn.style.display = 'flex';
-}
-
-function downloadQR() { const img = document.querySelector('#qr-result img'); if (img) window.open(img.src, '_blank'); }
-function updateTextStats() { 
-    const text = document.getElementById('text-input').value; 
-    document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; 
-}
-function processText(mode) { 
-    const input = document.getElementById('text-input');
-    if (mode === 'upper') input.value = input.value.toUpperCase(); 
-    else if (mode === 'lower') input.value = input.value.toLowerCase(); 
-    else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase()); 
-    else if (mode === 'clear') input.value = "";
-    updateTextStats();
-}
-function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
-function toggleMetronome() { isMetronomeRunning ? stopMetronome() : startMetronome(); }
 function startMetronome() {
     isMetronomeRunning = true;
     document.getElementById('metro-btn').innerText = "Stop";
     const circle = document.getElementById('metro-circle');
     metronomeInterval = setInterval(() => {
+        playSound('beat');
         haptic.impactOccurred('medium');
         circle.classList.add('metro-active');
         setTimeout(() => circle.classList.remove('metro-active'), 50);
     }, (60 / bpm) * 1000);
 }
+
+// Global Helpers
+function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; const info = document.getElementById('audio-info'); info.innerText = `Selected: ${selectedAudioFile.name}`; info.style.display = 'block'; document.getElementById('conv-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
+async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'); const chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('click'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }); const data = await response.json(); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
+function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
 function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearInterval(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
-function showDownloaderUI(type) {
-    const box = document.getElementById('downloader-ui-box');
-    document.querySelectorAll('#media-tab-content .tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`st-${type}`).classList.add('active');
-    box.innerHTML = `<div class="pass-box">
-        <input type="text" id="media-url" class="text-input" placeholder="${type.toUpperCase()} Link">
-        <select id="media-format" class="select-input"><option value="mp4">Video</option><option value="mp3">Audio</option></select>
-        <button class="tool-btn" style="justify-content:center" onclick="processDownload('${type}')">Download</button>
-        <div id="dl-status" style="margin-top:10px; font-size:13px"></div>
-    </div>`;
-}
-async function processDownload(type) {
-    const url = document.getElementById('media-url').value.trim();
-    const format = document.getElementById('media-format').value;
-    const status = document.getElementById('dl-status');
-    const chatId = tg.initDataUnsafe?.user?.id;
-    if (!url || !chatId) return;
-    status.innerText = t('processing') + "...";
-    try {
-        const response = await fetch(`/api/${type === 'yt' ? 'youtube' : (type === 'ig' ? 'instagram' : 'tiktok')}?url=${encodeURIComponent(url)}&format=${format}&chatId=${chatId}`);
-        const data = await response.json();
-        if (data.success) { status.innerText = "✅ " + t('sentChat'); haptic.notificationOccurred('success'); }
-        else throw new Error(data.error);
-    } catch (e) { status.innerText = "❌ " + t('failed'); haptic.notificationOccurred('error'); }
-}
+function showDownloaderUI(type) { playSound('click'); const box = document.getElementById('downloader-ui-box'); document.querySelectorAll('#media-tab-content .tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`st-${type}`).classList.add('active'); box.innerHTML = `<div class="pass-box"><input type="text" id="media-url" class="text-input" placeholder="${type.toUpperCase()} Link"><select id="media-format" class="select-input"><option value="mp4">Video</option><option value="mp3">Audio</option></select><button class="tool-btn" style="justify-content:center" onclick="processDownload('${type}')">Download</button><div id="dl-status" style="margin-top:10px; font-size:13px"></div></div>`; }
+async function processDownload(type) { const url = document.getElementById('media-url').value.trim(); const format = document.getElementById('media-format').value; const status = document.getElementById('dl-status'); const chatId = tg.initDataUnsafe?.user?.id; if (!url || !chatId) return; status.innerText = t('processing') + "..."; try { const response = await fetch(`/api/${type === 'yt' ? 'youtube' : (type === 'ig' ? 'instagram' : 'tiktok')}?url=${encodeURIComponent(url)}&format=${format}&chatId=${chatId}`); const data = await response.json(); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
+async function lookupDomain() { const domain = document.getElementById('dom-url').value.trim(); const resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`); const data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('success'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
+function updateQR() { const input = document.getElementById('qr-input').value; const result = document.getElementById('qr-result'); const dlBtn = document.getElementById('download-qr'); if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; } result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`; dlBtn.style.display = 'flex'; }
+function downloadQR() { const img = document.querySelector('#qr-result img'); if (img) window.open(img.src, '_blank'); }
+function updateTextStats() { const text = document.getElementById('text-input').value; document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
+function processText(mode) { const input = document.getElementById('text-input'); if (mode === 'upper') input.value = input.value.toUpperCase(); else if (mode === 'lower') input.value = input.value.toLowerCase(); else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase()); else if (mode === 'clear') input.value = ""; updateTextStats(); playSound('click'); }
 
-async function lookupDomain() {
-    const domain = document.getElementById('dom-url').value.trim();
-    const resultDiv = document.getElementById('dom-result');
-    if (!domain) return;
-    resultDiv.innerHTML = "Querying...";
-    try {
-        const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`);
-        const data = await response.json();
-        let html = `<div class="stats-grid">`;
-        html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`;
-        if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`;
-        html += `</div>`;
-        resultDiv.innerHTML = html;
-        haptic.notificationOccurred('success');
-    } catch (e) { resultDiv.innerHTML = "Lookup failed"; haptic.notificationOccurred('error'); }
-}
-
-// Init
 initTheme();
 switchView('tools');
 updateUIVocabulary();
