@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css">
@@ -10,31 +10,56 @@
 </head>
 <body>
     <div id="app">
-        <div class="header-row">
-            <h1>Toolkit</h1>
-            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">
-                <i data-lucide="sun" id="theme-icon"></i>
-            </button>
+        <div id="view-tools" class="view">
+            <div class="header-row">
+                <h1>Toolkit</h1>
+            </div>
+            <div id="menu">
+                <button class="tool-btn" onclick="showTool('speedtest')"><i data-lucide="zap"></i> Speed Test</button>
+                <button class="tool-btn" onclick="showTool('password')"><i data-lucide="shield-check"></i> Password Gen</button>
+                <button class="tool-btn" onclick="showTool('domain')"><i data-lucide="globe"></i> Domain Info</button>
+                <button class="tool-btn" onclick="showTool('qrcode')"><i data-lucide="qr-code"></i> QR Generator</button>
+                <button class="tool-btn" onclick="showTool('textutils')"><i data-lucide="file-text"></i> Text Utils</button>
+                <button class="tool-btn" onclick="showTool('ipinfo')"><i data-lucide="map-pin"></i> IP Info</button>
+            </div>
         </div>
-        
-        <div id="menu">
-            <button class="tool-btn" onclick="showTool('speedtest')"><i data-lucide="zap"></i> Speed Test</button>
-            <button class="tool-btn" onclick="showTool('password')"><i data-lucide="shield-check"></i> Password Gen</button>
-            <button class="tool-btn" onclick="showTool('media')"><i data-lucide="clapperboard"></i> Audio/Video</button>
-            <button class="tool-btn" onclick="showTool('currency')"><i data-lucide="banknote"></i> Currency Converter</button>
-            <button class="tool-btn" onclick="showTool('domain')"><i data-lucide="globe"></i> Domain Info</button>
-            <button class="tool-btn" onclick="showTool('qrcode')"><i data-lucide="qr-code"></i> QR Generator</button>
-            <button class="tool-btn" onclick="showTool('textutils')"><i data-lucide="file-text"></i> Text Utils</button>
-            <button class="tool-btn" onclick="showTool('ipinfo')"><i data-lucide="map-pin"></i> IP Info</button>
+
+        <div id="view-media" class="view" style="display:none;">
+            <div class="header-row">
+                <h1>Audio/Video</h1>
+            </div>
+            <div id="media-tabs-container"></div>
+        </div>
+
+        <div id="view-settings" class="view" style="display:none;">
+            <div class="header-row">
+                <h1>Settings</h1>
+            </div>
+            <div id="settings-content"></div>
         </div>
         
         <div id="tool-container" style="display:none;">
             <div id="tool-header" class="tool-header">
-                <button onclick="goBack()" class="back-btn"><i data-lucide="chevron-left" style="width:16px; height:16px; vertical-align:middle;"></i> Back</button>
-                <h3 id="tool-title" style="margin:0; font-size: 14px; font-weight: 700; flex-grow: 1; text-align: center; margin-right: 60px; text-transform: uppercase; letter-spacing: 1.5px;">Tool</h3>
+                <button onclick="hideTool()" class="back-btn"><i data-lucide="chevron-left"></i> Back</button>
+                <h3 id="tool-title">Tool</h3>
             </div>
             <div id="tool-content"></div>
         </div>
+
+        <nav class="bottom-nav">
+            <button onclick="switchView('tools')" id="nav-tools" class="nav-item active">
+                <i data-lucide="layout-grid"></i>
+                <span>Tools</span>
+            </button>
+            <button onclick="switchView('media')" id="nav-media" class="nav-item">
+                <i data-lucide="clapperboard"></i>
+                <span>Media</span>
+            </button>
+            <button onclick="switchView('settings')" id="nav-settings" class="nav-item">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </button>
+        </nav>
     </div>
 
     <script src="script.js"></script>
