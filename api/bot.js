@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
 
   if (body && body.message) {
     const chatId = body.message.chat.id;
-    const text = "Welcome to the Toolkit! Your key is now hidden and secure. 🛡️";
+    const text = "Welcome to the Toolkit. Your connection is secure. [⌬]";
 
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",

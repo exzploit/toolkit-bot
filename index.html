@@ -10,25 +10,25 @@
 <body>
     <div id="app">
         <div class="header-row">
-            <h1>Toolkit Bot</h1>
-            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            <h1>Toolkit</h1>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">◌</button>
         </div>
         
         <div id="menu">
-            <button class="tool-btn" onclick="showTool('speedtest')">🚀 Speed Test</button>
-            <button class="tool-btn" onclick="showTool('password')">🔐 Password Gen</button>
-            <button class="tool-btn" onclick="showTool('downloaders')">📥 Downloaders</button>
-            <button class="tool-btn" onclick="showTool('currency')">💰 Currency Converter</button>
-            <button class="tool-btn" onclick="showTool('domain')">🌐 Domain Info</button>
-            <button class="tool-btn" onclick="showTool('qrcode')">🔲 QR Generator</button>
-            <button class="tool-btn" onclick="showTool('textutils')">📝 Text Utils</button>
-            <button class="tool-btn" onclick="showTool('ipinfo')">🌐 IP Info</button>
+            <button class="tool-btn" onclick="showTool('speedtest')"><span>☇</span> Speed Test</button>
+            <button class="tool-btn" onclick="showTool('password')"><span>⚙</span> Password Gen</button>
+            <button class="tool-btn" onclick="showTool('downloaders')"><span>↓</span> Downloaders</button>
+            <button class="tool-btn" onclick="showTool('currency')"><span>$</span> Currency Converter</button>
+            <button class="tool-btn" onclick="showTool('domain')"><span>⌬</span> Domain Info</button>
+            <button class="tool-btn" onclick="showTool('qrcode')"><span>▣</span> QR Generator</button>
+            <button class="tool-btn" onclick="showTool('textutils')"><span>¶</span> Text Utils</button>
+            <button class="tool-btn" onclick="showTool('ipinfo')"><span>⌖</span> IP Info</button>
         </div>
         
         <div id="tool-container" style="display:none;">
             <div id="tool-header" class="tool-header">
-                <button onclick="goBack()" class="back-btn">⬅ Back</button>
-                <h3 id="tool-title" style="margin:0; font-size: 18px; flex-grow: 1; text-align: center; margin-right: 40px;">Tool</h3>
+                <button onclick="goBack()" class="back-btn">← Back</button>
+                <h3 id="tool-title" style="margin:0; font-size: 16px; font-weight: 600; flex-grow: 1; text-align: center; margin-right: 40px; text-transform: uppercase; letter-spacing: 1px;">Tool</h3>
             </div>
             <div id="tool-content"></div>
         </div>

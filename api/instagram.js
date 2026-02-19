@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
                 body: JSON.stringify({
                     chat_id: chatId,
                     [field]: mediaUrl,
-                    caption: 'Downloaded via Toolkit Bot 🛡️'
+                    caption: 'Source: Instagram [⌬] Toolkit'
                 })
             });
 
