@@ -11,7 +11,7 @@ let bpm = 120;
 const i18n = {
     en: {
         tools: "Tools", network: "Network", media: "Media", settings: "Settings",
-        speedtest: "Speed Test", passgen: "Password Gen", domain: "Domain Info",
+        speedtest: "Speed Test", portscan: "Port Scanner", passgen: "Password Gen", domain: "Domain Info",
         qrgen: "QR Generator", textutils: "Text Utils", ipinfo: "IP Address",
         downloads: "Downloads", audioConv: "Audio Conv", metronome: "Metronome",
         darkMode: "Dark Mode", language: "Language", closeApp: "Close App",
@@ -25,11 +25,12 @@ const i18n = {
         failed: "Failed", query: "Querying...", provider: "Provider",
         link: "Link", processing: "Processing...", chars: "Chars", words: "Words",
         clear: "Clear", title: "Title", upper: "Upper", lower: "Lower",
-        rickroll: "Rickroll Gen", soundEffects: "Sound Effects", copy: "Copy Link"
+        rickroll: "Rickroll Gen", soundEffects: "Sound Effects", copy: "Copy Link",
+        scanning: "Scanning...", open: "OPEN", closed: "CLOSED", target: "Target IP/Host"
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
-        speedtest: "Test Viteză", passgen: "Gen. Parole", domain: "Info Domeniu",
+        speedtest: "Test Viteză", portscan: "Scanare Porturi", passgen: "Gen. Parole", domain: "Info Domeniu",
         qrgen: "Generator QR", textutils: "Text Utils", ipinfo: "Adresă IP",
         downloads: "Descărcări", audioConv: "Conv. Audio", metronome: "Metronom",
         darkMode: "Mod Întunecat", language: "Limbă", closeApp: "Închide",
@@ -43,7 +44,8 @@ const i18n = {
         failed: "Eroare", query: "Se caută...", provider: "Furnizor",
         link: "Link", processing: "Se procesează...", chars: "Caractere", words: "Cuvinte",
         clear: "Șterge", title: "Titlu", upper: "Majuscule", lower: "Minuscule",
-        rickroll: "Gen. Rickroll", soundEffects: "Efecte Sonore", copy: "Copiază Link"
+        rickroll: "Gen. Rickroll", soundEffects: "Efecte Sonore", copy: "Copiază Link",
+        scanning: "Se scanează...", open: "DESCHIS", closed: "ÎNCHIS", target: "IP sau Gazdă"
     }
 };
 
@@ -137,8 +139,9 @@ function updateUIVocabulary() {
     const networkMenu = document.getElementById('menu-network');
     if (networkMenu) {
         networkMenu.children[0].innerHTML = `<i data-lucide="zap"></i> ${t('speedtest')}`;
-        networkMenu.children[1].innerHTML = `<i data-lucide="globe"></i> ${t('domain')}`;
-        networkMenu.children[2].innerHTML = `<i data-lucide="map-pin"></i> ${t('ipinfo')}`;
+        networkMenu.children[1].innerHTML = `<i data-lucide="search-code"></i> ${t('portscan')}`;
+        networkMenu.children[2].innerHTML = `<i data-lucide="globe"></i> ${t('domain')}`;
+        networkMenu.children[3].innerHTML = `<i data-lucide="map-pin"></i> ${t('ipinfo')}`;
     }
     lucide.createIcons();
 }
@@ -178,6 +181,15 @@ function showTool(toolName) {
                 <div class="stat-card"><span class="stat-label">${t('upload')}</span><span id="upload-display" class="stat-value">--</span></div>
             </div>
             <button class="tool-btn" id="start-test-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
+        </div>`;
+    }
+
+    if (toolName === 'portscan') {
+        title.innerText = t('portscan');
+        content.innerHTML = `<div class="pass-box">
+            <input type="text" id="scan-target" class="text-input" placeholder="${t('target')}">
+            <button class="tool-btn" style="justify-content:center" onclick="runPortScan()"><i data-lucide="search"></i> ${t('generate')}</button>
+            <div id="scan-results" style="margin-top:20px;"></div>
         </div>`;
     }
 
@@ -229,6 +241,41 @@ function hideTool() {
     document.getElementById('tool-container').style.display = 'none';
     stopMetronome();
     stopSound('loading');
+}
+
+async function runPortScan() {
+    const target = document.getElementById('scan-target').value.trim();
+    const resultDiv = document.getElementById('scan-results');
+    if (!target) return;
+
+    resultDiv.innerHTML = `<p>${t('scanning')}</p>`;
+    playSound('loading');
+    haptic.impactOccurred('medium');
+
+    try {
+        const response = await fetch(`/api/scan?target=${encodeURIComponent(target)}`);
+        const data = await response.json();
+        stopSound('loading');
+        
+        let html = `<div style="display:grid; gap:8px;">`;
+        data.results.sort((a,b) => a.port - b.port).forEach(r => {
+            const color = r.open ? '#34c759' : '#ff3b30';
+            const status = r.open ? t('open') : t('closed');
+            html += `<div class="settings-cell" style="background:var(--secondary-bg); border-radius:8px; padding:10px 15px;">
+                <span style="font-weight:600">Port ${r.port}</span>
+                <span style="color:${color}; font-weight:800; font-size:12px;">${status}</span>
+            </div>`;
+        });
+        html += `</div>`;
+        resultDiv.innerHTML = html;
+        playSound('success');
+        haptic.notificationOccurred('success');
+    } catch (e) {
+        stopSound('loading');
+        resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`;
+        playSound('error');
+        haptic.notificationOccurred('error');
+    }
 }
 
 async function runSpeedTest() {
@@ -289,7 +336,7 @@ async function runSpeedTest() {
         progressBar.style.width = '100%';
         statusText.innerText = t('complete');
         stopSound('loading');
-        playSound('click');
+        playSound('success');
         haptic.notificationOccurred('success');
     } catch (e) { statusText.innerText = t('failed'); stopSound('loading'); playSound('error'); haptic.notificationOccurred('error'); }
     if (btn) { btn.disabled = false; btn.innerText = t('testAgain'); }
@@ -381,7 +428,7 @@ async function processDownload(type) {
         const response = await fetch(`/api/${type === 'yt' ? 'youtube' : (type === 'ig' ? 'instagram' : 'tiktok')}?url=${encodeURIComponent(url)}&format=${format}&chatId=${chatId}`);
         const data = await response.json();
         stopSound('loading');
-        if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('click'); haptic.notificationOccurred('success'); }
+        if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); }
         else throw new Error();
     } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); }
 }
@@ -395,7 +442,7 @@ function renderSettings() {
             <div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div>
         </div>
         <div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div>
-        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.4 • [⌬]</p>
+        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>
     `;
 }
 
@@ -427,8 +474,8 @@ function startMetronome() {
 function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearInterval(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
 function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
 function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; const info = document.getElementById('audio-info'); info.innerText = `Selected: ${selectedAudioFile.name}`; info.style.display = 'block'; document.getElementById('conv-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
-async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'); const chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('loading'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }); const data = await response.json(); stopSound('loading'); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('click'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
-async function lookupDomain() { const domainInput = document.getElementById('dom-url'); if (!domainInput) return; const domain = domainInput.value.trim(); const resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; playSound('click'); try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`); const data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('click'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
+async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'); const chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('loading'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }); const data = await response.json(); stopSound('loading'); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
+async function lookupDomain() { const domainInput = document.getElementById('dom-url'); if (!domainInput) return; const domain = domainInput.value.trim(); const resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; playSound('click'); try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`); const data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('success'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
 function updateQR() { const inputEl = document.getElementById('qr-input'); if (!inputEl) return; const input = inputEl.value; const result = document.getElementById('qr-result'); const dlBtn = document.getElementById('download-qr'); if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; } result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`; dlBtn.style.display = 'flex'; }
 function downloadQR() { const img = document.querySelector('#qr-result img'); if (img) window.open(img.src, '_blank'); }
 function updateTextStats() { const textInput = document.getElementById('text-input'); if (!textInput) return; const text = textInput.value; document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
