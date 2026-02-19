@@ -78,7 +78,20 @@ h1 { font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacin
     transition: all 0.1s;
 }
 
-.tool-btn span { font-size: 18px; width: 24px; text-align: center; }
+.tool-btn i {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5;
+}
+
+.theme-toggle i {
+    width: 18px;
+    height: 18px;
+}
+
+.back-btn i {
+    margin-right: 5px;
+}
 
 .tool-btn:active {
     background-color: var(--text-color);

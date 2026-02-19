@@ -17,12 +17,15 @@ function toggleTheme() {
 }
 
 function updateThemeIcon() {
-    const btn = document.getElementById('theme-toggle');
-    if (!btn) return;
-    btn.innerText = document.body.classList.contains('dark-mode') ? '□' : '◌';
+    const icon = document.getElementById('theme-icon');
+    if (!icon) return;
+    const isDark = document.body.classList.contains('dark-mode');
+    icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+    lucide.createIcons();
 }
 
 initTheme();
+lucide.createIcons();
 
 function showTool(toolName) {
     haptic.impactOccurred('medium');
@@ -32,7 +35,7 @@ function showTool(toolName) {
     const title = document.getElementById('tool-title');
 
     if (toolName === 'speedtest') {
-        title.innerText = "Nwk.Speed";
+        title.innerText = "NWK.SPEED";
         content.innerHTML = `
             <div id="speedtest-ui">
                 <div id="meta-info" style="font-size: 10px; color: var(--secondary-text); margin-bottom: 10px;">SYSTEM READY</div>
@@ -57,13 +60,13 @@ function showTool(toolName) {
     } 
     
     if (toolName === 'password') {
-        title.innerText = "Sec.Pass";
+        title.innerText = "SEC.PASS";
         content.innerHTML = `
             <div class="pass-box">
                 <h2 id="password-display" style="color: var(--accent-color); word-break: break-all; min-height: 1.2em; font-size: 24px; margin-bottom: 20px;">-</h2>
                 <div class="options-container">
                     <div style="margin-bottom: 20px; text-align:left;">
-                        <label style="display:flex; justify-content:space-between; font-size:12px; font-weight:700;">LEN <span id="length-val" class="length-display">12</span></label>
+                        <label style="display:flex; justify-content:space-between; font-size:10px; font-weight:700;">LEN <span id="length-val" class="length-display">12</span></label>
                         <input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText = this.value; generateComplexPassword(true);">
                     </div>
                     <div class="option-row"><label>A-Z</label><input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)"></div>
@@ -76,7 +79,7 @@ function showTool(toolName) {
     }
 
     if (toolName === 'downloaders') {
-        title.innerText = "Media.Down";
+        title.innerText = "MEDIA.DOWN";
         content.innerHTML = `
             <div class="tab-container">
                 <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')">YT</button>
@@ -89,11 +92,11 @@ function showTool(toolName) {
     }
 
     if (toolName === 'currency') {
-        title.innerText = "Val.Conv";
+        title.innerText = "VAL.CONV";
         content.innerHTML = `
             <div class="pass-box">
                 <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-                    <div style="display:flex; gap:1px; background: var(--border-color); border: 1px solid var(--border-color);">
+                    <div style="display:flex; border: 1px solid var(--border-color);">
                         <input type="number" id="cur-amount" class="text-input" value="1" style="flex:1; margin:0; border:none;">
                         <select id="cur-from" class="select-input" style="width: 100px; margin:0; border:none; border-left: 1px solid var(--border-color);">
                             <option value="usd">USD</option><option value="eur">EUR</option><option value="gbp">GBP</option>
@@ -101,8 +104,8 @@ function showTool(toolName) {
                             <option value="btc">BTC</option><option value="ton">TON</option>
                         </select>
                     </div>
-                    <div style="text-align:center; font-size: 18px; opacity: 0.5;">▼</div>
-                    <div style="display:flex; gap:1px; background: var(--border-color); border: 1px solid var(--border-color);">
+                    <div style="text-align:center; font-size: 14px; opacity: 0.5;">▼</div>
+                    <div style="display:flex; border: 1px solid var(--border-color);">
                         <div id="cur-result-val" class="text-input" style="flex:1; margin:0; background: var(--bg-color); line-height: 24px; border:none;">---</div>
                         <select id="cur-to" class="select-input" style="width: 100px; margin:0; border:none; border-left: 1px solid var(--border-color);">
                             <option value="eur">EUR</option><option value="usd">USD</option><option value="ron">RON</option>
@@ -116,7 +119,7 @@ function showTool(toolName) {
     }
 
     if (toolName === 'domain') {
-        title.innerText = "Domain.Qry";
+        title.innerText = "DOMAIN.QRY";
         content.innerHTML = `
             <div class="pass-box">
                 <input type="text" id="dom-url" class="text-input" placeholder="HOST.NAME">
@@ -126,19 +129,19 @@ function showTool(toolName) {
     }
 
     if (toolName === 'qrcode') {
-        title.innerText = "QR.Gen";
+        title.innerText = "QR.GEN";
         content.innerHTML = `
             <div class="pass-box">
                 <input type="text" id="qr-input" class="text-input" placeholder="DATA_SOURCE" oninput="updateQR()">
                 <div class="qr-container" id="qr-result" style="margin: 20px 0;">
                     <p style="font-size: 10px; color: var(--secondary-text); margin: 40px 0;">AWAITING_INPUT</p>
                 </div>
-                <button id="download-qr" class="tool-btn" style="display:none; margin-top: 15px;" onclick="downloadQR()">📥 EXPORT_PNG</button>
+                <button id="download-qr" class="tool-btn" style="display:none; margin-top: 15px;" onclick="downloadQR()">[ EXPORT_PNG ]</button>
             </div>`;
     }
 
     if (toolName === 'textutils') {
-        title.innerText = "Text.Prc";
+        title.innerText = "TEXT.PRC";
         content.innerHTML = `
             <div class="pass-box">
                 <span id="text-stats" class="stats-info" style="font-size:10px;">LEN: 0 | WRD: 0</span>
@@ -153,8 +156,8 @@ function showTool(toolName) {
     }
 
     if (toolName === 'ipinfo') {
-        title.innerText = "Sys.Addr";
-        content.innerHTML = `<div id="loading-spinner" style="padding: 20px; font-size:12px;">QUERYING...</div>`;
+        title.innerText = "SYS.ADDR";
+        content.innerHTML = `<div id="loading-spinner" style="padding: 20px; font-size:10px;">QUERYING...</div>`;
         fetch('https://ipapi.co/json/')
             .then(res => res.json())
             .then(data => {
@@ -169,9 +172,10 @@ function showTool(toolName) {
             })
             .catch(() => {
                 haptic.notificationOccurred('error');
-                content.innerHTML = `<p style="color: red; font-size:12px;">FAILURE_DETECTION</p>`;
+                content.innerHTML = `<p style="color: red; font-size:10px;">FAILURE_DETECTION</p>`;
             });
     }
+    lucide.createIcons();
 }
 
 function showDownloader(type) {
