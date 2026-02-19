@@ -12,28 +12,36 @@
     <div id="app">
         <div id="view-tools" class="view">
             <div class="header-row">
-                <h1>Toolkit</h1>
+                <h1 id="header-tools">Tools</h1>
             </div>
-            <div id="menu">
-                <button class="tool-btn" onclick="showTool('speedtest')"><i data-lucide="zap"></i> Speed Test</button>
+            <div id="menu-tools">
                 <button class="tool-btn" onclick="showTool('password')"><i data-lucide="shield-check"></i> Password Gen</button>
-                <button class="tool-btn" onclick="showTool('domain')"><i data-lucide="globe"></i> Domain Info</button>
                 <button class="tool-btn" onclick="showTool('qrcode')"><i data-lucide="qr-code"></i> QR Generator</button>
                 <button class="tool-btn" onclick="showTool('textutils')"><i data-lucide="file-text"></i> Text Utils</button>
+            </div>
+        </div>
+
+        <div id="view-network" class="view" style="display:none;">
+            <div class="header-row">
+                <h1 id="header-network">Network</h1>
+            </div>
+            <div id="menu-network">
+                <button class="tool-btn" onclick="showTool('speedtest')"><i data-lucide="zap"></i> Speed Test</button>
+                <button class="tool-btn" onclick="showTool('domain')"><i data-lucide="globe"></i> Domain Info</button>
                 <button class="tool-btn" onclick="showTool('ipinfo')"><i data-lucide="map-pin"></i> IP Info</button>
             </div>
         </div>
 
         <div id="view-media" class="view" style="display:none;">
             <div class="header-row">
-                <h1>Audio/Video</h1>
+                <h1 id="header-media">Audio/Video</h1>
             </div>
             <div id="media-tabs-container"></div>
         </div>
 
         <div id="view-settings" class="view" style="display:none;">
             <div class="header-row">
-                <h1>Settings</h1>
+                <h1 id="header-settings">Settings</h1>
             </div>
             <div id="settings-content"></div>
         </div>
@@ -50,6 +58,10 @@
             <button onclick="switchView('tools')" id="nav-tools" class="nav-item active">
                 <i data-lucide="layout-grid"></i>
                 <span>Tools</span>
+            </button>
+            <button onclick="switchView('network')" id="nav-network" class="nav-item">
+                <i data-lucide="activity"></i>
+                <span>Network</span>
             </button>
             <button onclick="switchView('media')" id="nav-media" class="nav-item">
                 <i data-lucide="clapperboard"></i>

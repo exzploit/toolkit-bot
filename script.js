@@ -9,7 +9,7 @@ let bpm = 120;
 
 const i18n = {
     en: {
-        tools: "Tools", media: "Media", settings: "Settings",
+        tools: "Tools", network: "Network", media: "Media", settings: "Settings",
         speedtest: "Speed Test", passgen: "Password Gen", domain: "Domain Info",
         qrgen: "QR Generator", textutils: "Text Utils", ipinfo: "IP Address",
         downloads: "Downloads", audioConv: "Audio Conv", metronome: "Metronome",
@@ -26,7 +26,7 @@ const i18n = {
         clear: "Clear", title: "Title", upper: "Upper", lower: "Lower"
     },
     ro: {
-        tools: "Utilități", media: "Media", settings: "Setări",
+        tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
         speedtest: "Test Viteză", passgen: "Gen. Parole", domain: "Info Domeniu",
         qrgen: "Generator QR", textutils: "Text Utils", ipinfo: "Adresă IP",
         downloads: "Descărcări", audioConv: "Conv. Audio", metronome: "Metronom",
@@ -75,25 +75,25 @@ function switchLang() {
 }
 
 function updateUIVocabulary() {
-    // Main Nav
     document.querySelector('#nav-tools span').innerText = t('tools');
+    document.querySelector('#nav-network span').innerText = t('network');
     document.querySelector('#nav-media span').innerText = t('media');
     document.querySelector('#nav-settings span').innerText = t('settings');
     
-    // Main Headers
-    document.querySelector('#view-tools h1').innerText = t('tools');
-    document.querySelector('#view-media h1').innerText = t('media');
-    document.querySelector('#view-settings h1').innerText = t('settings');
+    document.getElementById('header-tools').innerText = t('tools');
+    document.getElementById('header-network').innerText = t('network');
+    document.getElementById('header-media').innerText = t('media');
+    document.getElementById('header-settings').innerText = t('settings');
 
-    // Tool Buttons
-    const toolBtns = document.querySelectorAll('.tool-btn');
-    const toolMap = ['speedtest', 'password', 'domain', 'qrcode', 'textutils', 'ipinfo'];
-    toolBtns.forEach((btn, i) => {
-        if (toolMap[i]) {
-            const icon = btn.querySelector('i').outerHTML;
-            btn.innerHTML = `${icon} ${t(toolMap[i] === 'password' ? 'passgen' : (toolMap[i] === 'qrcode' ? 'qrgen' : toolMap[i]))}`;
-        }
-    });
+    // Re-render buttons text
+    document.querySelector('#menu-tools button:nth-child(1)').innerHTML = `<i data-lucide="shield-check"></i> ${t('passgen')}`;
+    document.querySelector('#menu-tools button:nth-child(2)').innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
+    document.querySelector('#menu-tools button:nth-child(3)').innerHTML = `<i data-lucide="file-text"></i> ${t('textutils')}`;
+    
+    document.querySelector('#menu-network button:nth-child(1)').innerHTML = `<i data-lucide="zap"></i> ${t('speedtest')}`;
+    document.querySelector('#menu-network button:nth-child(2)').innerHTML = `<i data-lucide="globe"></i> ${t('domain')}`;
+    document.querySelector('#menu-network button:nth-child(3)').innerHTML = `<i data-lucide="map-pin"></i> ${t('ipinfo')}`;
+    
     lucide.createIcons();
 }
 
@@ -118,11 +118,14 @@ function showTool(toolName) {
 
     if (toolName === 'speedtest') {
         title.innerText = t('speedtest');
-        content.innerHTML = `<div class="pass-box">
-            <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 10px;">${t('systemReady')}</div>
-            <div class="speed-gauge"><span id="speed-display" class="speed-value">0.0</span><span class="speed-unit">Mbps</span></div>
-            <div id="test-status" style="margin-top: -10px; color: var(--secondary-text); font-size: 14px; font-weight: 600;">${t('standby')}</div>
-            <div class="progress-container"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
+        content.innerHTML = `<div class="pass-box" style="padding-top: 10px;">
+            <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 15px; height: 20px;">${t('systemReady')}</div>
+            <div class="speed-gauge" style="margin-bottom: 20px;">
+                <span id="speed-display" class="speed-value">0.0</span>
+                <span class="speed-unit">Mbps</span>
+            </div>
+            <div id="test-status" style="color: var(--secondary-text); font-size: 14px; font-weight: 600; margin-bottom: 10px;">${t('standby')}</div>
+            <div class="progress-container" style="margin: 10px 0 25px 0;"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
             <div class="stats-grid">
                 <div class="stat-card"><span class="stat-label">${t('latency')}</span><span id="ping-display" class="stat-value">-- ms</span></div>
                 <div class="stat-card"><span class="stat-label">${t('jitter')}</span><span id="jitter-display" class="stat-value">-- ms</span></div>
@@ -160,18 +163,17 @@ function showTool(toolName) {
         }).catch(() => haptic.notificationOccurred('error'));
     }
     
-    // Domain, QR, Text Utils (shortened for brevity but should be functional)
     if (toolName === 'domain') {
         title.innerText = t('domain');
-        content.innerHTML = `<div class="pass-box"><input type="text" id="dom-url" class="text-input" placeholder="example.com"><button class="tool-btn" style="justify-content:center;" onclick="lookupDomain()">Lookup</button><div id="dom-result"></div></div>`;
+        content.innerHTML = `<div class="pass-box"><input type="text" id="dom-url" class="text-input" placeholder="example.com"><button class="tool-btn" style="justify-content:center;" onclick="lookupDomain()">Lookup</button><div id="dom-result" style="margin-top:20px;"></div></div>`;
     }
     if (toolName === 'qrcode') {
         title.innerText = t('qrgen');
-        content.innerHTML = `<div class="pass-box"><input type="text" id="qr-input" class="text-input" placeholder="Text..." oninput="updateQR()"><div class="qr-container" id="qr-result"></div><button id="download-qr" class="tool-btn" style="display:none; justify-content:center;" onclick="downloadQR()">Save</button></div>`;
+        content.innerHTML = `<div class="pass-box" style="text-align:center;"><input type="text" id="qr-input" class="text-input" placeholder="Text..." oninput="updateQR()"><div class="qr-container" id="qr-result" style="margin: 20px auto; display:block; width:fit-content;"><p style="font-size: 14px; color: var(--secondary-text); padding: 40px;">Waiting...</p></div><button id="download-qr" class="tool-btn" style="display:none; justify-content:center;" onclick="downloadQR()">Save PNG</button></div>`;
     }
     if (toolName === 'textutils') {
         title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Text..." oninput="updateTextStats()"></textarea><div id="text-stats"></div><div class="util-grid"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div></div>`;
+        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Text..." oninput="updateTextStats()" style="height:150px;"></textarea><div id="text-stats" style="font-size:12px; color:var(--secondary-text); margin-bottom:15px;"></div><div class="util-grid"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div></div>`;
     }
 
     lucide.createIcons();
@@ -225,7 +227,7 @@ function setMediaTab(tab) {
         </div>`;
     } else {
         content.innerHTML = `<div class="pass-box" style="text-align:center;">
-            <div id="metro-circle" class="metro-circle">${bpm}</div>
+            <div id="metro-circle" class="metro-circle" style="margin: 20px auto;">${bpm}</div>
             <div style="margin-bottom:30px; text-align:left;">
                 <label style="display:flex; justify-content:space-between; font-weight:600">BPM <span id="bpm-val">${bpm}</span></label>
                 <input type="range" min="40" max="220" value="${bpm}" oninput="updateBPM(this.value)">
@@ -245,7 +247,8 @@ function generateComplexPassword(isUserAction) {
     const lower = "abcdefghijklmnopqrstuvwxyz", upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", numbers = "0123456789", symbols = "!@#$%^&*()_+~`|}{[]:;?><,./-=";
     let charset = lower; if (hasUpper) charset += upper; if (hasNumbers) charset += numbers; if (hasSymbols) charset += symbols;
     let password = ""; for (let i = 0; i < length; i++) password += charset[Math.floor(Math.random() * charset.length)];
-    document.getElementById('password-display').innerText = password;
+    const display = document.getElementById('password-display');
+    if (display) display.innerText = password;
 }
 
 async function runSpeedTest() {
@@ -259,11 +262,11 @@ async function runSpeedTest() {
     statusText.innerText = t('testing') + "...";
     
     try {
-        const TEST_DURATION = 8000; // 8 second test for accuracy
+        const TEST_DURATION = 8000;
         const metaRes = await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
         const colo = metaRes.headers.get('cf-meta-colo') || 'UKN';
+        document.getElementById('meta-info').innerText = `Server: ${colo}`;
         
-        // Accurate Latency
         let pings = [];
         for (let i = 0; i < 15; i++) {
             const start = performance.now();
@@ -273,7 +276,6 @@ async function runSpeedTest() {
         }
         pingDisplay.innerText = Math.min(...pings).toFixed(0) + ' ms';
 
-        // Accurate Download
         let dlReceived = 0;
         const startDlTime = performance.now();
         while (performance.now() - startDlTime < TEST_DURATION) {
@@ -313,19 +315,19 @@ function renderSettings() {
                 <span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span>
             </div>
         </div>
-        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.1 • [⌬]</p>
+        <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.2 • [⌬]</p>
     `;
 }
 
-// Helpers
 function updateQR() {
     const input = document.getElementById('qr-input').value;
     const result = document.getElementById('qr-result');
     const dlBtn = document.getElementById('download-qr');
-    if (!input.trim()) { result.innerHTML = '<p>Awaiting...</p>'; dlBtn.style.display = 'none'; return; }
-    result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:100%">`;
+    if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; }
+    result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`;
     dlBtn.style.display = 'flex';
 }
+
 function downloadQR() { const img = document.querySelector('#qr-result img'); if (img) window.open(img.src, '_blank'); }
 function updateTextStats() { 
     const text = document.getElementById('text-input').value; 
@@ -378,6 +380,24 @@ async function processDownload(type) {
     } catch (e) { status.innerText = "❌ " + t('failed'); haptic.notificationOccurred('error'); }
 }
 
+async function lookupDomain() {
+    const domain = document.getElementById('dom-url').value.trim();
+    const resultDiv = document.getElementById('dom-result');
+    if (!domain) return;
+    resultDiv.innerHTML = "Querying...";
+    try {
+        const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`);
+        const data = await response.json();
+        let html = `<div class="stats-grid">`;
+        html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`;
+        if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`;
+        html += `</div>`;
+        resultDiv.innerHTML = html;
+        haptic.notificationOccurred('success');
+    } catch (e) { resultDiv.innerHTML = "Lookup failed"; haptic.notificationOccurred('error'); }
+}
+
+// Init
 initTheme();
 switchView('tools');
 updateUIVocabulary();
