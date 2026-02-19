@@ -193,8 +193,21 @@ h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
     text-align: left;
 }
 
-.progress-container { height: 6px; border-radius: 3px; background: var(--progress-bg); margin: 25px 0; overflow: hidden; }
-.progress-bar { height: 100%; background: var(--primary-color); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.progress-container { 
+    height: 12px; 
+    border-radius: 6px; 
+    background: var(--progress-bg); 
+    margin: 25px 0; 
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress-bar { 
+    height: 100%; 
+    background: linear-gradient(90deg, #007aff, #5856d6); 
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);
+}
 
 /* Settings & Media UI Polish */
 .settings-group {
