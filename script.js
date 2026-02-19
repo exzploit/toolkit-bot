@@ -78,17 +78,16 @@ function showTool(toolName) {
         generateComplexPassword(false);
     }
 
-    if (toolName === 'downloaders') {
-        title.innerText = "Downloaders";
+    if (toolName === 'media') {
+        title.innerText = "Audio / Video";
         content.innerHTML = `
-            <div class="tab-container">
-                <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')"><i data-lucide="youtube"></i> YT</button>
-                <button id="tab-ig" class="tab-btn" onclick="showDownloader('ig')"><i data-lucide="instagram"></i> IG</button>
-                <button id="tab-tt" class="tab-btn" onclick="showDownloader('tt')"><i data-lucide="music"></i> TT</button>
+            <div class="tab-container" style="margin-bottom: 15px;">
+                <button id="tab-downs" class="tab-btn active" onclick="showMediaTab('downs')">Downloads</button>
+                <button id="tab-conv" class="tab-btn" onclick="showMediaTab('conv')">Audio Conv</button>
             </div>
-            <div id="downloader-content"></div>
+            <div id="media-content"></div>
         `;
-        showDownloader('yt');
+        showMediaTab('downs');
     }
 
     if (toolName === 'currency') {
@@ -174,11 +173,47 @@ function showTool(toolName) {
     lucide.createIcons();
 }
 
+function showMediaTab(tab) {
+    haptic.impactOccurred('light');
+    const content = document.getElementById('media-content');
+    const tabs = document.querySelectorAll('.tab-container:first-child .tab-btn'); // Primary tabs
+    document.getElementById('tab-downs').classList.remove('active');
+    document.getElementById('tab-conv').classList.remove('active');
+    
+    if (tab === 'downs') {
+        document.getElementById('tab-downs').classList.add('active');
+        content.innerHTML = `
+            <div class="tab-container" style="margin-top: 10px; background: none; border: 1px solid var(--progress-bg);">
+                <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')"><i data-lucide="youtube"></i> YT</button>
+                <button id="tab-ig" class="tab-btn" onclick="showDownloader('ig')"><i data-lucide="instagram"></i> IG</button>
+                <button id="tab-tt" class="tab-btn" onclick="showDownloader('tt')"><i data-lucide="music"></i> TT</button>
+            </div>
+            <div id="downloader-content"></div>
+        `;
+        showDownloader('yt');
+    } else {
+        document.getElementById('tab-conv').classList.add('active');
+        content.innerHTML = `
+            <div class="pass-box">
+                <div class="upload-box" style="border: 2px dashed var(--progress-bg); padding: 30px; border-radius: 15px; cursor: pointer; margin-bottom: 15px;" onclick="document.getElementById('audio-upload').click()">
+                    <i data-lucide="music" style="width: 32px; height: 32px; margin-bottom: 10px; color: var(--primary-color);"></i>
+                    <span style="display:block; font-weight:600;">Choose Audio/Video File</span>
+                    <span style="font-size:12px; color: var(--secondary-text);">To convert to MP3</span>
+                    <input type="file" id="audio-upload" style="display:none;" accept="audio/*,video/*" onchange="handleAudioFile(this)">
+                </div>
+                <div id="audio-info" style="display:none; margin-bottom:20px; font-size:14px; font-weight:600;"></div>
+                <button id="conv-btn" class="tool-btn" style="display:none; justify-content:center;" onclick="startAudioConversion()">Convert to MP3</button>
+                <div id="conv-status" style="margin-top: 15px; font-size: 13px; font-weight:500;"></div>
+            </div>
+        `;
+    }
+    lucide.createIcons();
+}
+
 function showDownloader(type) {
     haptic.impactOccurred('light');
     const content = document.getElementById('downloader-content');
-    const tabs = document.querySelectorAll('.tab-btn');
-    tabs.forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#media-content .tab-btn').forEach(t => t.classList.remove('active'));
     
     if (type === 'yt') {
         document.getElementById('tab-yt').classList.add('active');
@@ -212,6 +247,45 @@ function showDownloader(type) {
             </div>`;
     }
     lucide.createIcons();
+}
+
+// Audio Converter Logic
+let selectedAudioFile = null;
+function handleAudioFile(input) {
+    if (input.files && input.files[0]) {
+        selectedAudioFile = input.files[0];
+        const info = document.getElementById('audio-info');
+        info.innerText = `Selected: ${selectedAudioFile.name}`;
+        info.style.display = 'block';
+        document.getElementById('conv-btn').style.display = 'flex';
+        haptic.impactOccurred('light');
+    }
+}
+
+async function startAudioConversion() {
+    if (!selectedAudioFile) return;
+    const status = document.getElementById('conv-status');
+    const chatId = tg.initDataUnsafe?.user?.id;
+    if (!chatId) return status.innerText = "❌ User ID not found";
+    status.innerText = "⏳ Converting...";
+    status.style.color = "var(--primary-color)";
+    haptic.impactOccurred('medium');
+    try {
+        const formData = new FormData();
+        formData.append('file', selectedAudioFile);
+        formData.append('chatId', chatId);
+        const response = await fetch('/api/convert-audio', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.success) {
+            status.innerText = "✅ Sent to chat!";
+            status.style.color = "#34c759";
+            haptic.notificationOccurred('success');
+        } else throw new Error(data.error);
+    } catch (err) {
+        status.innerText = "❌ Failed: " + err.message;
+        status.style.color = "#ff3b30";
+        haptic.notificationOccurred('error');
+    }
 }
 
 // Logic Functions
@@ -257,7 +331,7 @@ async function lookupDomain() {
 }
 
 function goBack() { haptic.impactOccurred('light'); document.getElementById('menu').style.display = 'grid'; document.getElementById('tool-container').style.display = 'none'; }
-function updateTextStats() { const text = document.getElementById('text-input').value; document.getElementById('text-stats').innerText = `Length: ${text.length} | Words: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
+function updateTextStats() { const text = document.getElementById('text-input').value; const stats = document.getElementById('text-stats'); stats.innerText = `Length: ${text.length} | Words: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
 function processText(mode) { 
     haptic.impactOccurred('light'); const input = document.getElementById('text-input');
     if (mode === 'upper') input.value = input.value.toUpperCase(); 
@@ -280,18 +354,25 @@ async function downloadYouTube() {
     haptic.impactOccurred('light'); const urlInput = document.getElementById('yt-url').value.trim(); const format = document.getElementById('yt-format').value; const quality = document.getElementById('yt-quality')?.value || 'highest'; const status = document.getElementById('yt-status'); const chatId = tg.initDataUnsafe?.user?.id;
     if (!urlInput || !chatId) return; status.innerText = "Processing request..."; status.style.color = "var(--primary-color)";
     try {
-        const response = await fetch(`/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`);
+        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
+        const apiUrl = `${baseUrl}/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
         const data = await response.json();
-        if (data.success) { status.innerText = "Sent to chat!"; status.style.color = "#34c759"; haptic.notificationOccurred('success'); } else throw new Error();
+        if (data.success) { status.innerText = "Sent to chat!"; status.style.color = "#34c759"; haptic.notificationOccurred('success'); } else throw new Error(data.error);
     } catch (err) { status.innerText = "Process failed"; status.style.color = "#ff3b30"; haptic.notificationOccurred('error'); }
 }
 async function downloadInstagram() {
     haptic.impactOccurred('light'); const urlInput = document.getElementById('ig-url').value.trim(); const format = document.getElementById('ig-format').value; const status = document.getElementById('ig-status'); const chatId = tg.initDataUnsafe?.user?.id;
     if (!urlInput || !chatId) return; status.innerText = "Processing request..."; status.style.color = "var(--primary-color)";
     try {
-        const response = await fetch(`/api/instagram?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
+        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
+        const response = await fetch(`${baseUrl}/api/instagram?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
         const data = await response.json();
-        if (data.success) { status.innerText = "Sent to chat!"; status.style.color = "#34c759"; haptic.notificationOccurred('success'); } else throw new Error();
+        if (data.success) { status.innerText = "Sent to chat!"; status.style.color = "#34c759"; haptic.notificationOccurred('success'); } else throw new Error(data.error);
     } catch (err) { status.innerText = "Process failed"; status.style.color = "#ff3b30"; haptic.notificationOccurred('error'); }
 }
 async function downloadTikTok() {
@@ -300,7 +381,7 @@ async function downloadTikTok() {
     try {
         const response = await fetch(`/api/tiktok?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
         const data = await response.json();
-        if (data.success) { status.innerText = "Sent to chat!"; status.style.color = "#34c759"; haptic.notificationOccurred('success'); } else throw new Error();
+        if (data.success) { status.innerText = "Sent to chat!"; status.style.color = "#34c759"; haptic.notificationOccurred('success'); } else throw new Error(data.error);
     } catch (err) { status.innerText = "Process failed"; status.style.color = "#ff3b30"; haptic.notificationOccurred('error'); }
 }
 function updateQR() {
