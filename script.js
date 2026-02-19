@@ -73,32 +73,72 @@ function showTool(toolName) {
         content.innerHTML = `
             <div class="pass-box">
                 <h2 id="password-display" style="color: var(--primary-color); word-break: break-all; min-height: 1.2em;">-</h2>
-                
                 <div class="options-container">
                     <div style="margin-bottom: 15px;">
                         <label>Length: <span id="length-val" class="length-display">12</span></label>
                         <input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText = this.value; generateComplexPassword(true);">
                     </div>
-                    
                     <div class="option-row">
                         <label for="pass-upper">Uppercase (A-Z)</label>
                         <input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)">
                     </div>
-                    
                     <div class="option-row">
                         <label for="pass-numbers">Numbers (0-9)</label>
                         <input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)">
                     </div>
-                    
                     <div class="option-row">
                         <label for="pass-symbols">Symbols (!@#$%^&*)</label>
                         <input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)">
                     </div>
                 </div>
-                
                 <button class="tool-btn" onclick="generateComplexPassword(true)">🔄 Generate New</button>
             </div>`;
         generateComplexPassword(false);
+    }
+
+    if (toolName === 'downloaders') {
+        title.innerText = "Downloaders";
+        content.innerHTML = `
+            <div class="tab-container">
+                <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')">YouTube</button>
+                <button id="tab-ig" class="tab-btn" onclick="showDownloader('ig')">Instagram</button>
+                <button id="tab-tt" class="tab-btn" onclick="showDownloader('tt')">TikTok</button>
+            </div>
+            <div id="downloader-content"></div>
+        `;
+        showDownloader('yt');
+    }
+
+    if (toolName === 'ai') {
+        title.innerText = "AI Assistant";
+        content.innerHTML = `
+            <div class="chat-container" id="ai-chat">
+                <div class="message ai-message">Hello! I'm your AI assistant. How can I help you today?</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="ai-input" class="text-input" placeholder="Ask something..." style="margin:0;">
+                <button class="small-btn" onclick="askAI()" style="width: 60px; background: var(--primary-color); color: white;">Send</button>
+            </div>
+        `;
+    }
+
+    if (toolName === 'image') {
+        title.innerText = "Image Utils";
+        content.innerHTML = `
+            <div class="pass-box">
+                <div class="upload-box" onclick="document.getElementById('img-upload').click()">
+                    <span>📁 Tap to upload image</span>
+                    <input type="file" id="img-upload" style="display:none;" accept="image/*" onchange="handleImage(this)">
+                </div>
+                <img id="img-preview" class="image-preview">
+                <div id="img-actions" style="display:none;" class="util-grid">
+                    <button class="small-btn" onclick="processImage('bw')">Grayscale</button>
+                    <button class="small-btn" onclick="processImage('sepia')">Sepia</button>
+                    <button class="small-btn" onclick="processImage('clear')">Remove</button>
+                </div>
+                <button id="img-send" class="tool-btn" style="display:none;" onclick="sendImageToTelegram()">📤 Send to Chat</button>
+            </div>
+        `;
     }
 
     if (toolName === 'qrcode') {
@@ -119,7 +159,6 @@ function showTool(toolName) {
             <div class="pass-box">
                 <span id="text-stats" class="stats-info">Chars: 0 | Words: 0</span>
                 <textarea id="text-input" class="text-area" placeholder="Enter text here..." oninput="updateTextStats()"></textarea>
-                
                 <div class="util-grid">
                     <button class="small-btn" onclick="processText('upper')">UPPERCASE</button>
                     <button class="small-btn" onclick="processText('lower')">lowercase</button>
@@ -129,18 +168,6 @@ function showTool(toolName) {
                     <button class="small-btn" onclick="processText('clear')">Clear</button>
                 </div>
             </div>`;
-    }
-
-    if (toolName === 'downloaders') {
-        title.innerText = "Downloaders";
-        content.innerHTML = `
-            <div class="tab-container">
-                <button id="tab-yt" class="tab-btn active" onclick="showDownloader('yt')">YouTube</button>
-                <button id="tab-ig" class="tab-btn" onclick="showDownloader('ig')">Instagram</button>
-            </div>
-            <div id="downloader-content"></div>
-        `;
-        showDownloader('yt');
     }
 
     if (toolName === 'ipinfo') {
@@ -199,11 +226,11 @@ function showDownloader(type) {
                 <button class="tool-btn" onclick="downloadYouTube()">🚀 Download & Send</button>
                 <div id="yt-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
             </div>`;
-    } else {
+    } else if (type === 'ig') {
         document.getElementById('tab-ig').classList.add('active');
         content.innerHTML = `
             <div class="pass-box">
-                <input type="text" id="ig-url" class="text-input" placeholder="Paste Instagram Reel/Post link...">
+                <input type="text" id="ig-url" class="text-input" placeholder="Paste Instagram link...">
                 <div class="options-container">
                     <div class="option-row">
                         <label>Format</label>
@@ -216,62 +243,111 @@ function showDownloader(type) {
                 <button class="tool-btn" onclick="downloadInstagram()">📸 Download & Send</button>
                 <div id="ig-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
             </div>`;
+    } else {
+        document.getElementById('tab-tt').classList.add('active');
+        content.innerHTML = `
+            <div class="pass-box">
+                <input type="text" id="tt-url" class="text-input" placeholder="Paste TikTok link...">
+                <div class="options-container">
+                    <div class="option-row">
+                        <label>Format</label>
+                        <select id="tt-format" class="select-input" style="width: 120px; margin:0;">
+                            <option value="mp4">Video (No WM)</option>
+                            <option value="mp3">Audio (MP3)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="tool-btn" onclick="downloadTikTok()">🎵 Download & Send</button>
+                <div id="tt-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
+            </div>`;
     }
 }
 
-async function downloadInstagram() {
+// Tool Implementation Functions
+async function askAI() {
+    const input = document.getElementById('ai-input');
+    const chat = document.getElementById('ai-chat');
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
     haptic.impactOccurred('light');
-    const status = document.getElementById('ig-status');
-    const urlInput = document.getElementById('ig-url').value.trim();
-    const format = document.getElementById('ig-format').value;
-    const chatId = tg.initDataUnsafe?.user?.id;
+    input.value = "";
+    chat.innerHTML += `<div class="message user-message">${prompt}</div>`;
+    chat.scrollTop = chat.scrollHeight;
 
-    if (!urlInput) {
-        status.innerText = "❌ Please enter a URL";
-        haptic.notificationOccurred('error');
-        return;
-    }
-
-    if (!chatId) {
-        status.innerText = "❌ User ID not found. Use Telegram!";
-        haptic.notificationOccurred('error');
-        return;
-    }
-
-    status.innerText = "⏳ Processing IG request...";
-    status.style.color = "var(--primary-color)";
+    const loadingMsg = document.createElement('div');
+    loadingMsg.className = "message ai-message";
+    loadingMsg.innerText = "thinking...";
+    chat.appendChild(loadingMsg);
 
     try {
-        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
-        const response = await fetch(`${baseUrl}/api/instagram?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
+        const response = await fetch('/api/ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
         const data = await response.json();
-
-        if (data.success) {
-            status.innerText = "✅ Sent to your chat!";
-            status.style.color = "#4caf50";
-            haptic.notificationOccurred('success');
-        } else {
-            throw new Error(data.error || "Failed to download");
-        }
+        loadingMsg.innerText = data.text || "I couldn't process that.";
+        haptic.notificationOccurred('success');
     } catch (err) {
-        status.innerText = "❌ Error: " + err.message;
-        status.style.color = "#f44336";
+        loadingMsg.innerText = "Error connecting to AI.";
+        haptic.notificationOccurred('error');
+    }
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function handleImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('img-preview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            document.getElementById('img-actions').style.display = 'grid';
+            document.getElementById('img-send').style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function downloadTikTok() {
+    haptic.impactOccurred('light');
+    const urlInput = document.getElementById('tt-url').value.trim();
+    const format = document.getElementById('tt-format').value;
+    const status = document.getElementById('tt-status');
+    const chatId = tg.initDataUnsafe?.user?.id;
+
+    if (!urlInput) return status.innerText = "❌ URL needed";
+    if (!chatId) return status.innerText = "❌ Open in Telegram";
+
+    status.innerText = "⏳ Fetching TikTok...";
+    try {
+        const response = await fetch(`/api/tiktok?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
+        const data = await response.json();
+        if (data.success) {
+            status.innerText = "✅ Sent!";
+            haptic.notificationOccurred('success');
+        } else throw new Error(data.error);
+    } catch (err) {
+        status.innerText = "❌ " + err.message;
         haptic.notificationOccurred('error');
     }
 }
 
-// QR Functions
+// Standard Back/Theme
+function goBack() {
+    haptic.impactOccurred('light');
+    document.getElementById('menu').style.display = 'block';
+    document.getElementById('tool-container').style.display = 'none';
+    document.getElementById('tool-content').innerHTML = "";
+}
+
+// ... include other utility functions (updateQR, downloadQR, updateTextStats, processText, generateComplexPassword, etc.) ...
 function updateQR() {
     const input = document.getElementById('qr-input').value;
     const result = document.getElementById('qr-result');
     const dlBtn = document.getElementById('download-qr');
-    
-    if (!input.trim()) {
-        result.innerHTML = '<p style="color: #888; margin: 40px 0;">QR will appear here</p>';
-        dlBtn.style.display = 'none';
-        return;
-    }
-
+    if (!input.trim()) { result.innerHTML = '<p style="color: #888; margin: 40px 0;">QR will appear here</p>'; dlBtn.style.display = 'none'; return; }
     const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}`;
     result.innerHTML = `<img src="${url}" alt="QR Code">`;
     dlBtn.style.display = 'block';
@@ -280,12 +356,9 @@ function updateQR() {
 function downloadQR() {
     haptic.impactOccurred('light');
     const img = document.querySelector('#qr-result img');
-    if (img) {
-        window.open(img.src, '_blank');
-    }
+    if (img) window.open(img.src, '_blank');
 }
 
-// Text Utils Functions
 function updateTextStats() {
     const text = document.getElementById('text-input').value;
     const stats = document.getElementById('text-stats');
@@ -298,158 +371,33 @@ function processText(mode) {
     haptic.impactOccurred('light');
     const input = document.getElementById('text-input');
     let text = input.value;
-
     if (mode === 'upper') text = text.toUpperCase();
     if (mode === 'lower') text = text.toLowerCase();
     if (mode === 'title') text = text.replace(/\b\w/g, l => l.toUpperCase());
     if (mode === 'clear') text = "";
-    
-    if (mode === 'b64e') {
-        try { text = btoa(text); } catch(e) { haptic.notificationOccurred('error'); return; }
-    }
-    if (mode === 'b64d') {
-        try { text = atob(text); } catch(e) { haptic.notificationOccurred('error'); return; }
-    }
-
+    if (mode === 'b64e') { try { text = btoa(text); } catch(e) { haptic.notificationOccurred('error'); return; } }
+    if (mode === 'b64d') { try { text = atob(text); } catch(e) { haptic.notificationOccurred('error'); return; } }
     input.value = text;
     updateTextStats();
 }
 
 function generateComplexPassword(isUserAction) {
     if (isUserAction) haptic.impactOccurred('light');
-    
     const length = document.getElementById('pass-length').value;
     const hasUpper = document.getElementById('pass-upper').checked;
     const hasNumbers = document.getElementById('pass-numbers').checked;
     const hasSymbols = document.getElementById('pass-symbols').checked;
-
-    const lower = "abcdefghijklmnopqrstuvwxyz";
-    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const numbers = "0123456789";
-    const symbols = "!@#$%^&*()_+~`|}{[]:;?><,./-=";
-
+    const lower = "abcdefghijklmnopqrstuvwxyz", upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", numbers = "0123456789", symbols = "!@#$%^&*()_+~`|}{[]:;?><,./-=";
     let charset = lower;
     if (hasUpper) charset += upper;
     if (hasNumbers) charset += numbers;
     if (hasSymbols) charset += symbols;
-
     let password = "";
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * charset.length);
-        password += charset[randomIndex];
-    }
-
+    for (let i = 0; i < length; i++) password += charset[Math.floor(Math.random() * charset.length)];
     document.getElementById('password-display').innerText = password;
 }
 
-async function runSpeedTest() {
-    const speedDisplay = document.getElementById('speed-display');
-    const pingDisplay = document.getElementById('ping-display');
-    const jitterDisplay = document.getElementById('jitter-display');
-    const downloadDisplay = document.getElementById('download-display');
-    const uploadDisplay = document.getElementById('upload-display');
-    const progressBar = document.getElementById('progress-bar');
-    const statusText = document.getElementById('test-status');
-    const metaInfo = document.getElementById('meta-info');
-    const restartBtn = document.getElementById('restart-test');
-
-    if (!speedDisplay) return;
-
-    restartBtn.style.display = 'none';
-    progressBar.style.width = '0%';
-    speedDisplay.innerText = '0.0';
-    pingDisplay.innerText = '--';
-    jitterDisplay.innerText = '--';
-    downloadDisplay.innerText = '--';
-    uploadDisplay.innerText = '--';
-
-    try {
-        const TEST_DURATION = 10000;
-
-        const metaRes = await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
-        const colo = metaRes.headers.get('cf-meta-colo') || 'Unknown';
-        const country = metaRes.headers.get('cf-meta-country') || '';
-        metaInfo.innerText = `Server: ${colo} (${country}) • Provider: ${metaRes.headers.get('server') || 'Cloudflare'}`;
-
-        statusText.innerText = 'Measuring Latency...';
-        let pings = [];
-        for (let i = 0; i < 20; i++) {
-            const start = performance.now();
-            await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
-            pings.push(performance.now() - start);
-            progressBar.style.width = (i * 0.5) + '%';
-        }
-        const avgPing = pings.reduce((a,b) => a+b) / pings.length;
-        const jitter = Math.max(...pings) - Math.min(...pings);
-        pingDisplay.innerText = avgPing.toFixed(0) + ' ms';
-        jitterDisplay.innerText = jitter.toFixed(0) + ' ms';
-        haptic.impactOccurred('soft');
-
-        statusText.innerText = 'Testing Download Speed...';
-        let dlReceived = 0;
-        const startDlTime = performance.now();
-        
-        while (performance.now() - startDlTime < TEST_DURATION) {
-            const response = await fetch(`https://speed.cloudflare.com/__down?bytes=25000000`, { cache: 'no-store' });
-            const reader = response.body.getReader();
-            
-            while (true) {
-                const { done, value } = await reader.read();
-                const elapsed = performance.now() - startDlTime;
-                if (done || elapsed >= TEST_DURATION) break;
-                
-                dlReceived += value.length;
-                const speedMbps = (dlReceived * 8) / (elapsed / 1000 * 1024 * 1024);
-                speedDisplay.innerText = speedMbps.toFixed(1);
-                progressBar.style.width = (10 + (elapsed / TEST_DURATION) * 40) + '%';
-            }
-            if (performance.now() - startDlTime >= TEST_DURATION) break;
-        }
-        downloadDisplay.innerText = speedDisplay.innerText + ' Mbps';
-        haptic.impactOccurred('soft');
-
-        statusText.innerText = 'Testing Upload Speed...';
-        let ulSent = 0;
-        const startUlTime = performance.now();
-        const ulChunkSize = 5 * 1024 * 1024;
-        const ulData = new Uint8Array(ulChunkSize);
-
-        while (performance.now() - startUlTime < TEST_DURATION) {
-            await fetch('https://speed.cloudflare.com/__up', {
-                method: 'POST',
-                body: ulData,
-                cache: 'no-store'
-            });
-            ulSent += ulChunkSize;
-            const elapsed = performance.now() - startUlTime;
-            const speedMbps = (ulSent * 8) / (elapsed / 1000 * 1024 * 1024);
-            speedDisplay.innerText = speedMbps.toFixed(1);
-            progressBar.style.width = (50 + (elapsed / TEST_DURATION) * 50) + '%';
-            if (elapsed >= TEST_DURATION) break;
-        }
-        uploadDisplay.innerText = speedDisplay.innerText + ' Mbps';
-        
-        progressBar.style.width = '100%';
-        statusText.innerText = 'Test Complete';
-        restartBtn.style.display = 'block';
-        haptic.notificationOccurred('success');
-
-    } catch (error) {
-        console.error(error);
-        haptic.notificationOccurred('error');
-        if (statusText) statusText.innerText = 'Test Failed. Check connection.';
-        if (restartBtn) restartBtn.style.display = 'block';
-    }
-}
-
-function goBack() {
-    haptic.impactOccurred('light');
-    document.getElementById('menu').style.display = 'block';
-    document.getElementById('tool-container').style.display = 'none';
-    document.getElementById('tool-content').innerHTML = "";
-}
-
-// YT Downloader Functions
+// YouTube Downloader Logic
 function toggleYTQuality() {
     const format = document.getElementById('yt-format').value;
     const qualityRow = document.getElementById('yt-quality-row');
@@ -463,42 +411,28 @@ async function downloadYouTube() {
     const quality = document.getElementById('yt-quality')?.value || 'highest';
     const status = document.getElementById('yt-status');
     const chatId = tg.initDataUnsafe?.user?.id;
-
-    if (!urlInput) {
-        status.innerText = "❌ Please enter a URL";
-        haptic.notificationOccurred('error');
-        return;
-    }
-
-    if (!chatId) {
-        status.innerText = "❌ User ID not found. Use Telegram!";
-        haptic.notificationOccurred('error');
-        return;
-    }
-
-    status.innerText = "⏳ Processing... This may take a minute.";
-    status.style.color = "var(--primary-color)";
-
+    if (!urlInput || !chatId) return;
+    status.innerText = "⏳ Processing YouTube...";
     try {
-        const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
-        const apiUrl = `${baseUrl}/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`;
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Server error: ${response.status}`);
-        }
+        const response = await fetch(`/api/youtube?url=${encodeURIComponent(urlInput)}&format=${format}&quality=${quality}&chatId=${chatId}`);
         const data = await response.json();
-        if (data.success) {
-            status.innerText = "✅ Sent to your chat!";
-            status.style.color = "#4caf50";
-            haptic.notificationOccurred('success');
-        } else {
-            throw new Error(data.error || "Failed to download");
-        }
-    } catch (err) {
-        console.error("YT Download Error:", err);
-        status.innerText = "❌ Error: " + err.message;
-        status.style.color = "#f44336";
-        haptic.notificationOccurred('error');
-    }
+        if (data.success) { status.innerText = "✅ Sent!"; haptic.notificationOccurred('success'); }
+        else throw new Error(data.error);
+    } catch (err) { status.innerText = "❌ " + err.message; haptic.notificationOccurred('error'); }
+}
+
+async function downloadInstagram() {
+    haptic.impactOccurred('light');
+    const status = document.getElementById('ig-status');
+    const urlInput = document.getElementById('ig-url').value.trim();
+    const format = document.getElementById('ig-format').value;
+    const chatId = tg.initDataUnsafe?.user?.id;
+    if (!urlInput || !chatId) return;
+    status.innerText = "⏳ Processing IG...";
+    try {
+        const response = await fetch(`/api/instagram?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
+        const data = await response.json();
+        if (data.success) { status.innerText = "✅ Sent!"; haptic.notificationOccurred('success'); }
+        else throw new Error(data.error);
+    } catch (err) { status.innerText = "❌ " + err.message; haptic.notificationOccurred('error'); }
 }
