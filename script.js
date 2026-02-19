@@ -204,6 +204,15 @@ function showDownloader(type) {
         content.innerHTML = `
             <div class="pass-box">
                 <input type="text" id="ig-url" class="text-input" placeholder="Paste Instagram Reel/Post link...">
+                <div class="options-container">
+                    <div class="option-row">
+                        <label>Format</label>
+                        <select id="ig-format" class="select-input" style="width: 120px; margin:0;">
+                            <option value="mp4">Video (MP4)</option>
+                            <option value="mp3">Audio (MP3)</option>
+                        </select>
+                    </div>
+                </div>
                 <button class="tool-btn" onclick="downloadInstagram()">📸 Download & Send</button>
                 <div id="ig-status" style="margin-top: 10px; font-size: 14px; color: var(--secondary-text);"></div>
             </div>`;
@@ -214,6 +223,7 @@ async function downloadInstagram() {
     haptic.impactOccurred('light');
     const status = document.getElementById('ig-status');
     const urlInput = document.getElementById('ig-url').value.trim();
+    const format = document.getElementById('ig-format').value;
     const chatId = tg.initDataUnsafe?.user?.id;
 
     if (!urlInput) {
@@ -233,7 +243,7 @@ async function downloadInstagram() {
 
     try {
         const baseUrl = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '';
-        const response = await fetch(`${baseUrl}/api/instagram?url=${encodeURIComponent(urlInput)}&chatId=${chatId}`);
+        const response = await fetch(`${baseUrl}/api/instagram?url=${encodeURIComponent(urlInput)}&format=${format}&chatId=${chatId}`);
         const data = await response.json();
 
         if (data.success) {
