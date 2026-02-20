@@ -40,7 +40,9 @@ const i18n = {
         heads: "HEADS", tails: "TAILS", rolling: "Rolling...", exifStripper: "EXIF Stripper",
         stripMetadata: "Strip Metadata", selectImage: "Select Image",
         crack: "Hash Cracker", cracking: "Cracking...", enterHash: "Enter Hash (MD5/SHA)",
-        cracked: "Cracked!", notFound: "Not found"
+        cracked: "Cracked!", notFound: "Not found", jailbreak: "Jailbreak Check",
+        check: "Check Compatibility", selectModel: "Select Model", selectOS: "Select iOS Version",
+        compatible: "COMPATIBLE", incompatible: "NOT COMPATIBLE", partial: "SEMI-COMPATIBLE"
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -72,7 +74,9 @@ const i18n = {
         heads: "CAP", tails: "PAJURĂ", rolling: "Se rotește...", exifStripper: "Șterge EXIF",
         stripMetadata: "Șterge Datele", selectImage: "Alege Imagine",
         crack: "Hash Cracker", cracking: "Se sparge...", enterHash: "Introdu Hash-ul",
-        cracked: "Spart!", notFound: "Nu am găsit"
+        cracked: "Spart!", notFound: "Nu am găsit", jailbreak: "Verifică Jailbreak",
+        check: "Verifică Compatibilitate", selectModel: "Alege Modelul", selectOS: "Alege Versiunea iOS",
+        compatible: "COMPATIBIL", incompatible: "INCOMPATIBIL", partial: "SEMI-COMPATIBIL"
     }
 };
 
@@ -153,9 +157,9 @@ function updateUIVocabulary() {
     });
     const toolsMenu = document.getElementById('menu-tools');
     if (toolsMenu) {
-        const icons = ['shield-check', 'lock', 'binary', 'unlock', 'help-circle', 'frown', 'qr-code', 'type'];
-        const toolKeys = ['passgen', 'secureVault', 'morse', 'crack', 'decision', 'rickroll', 'qrgen', 'textutils'];
-        toolsMenu.innerHTML = toolKeys.map((k, i) => `<button class="tool-btn" onclick="showTool('${k === 'passgen' ? 'password' : (k === 'secureVault' ? 'vault' : (k === 'morse' ? 'morse' : (k === 'crack' ? 'crack' : (k === 'decision' ? 'decision' : (k === 'rickroll' ? 'rickroll' : (k === 'qrgen' ? 'qrcode' : 'textutils'))))))}')"><i data-lucide="${icons[i]}"></i> ${t(k)}</button>`).join('');
+        const icons = ['shield-check', 'lock', 'binary', 'zap', 'unlock', 'help-circle', 'frown', 'qr-code', 'type'];
+        const toolKeys = ['passgen', 'secureVault', 'morse', 'jailbreak', 'crack', 'decision', 'rickroll', 'qrgen', 'textutils'];
+        toolsMenu.innerHTML = toolKeys.map((k, i) => `<button class="tool-btn" onclick="showTool('${k === 'passgen' ? 'password' : (k === 'secureVault' ? 'vault' : (k === 'morse' ? 'morse' : (k === 'jailbreak' ? 'jailbreak' : (k === 'crack' ? 'crack' : (k === 'decision' ? 'decision' : (k === 'rickroll' ? 'rickroll' : (k === 'qrgen' ? 'qrcode' : 'textutils')))))))}')"><i data-lucide="${icons[i]}"></i> ${t(k)}</button>`).join('');
     }
     const netMenu = document.getElementById('menu-network');
     if (netMenu) {
@@ -198,6 +202,37 @@ function showTool(toolName) {
                 <div class="stat-card"><span class="stat-label">${t('upload')}</span><span id="upload-display" class="stat-value">--</span></div>
             </div>
             <button class="tool-btn" id="start-test-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
+        </div>`;
+    }
+
+    if (toolName === 'jailbreak') {
+        title.innerText = t('jailbreak');
+        content.innerHTML = `<div class="pass-box">
+            <select id="jb-model" class="select-input">
+                <option value="" disabled selected>${t('selectModel')}</option>
+                <optgroup label="A12+ (Newer)">
+                    <option value="a12">iPhone XR / XS / XS Max</option>
+                    <option value="a13">iPhone 11 Series / SE 2</option>
+                    <option value="a14">iPhone 12 Series</option>
+                    <option value="a15">iPhone 13 Series / 14 / SE 3</option>
+                    <option value="a16">iPhone 14 Pro / 15 Series</option>
+                </optgroup>
+                <optgroup label="A8-A11 (Legacy)">
+                    <option value="a11">iPhone 8 / 8 Plus / X</option>
+                    <option value="a10">iPhone 7 / 7 Plus</option>
+                    <option value="a9">iPhone 6S / 6S Plus / SE 1</option>
+                </optgroup>
+            </select>
+            <select id="jb-version" class="select-input">
+                <option value="" disabled selected>${t('selectOS')}</option>
+                <option value="17.0">iOS 17.0</option>
+                <option value="16.6">iOS 16.0 - 16.6.1</option>
+                <option value="15.4">iOS 15.0 - 15.4.1</option>
+                <option value="14.8">iOS 14.0 - 14.8</option>
+                <option value="legacy">iOS 13.7 & Below</option>
+            </select>
+            <button class="tool-btn" style="justify-content:center" onclick="checkJailbreak()">${t('check')}</button>
+            <div id="jb-result" style="margin-top:20px;"></div>
         </div>`;
     }
 
@@ -325,6 +360,38 @@ function showTool(toolName) {
     lucide.createIcons();
 }
 
+function checkJailbreak() {
+    const model = document.getElementById('jb-model').value;
+    const version = document.getElementById('jb-version').value;
+    const resDiv = document.getElementById('jb-result');
+    if (!model || !version) return;
+    
+    let status = t('incompatible'), color = '#ff3b30', tool = 'N/A', url = '#';
+    const legacyA = ['a9', 'a10', 'a11'];
+
+    if (legacyA.includes(model)) {
+        status = t('compatible'); color = '#34c759'; tool = 'Palera1n'; url = 'https://palera.in';
+    } else if (version === '15.4' || (version === '16.6' && model !== 'a16')) {
+        status = t('compatible'); color = '#34c759'; tool = 'Dopamine'; url = 'https://ellekit.space/dopamine/';
+    } else if (version === '14.8') {
+        status = t('compatible'); color = '#34c759'; tool = 'unc0ver / Taurine'; url = 'https://unc0ver.dev';
+    } else if (version === 'legacy') {
+        status = t('compatible'); color = '#34c759'; tool = 'Checkra1n / Odyssey'; url = 'https://checkra.in';
+    } else if (version === '17.0') {
+        status = t('partial'); color = '#ffcc00'; tool = 'Misaka (Exploit Only)'; url = 'https://github.com/straight-tamago/misaka';
+    }
+
+    resDiv.innerHTML = `
+        <div class="settings-group" style="border-color:${color}44">
+            <div class="settings-cell"><span class="settings-label">Status</span><span style="color:${color}; font-weight:900">${status}</span></div>
+            <div class="settings-cell"><span class="settings-label">Recommended Tool</span><span style="font-weight:600">${tool}</span></div>
+        </div>
+        ${tool !== 'N/A' ? `<a href="${url}" target="_blank" class="tool-btn" style="margin-top:15px; text-decoration:none; justify-content:center; background:var(--secondary-bg)">Get ${tool}</a>` : ''}
+    `;
+    playSound(color === '#ff3b30' ? 'error' : 'success');
+    haptic.notificationOccurred(color === '#ff3b30' ? 'error' : 'success');
+}
+
 async function runHashCracker() {
     const hash = document.getElementById('hash-input').value.trim();
     const type = document.getElementById('hash-type').value;
@@ -443,7 +510,7 @@ function copyRickroll() { navigator.clipboard.writeText(document.getElementById(
 async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'), chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('loading'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }), data = await response.json(); stopSound('loading'); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
 async function lookupDomain() { const domainInput = document.getElementById('dom-url'); if (!domainInput) return; const domain = domainInput.value.trim(), resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; playSound('click'); try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`), data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('success'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
 function updateQR() { const inputEl = document.getElementById('qr-input'); if (!inputEl) return; const input = inputEl.value, result = document.getElementById('qr-result'), dlBtn = document.getElementById('download-qr'); if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; } result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`; dlBtn.style.display = 'flex'; }
-function renderSettings() { const container = document.getElementById('settings-content'); container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div><div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>`; }
+function renderSettings() { const container = document.getElementById('settings-content'); container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div><div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>`; }
 function startMetronome() { if (isMetronomeRunning) return; isMetronomeRunning = true; document.getElementById('metro-btn').innerText = "Stop"; const circle = document.getElementById('metro-circle'); nextBeatTime = performance.now(); const tick = () => { if (!isMetronomeRunning) return; playSound('click'); haptic.impactOccurred('medium'); circle.classList.add('metro-active'); setTimeout(() => circle.classList.remove('metro-active'), 100); const interval = (60 / bpm) * 1000; nextBeatTime += interval; metronomeInterval = setTimeout(tick, Math.max(0, interval - (performance.now() - nextBeatTime))); }; tick(); }
 function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearTimeout(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
 function toggleMetronome() { if (isMetronomeRunning) stopMetronome(); else startMetronome(); }
