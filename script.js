@@ -437,13 +437,10 @@ async function runTTS() {
     if (!text) return;
     status.innerText = "⏳ " + t('processing'); playSound('loading');
     
-    const formData = new FormData();
-    formData.append('text', text);
-    formData.append('lang', lang);
-    if (chatId) formData.append('chatId', chatId);
+    const url = `/api/tts?text=${encodeURIComponent(text)}&lang=${lang}${chatId ? `&chatId=${chatId}` : ''}`;
 
     try {
-        const response = await fetch('/api/tts', { method: 'POST', body: formData });
+        const response = await fetch(url);
         const data = await response.json();
         stopSound('loading');
         if (data.success) {
