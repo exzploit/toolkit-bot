@@ -42,7 +42,24 @@ const i18n = {
         crack: "Hash Cracker", cracking: "Cracking...", enterHash: "Enter Hash (MD5/SHA)",
         cracked: "Cracked!", notFound: "Not found", jailbreak: "Jailbreak Check",
         check: "Check Compatibility", selectModel: "Select Model", selectOS: "Select iOS Version",
-        compatible: "COMPATIBLE", incompatible: "NOT COMPATIBLE", partial: "SEMI-COMPATIBLE"
+        compatible: "COMPATIBLE", incompatible: "NOT COMPATIBLE", partial: "SEMI-COMPATIBLE",
+        desc_passgen: "Generate high-entropy secure passwords instantly.",
+        desc_vault: "Client-side encryption for your sensitive files.",
+        desc_morse: "Translate text to Morse code with haptic pulses.",
+        desc_jailbreak: "Check if your iPhone model and iOS version can be jailbroken.",
+        desc_crack: "Attempt to recover passwords from common MD5/SHA hashes.",
+        desc_decision: "Let fate decide with a high-speed coin flip or dice roll.",
+        desc_rickroll: "Create disguised links to prank your friends.",
+        desc_qrgen: "Generate high-quality QR codes for any text or link.",
+        desc_textutils: "Transform text into fancy styles, Zalgo, or Leetspeak.",
+        desc_speedtest: "Measure your internet speed using high-precision servers.",
+        desc_portscan: "Scan a host for commonly open network ports.",
+        desc_inspector: "Deep analysis of URLs including IP and server headers.",
+        desc_domain: "Lookup DNS and WHOIS registration details.",
+        desc_ipinfo: "Get detailed information about your current IP address.",
+        desc_audioConv: "Convert audio or video files into high-quality MP3s.",
+        desc_exif: "Remove hidden metadata from photos for better privacy.",
+        desc_metronome: "Rock-solid precision metronome with drift compensation."
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -76,7 +93,24 @@ const i18n = {
         crack: "Hash Cracker", cracking: "Se sparge...", enterHash: "Introdu Hash-ul",
         cracked: "Spart!", notFound: "Nu am găsit", jailbreak: "Verifică Jailbreak",
         check: "Verifică Compatibilitate", selectModel: "Alege Modelul", selectOS: "Alege Versiunea iOS",
-        compatible: "COMPATIBIL", incompatible: "INCOMPATIBIL", partial: "SEMI-COMPATIBIL"
+        compatible: "COMPATIBIL", incompatible: "INCOMPATIBIL", partial: "SEMI-COMPATIBIL",
+        desc_passgen: "Generează parole securizate cu entropie ridicată.",
+        desc_vault: "Criptare locală pentru fișierele tale sensibile.",
+        desc_morse: "Tradu text în cod Morse cu impulsuri haptice.",
+        desc_jailbreak: "Verifică dacă modelul și versiunea iOS pot fi jailbroken.",
+        desc_crack: "Recuperează parole din hash-uri comune MD5/SHA.",
+        desc_decision: "Lasă soarta să decidă cu un ban sau un zar rapid.",
+        desc_rickroll: "Creează link-uri mascate pentru glume cu prietenii.",
+        desc_qrgen: "Generează coduri QR de calitate pentru orice text sau link.",
+        desc_textutils: "Transformă textul în stiluri speciale, Zalgo sau Leetspeak.",
+        desc_speedtest: "Măsoară viteza internetului folosind servere de precizie.",
+        desc_portscan: "Scanează un host pentru porturi de rețea deschise.",
+        desc_inspector: "Analiză profundă a URL-urilor, inclusiv IP și server.",
+        desc_domain: "Caută detalii DNS și înregistrare WHOIS.",
+        desc_ipinfo: "Obține informații detaliate despre adresa ta IP curentă.",
+        desc_audioConv: "Convertește fișiere audio sau video în MP3-uri de calitate.",
+        desc_exif: "Elimină metadatele ascunse din poze pentru confidențialitate.",
+        desc_metronome: "Metronom de precizie cu compensare a derivei temporale."
     }
 };
 
@@ -187,6 +221,21 @@ function showTool(toolName) {
     document.getElementById('tool-container').style.display = 'block';
     const content = document.getElementById('tool-content');
     const title = document.getElementById('tool-title');
+    
+    let descKey = `desc_${toolName}`;
+    if (toolName === 'password') descKey = 'desc_passgen';
+    if (toolName === 'vault') descKey = 'desc_vault';
+    if (toolName === 'inspect') descKey = 'desc_inspector';
+    if (toolName === 'qrcode') descKey = 'desc_qrgen';
+    
+    const desc = t(descKey);
+    const existingDesc = document.querySelector('.tool-desc');
+    if (existingDesc) existingDesc.remove();
+    
+    const descEl = document.createElement('p');
+    descEl.className = 'tool-desc';
+    descEl.innerText = desc;
+    document.getElementById('tool-header').after(descEl);
 
     if (toolName === 'speedtest') {
         title.innerText = t('speedtest');
@@ -491,14 +540,46 @@ async function playMorseHaptics() {
     isMorsePlaying = false;
 }
 
-function hideTool() { document.getElementById('tool-container').style.display = 'none'; stopMetronome(); stopSound('loading'); isMorsePlaying = false; if (speedTestController) { speedTestController.abort(); speedTestController = null; } }
-function renderMediaTabs(shouldPlaySound = true) { if (shouldPlaySound) playSound('click'); const container = document.getElementById('media-tabs-container'); container.innerHTML = `<div class="tab-container"><button id="mtab-downs" class="tab-btn active" onclick="setMediaTab('downs')">${t('downloads')}</button><button id="mtab-conv" class="tab-btn" onclick="setMediaTab('conv')">${t('audioConv')}</button><button id="mtab-exif" class="tab-btn" onclick="setMediaTab('exif')">${t('exifStripper')}</button><button id="mtab-metro" class="tab-btn" onclick="setMediaTab('metro')">${t('metronome')}</button></div><div id="media-tab-content"></div>`; setMediaTab('downs', false); }
+function hideTool() { 
+    const existingDesc = document.querySelector('.tool-desc');
+    if (existingDesc) existingDesc.remove();
+    document.getElementById('tool-container').style.display = 'none'; 
+    stopMetronome(); stopSound('loading'); isMorsePlaying = false; 
+    if (speedTestController) { speedTestController.abort(); speedTestController = null; } 
+}
+
+function renderMediaTabs(shouldPlaySound = true) {
+    if (shouldPlaySound) playSound('click');
+    const container = document.getElementById('media-tabs-container');
+    container.innerHTML = `<div class="tab-container"><button id="mtab-downs" class="tab-btn active" onclick="setMediaTab('downs')">${t('downloads')}</button><button id="mtab-conv" class="tab-btn" onclick="setMediaTab('conv')">${t('audioConv')}</button><button id="mtab-exif" class="tab-btn" onclick="setMediaTab('exif')">${t('exifStripper')}</button><button id="mtab-metro" class="tab-btn" onclick="setMediaTab('metro')">${t('metronome')}</button></div><div id="media-tab-content"></div>`;
+    setMediaTab('downs', false);
+}
+
 function setMediaTab(tab, shouldPlaySound = true) {
-    if (shouldPlaySound) playSound('click'); haptic.impactOccurred('light'); const content = document.getElementById('media-tab-content'); document.querySelectorAll('#media-tabs-container .tab-btn').forEach(b => b.classList.remove('active')); const targetTab = document.getElementById(`mtab-${tab}`); if (targetTab) targetTab.classList.add('active'); stopMetronome(); stopSound('loading');
-    if (tab === 'downs') { content.innerHTML = `<div class="tab-container" style="background:none; border: 1px solid var(--border-color); margin-top:10px;"><button onclick="showDownloaderUI('yt')" id="st-yt" class="tab-btn active"><i data-lucide="youtube"></i> YT</button><button onclick="showDownloaderUI('ig')" id="st-ig" class="tab-btn"><i data-lucide="instagram"></i> IG</button><button onclick="showDownloaderUI('tt')" id="st-tt" class="tab-btn"><i data-lucide="music"></i> TT</button></div><div id="downloader-ui-box"></div>`; showDownloaderUI('yt', false); }
-    else if (tab === 'conv') content.innerHTML = `<div class="pass-box"><div class="upload-box" style="border: 2px dashed var(--border-color); background:var(--secondary-bg); padding:40px 20px; border-radius:16px; text-align:center; cursor:pointer;" onclick="document.getElementById('audio-upload').click()"><i data-lucide="music" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span style="display:block; font-weight:600">${t('selectFile')}</span><input type="file" id="audio-upload" style="display:none" onchange="handleAudioFile(this)"></div><div id="audio-info" style="display:none; margin:15px 0; font-size:14px; font-weight:600;"></div><button id="conv-btn" class="tool-btn" style="display:none; justify-content:center" onclick="startAudioConversion()">${t('convMp3')}</button><div id="conv-status" style="margin-top:10px;"></div></div>`;
-    else if (tab === 'exif') content.innerHTML = `<div class="pass-box"><div class="upload-box" style="border: 2px dashed var(--border-color); background:var(--secondary-bg); padding:40px 20px; border-radius:16px; text-align:center; cursor:pointer;" onclick="document.getElementById('exif-upload').click()"><i data-lucide="image" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span id="exif-filename" style="display:block; font-weight:600">${t('selectImage')}</span><input type="file" id="exif-upload" accept="image/*" style="display:none" onchange="handleExifFile(this)"></div><button id="exif-btn" class="tool-btn" style="display:none; justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="processExif()"> <i data-lucide="shield-check" style="color:white"></i> ${t('stripMetadata')}</button><div id="exif-status" style="margin-top:15px; text-align:center;"></div></div>`;
-    else content.innerHTML = `<div class="pass-box" style="text-align:center;"><div id="metro-circle" class="metro-circle" style="margin: 20px auto;">${bpm}</div><div style="margin-bottom:30px; text-align:left;"><label style="display:flex; justify-content:space-between; font-weight:600">BPM <span id="bpm-val">${bpm}</span></label><input type="range" min="40" max="220" value="${bpm}" oninput="updateBPM(this.value)"></div><button id="metro-btn" class="tool-btn" style="justify-content:center" onclick="toggleMetronome()">Start</button></div>`;
+    if (shouldPlaySound) playSound('click');
+    haptic.impactOccurred('light');
+    const content = document.getElementById('media-tab-content');
+    document.querySelectorAll('#media-tabs-container .tab-btn').forEach(b => b.classList.remove('active'));
+    const targetTab = document.getElementById(`mtab-${tab}`);
+    if (targetTab) targetTab.classList.add('active');
+    stopMetronome(); stopSound('loading');
+    
+    let descKey = `desc_${tab}`;
+    if (tab === 'downs') descKey = 'desc_audioConv'; // Generic media desc
+    
+    const existingDesc = document.querySelector('.tool-desc');
+    if (existingDesc) existingDesc.remove();
+    
+    if (tab === 'downs') {
+        content.innerHTML = `<div class="tab-container" style="background:none; border: 1px solid var(--border-color); margin-top:10px;"><button onclick="showDownloaderUI('yt')" id="st-yt" class="tab-btn active"><i data-lucide="youtube"></i> YT</button><button onclick="showDownloaderUI('ig')" id="st-ig" class="tab-btn"><i data-lucide="instagram"></i> IG</button><button onclick="showDownloaderUI('tt')" id="st-tt" class="tab-btn"><i data-lucide="music"></i> TT</button></div><div id="downloader-ui-box"></div>`;
+        showDownloaderUI('yt', false);
+    } else if (tab === 'conv') {
+        content.innerHTML = `<div class="pass-box"><div class="upload-box" style="border: 2px dashed var(--border-color); background:var(--secondary-bg); padding:40px 20px; border-radius:16px; text-align:center; cursor:pointer;" onclick="document.getElementById('audio-upload').click()"><i data-lucide="music" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span style="display:block; font-weight:600">${t('selectFile')}</span><input type="file" id="audio-upload" style="display:none" onchange="handleAudioFile(this)"></div><div id="audio-info" style="display:none; margin:15px 0; font-size:14px; font-weight:600;"></div><button id="conv-btn" class="tool-btn" style="display:none; justify-content:center" onclick="startAudioConversion()">${t('convMp3')}</button><div id="conv-status" style="margin-top:10px;"></div></div>`;
+    } else if (tab === 'exif') {
+        content.innerHTML = `<div class="pass-box"><div class="upload-box" style="border: 2px dashed var(--border-color); background:var(--secondary-bg); padding:40px 20px; border-radius:16px; text-align:center; cursor:pointer;" onclick="document.getElementById('exif-upload').click()"><i data-lucide="image" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span id="exif-filename" style="display:block; font-weight:600">${t('selectImage')}</span><input type="file" id="exif-upload" accept="image/*" style="display:none" onchange="handleExifFile(this)"></div><button id="exif-btn" class="tool-btn" style="display:none; justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="processExif()"> <i data-lucide="shield-check" style="color:white"></i> ${t('stripMetadata')}</button><div id="exif-status" style="margin-top:15px; text-align:center;"></div></div>`;
+    } else {
+        content.innerHTML = `<div class="pass-box" style="text-align:center;"><div id="metro-circle" class="metro-circle" style="margin: 20px auto;">${bpm}</div><div style="margin-bottom:30px; text-align:left;"><label style="display:flex; justify-content:space-between; font-weight:600">BPM <span id="bpm-val">${bpm}</span></label><input type="range" min="40" max="220" value="${bpm}" oninput="updateBPM(this.value)"></div><button id="metro-btn" class="tool-btn" style="justify-content:center" onclick="toggleMetronome()">Start</button></div>`;
+    }
     lucide.createIcons();
 }
 
