@@ -43,6 +43,7 @@ const i18n = {
         cracked: "Cracked!", notFound: "Not found", jailbreak: "Jailbreak Check",
         check: "Check Compatibility", selectModel: "Select Model", selectOS: "Select iOS Version",
         compatible: "COMPATIBLE", incompatible: "NOT COMPATIBLE", partial: "SEMI-COMPATIBLE",
+        tts: "Text-to-Speech", speak: "Generate Voice", enterText: "Enter text to speak...",
         desc_passgen: "Generate high-entropy secure passwords instantly.",
         desc_vault: "Client-side encryption for your sensitive files.",
         desc_morse: "Translate text to Morse code with haptic pulses.",
@@ -59,7 +60,8 @@ const i18n = {
         desc_ipinfo: "Get detailed information about your current IP address.",
         desc_audioConv: "Convert audio or video files into high-quality MP3s.",
         desc_exif: "Remove hidden metadata from photos for better privacy.",
-        desc_metronome: "Rock-solid precision metronome with drift compensation."
+        desc_metronome: "Rock-solid precision metronome with drift compensation.",
+        desc_tts: "Convert text to high-quality speech sent to your DM."
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -94,6 +96,7 @@ const i18n = {
         cracked: "Spart!", notFound: "Nu am găsit", jailbreak: "Verifică Jailbreak",
         check: "Verifică Compatibilitate", selectModel: "Alege Modelul", selectOS: "Alege Versiunea iOS",
         compatible: "COMPATIBIL", incompatible: "INCOMPATIBIL", partial: "SEMI-COMPATIBIL",
+        tts: "Text-to-Speech", speak: "Generează Voce", enterText: "Introdu textul pentru redare...",
         desc_passgen: "Generează parole securizate cu entropie ridicată.",
         desc_vault: "Criptare locală pentru fișierele tale sensibile.",
         desc_morse: "Tradu text în cod Morse cu impulsuri haptice.",
@@ -110,7 +113,8 @@ const i18n = {
         desc_ipinfo: "Obține informații detaliate despre adresa ta IP curentă.",
         desc_audioConv: "Convertește fișiere audio sau video în MP3-uri de calitate.",
         desc_exif: "Elimină metadatele ascunse din poze pentru confidențialitate.",
-        desc_metronome: "Metronom de precizie cu compensare a derivei temporale."
+        desc_metronome: "Metronom de precizie cu compensare a derivei temporale.",
+        desc_tts: "Convertește textul în voce și îl trimite în DM."
     }
 };
 
@@ -191,9 +195,9 @@ function updateUIVocabulary() {
     });
     const toolsMenu = document.getElementById('menu-tools');
     if (toolsMenu) {
-        const icons = ['shield-check', 'lock', 'binary', 'zap', 'unlock', 'help-circle', 'frown', 'qr-code', 'type'];
-        const toolKeys = ['passgen', 'secureVault', 'morse', 'jailbreak', 'crack', 'decision', 'rickroll', 'qrgen', 'textutils'];
-        toolsMenu.innerHTML = toolKeys.map((k, i) => `<button class="tool-btn" onclick="showTool('${k === 'passgen' ? 'password' : (k === 'secureVault' ? 'vault' : (k === 'morse' ? 'morse' : (k === 'jailbreak' ? 'jailbreak' : (k === 'crack' ? 'crack' : (k === 'decision' ? 'decision' : (k === 'rickroll' ? 'rickroll' : (k === 'qrgen' ? 'qrcode' : 'textutils')))))))}')"><i data-lucide="${icons[i]}"></i> ${t(k)}</button>`).join('');
+        const icons = ['shield-check', 'lock', 'binary', 'mic', 'zap', 'unlock', 'help-circle', 'frown', 'qr-code', 'type'];
+        const toolKeys = ['passgen', 'secureVault', 'morse', 'tts', 'jailbreak', 'crack', 'decision', 'rickroll', 'qrgen', 'textutils'];
+        toolsMenu.innerHTML = toolKeys.map((k, i) => `<button class="tool-btn" onclick="showTool('${k === 'passgen' ? 'password' : (k === 'secureVault' ? 'vault' : (k === 'morse' ? 'morse' : (k === 'jailbreak' ? 'jailbreak' : (k === 'crack' ? 'crack' : (k === 'decision' ? 'decision' : (k === 'rickroll' ? 'rickroll' : (k === 'qrgen' ? 'qrcode' : (k === 'tts' ? 'tts' : 'textutils'))))))))}')"><i data-lucide="${icons[i]}"></i> ${t(k)}</button>`).join('');
     }
     const netMenu = document.getElementById('menu-network');
     if (netMenu) {
@@ -251,6 +255,22 @@ function showTool(toolName) {
                 <div class="stat-card"><span class="stat-label">${t('upload')}</span><span id="upload-display" class="stat-value">--</span></div>
             </div>
             <button class="tool-btn" id="start-test-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
+        </div>`;
+    }
+
+    if (toolName === 'tts') {
+        title.innerText = t('tts');
+        content.innerHTML = `<div class="pass-box">
+            <textarea id="tts-input" class="text-area" placeholder="${t('enterText')}"></textarea>
+            <select id="tts-lang" class="select-input">
+                <option value="en">English</option>
+                <option value="ro">Română</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+            </select>
+            <button class="tool-btn" style="justify-content:center" onclick="runTTS()"><i data-lucide="volume-2"></i> ${t('speak')}</button>
+            <div id="tts-status" style="margin-top:15px; text-align:center;"></div>
         </div>`;
     }
 
@@ -407,6 +427,33 @@ function showTool(toolName) {
         content.innerHTML = `<div class="pass-box" style="text-align:center;"><input type="text" id="qr-input" class="text-input" placeholder="Text..." oninput="updateQR()"><div class="qr-container" id="qr-result" style="margin: 20px auto; display:block; width:fit-content;"><p style="font-size: 14px; color: var(--secondary-text); padding: 40px;">Waiting...</p></div><button id="download-qr" class="tool-btn" style="display:none; justify-content:center;" onclick="downloadQR()">Save PNG</button></div>`;
     }
     lucide.createIcons();
+}
+
+async function runTTS() {
+    const text = document.getElementById('tts-input').value.trim();
+    const lang = document.getElementById('tts-lang').value;
+    const status = document.getElementById('tts-status');
+    const chatId = tg.initDataUnsafe?.user?.id;
+    if (!text) return;
+    status.innerText = "⏳ " + t('processing'); playSound('loading');
+    
+    const formData = new FormData();
+    formData.append('text', text);
+    formData.append('lang', lang);
+    if (chatId) formData.append('chatId', chatId);
+
+    try {
+        const response = await fetch('/api/tts', { method: 'POST', body: formData });
+        const data = await response.json();
+        stopSound('loading');
+        if (data.success) {
+            status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('sentChat')}</span>`;
+            playSound('success'); haptic.notificationOccurred('success');
+        } else throw new Error();
+    } catch (e) {
+        stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`;
+        playSound('error'); haptic.notificationOccurred('error');
+    }
 }
 
 function checkJailbreak() {
