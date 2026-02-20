@@ -511,18 +511,33 @@ function generateComplexPassword(isUserAction) {
 }
 
 function startMetronome() {
+    if (isMetronomeRunning) return;
     isMetronomeRunning = true;
     document.getElementById('metro-btn').innerText = "Stop";
     const circle = document.getElementById('metro-circle');
-    metronomeInterval = setInterval(() => {
+    
+    const playBeat = () => {
+        if (!isMetronomeRunning) return;
+        
         playSound('click');
         haptic.impactOccurred('medium');
         circle.classList.add('metro-active');
-        setTimeout(() => circle.classList.remove('metro-active'), 50);
-    }, (60 / bpm) * 1000);
+        setTimeout(() => circle.classList.remove('metro-active'), 100);
+        
+        const interval = (60 / bpm) * 1000;
+        metronomeInterval = setTimeout(playBeat, interval);
+    };
+    
+    playBeat();
 }
 
-function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearInterval(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
+function stopMetronome() {
+    isMetronomeRunning = false;
+    if (metronomeInterval) clearTimeout(metronomeInterval);
+    const btn = document.getElementById('metro-btn');
+    if (btn) btn.innerText = "Start";
+}
+
 function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
 let vaultFile = null;
 function handleVaultFile(input) { if (input.files && input.files[0]) { vaultFile = input.files[0]; document.getElementById('vault-filename').innerText = vaultFile.name; playSound('click'); haptic.impactOccurred('light'); } }
