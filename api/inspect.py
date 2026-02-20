@@ -1,6 +1,8 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import requests
+import socket
+import time
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 
@@ -19,26 +21,39 @@ class handler(BaseHTTPRequestHandler):
             url = 'https://' + url
 
         try:
-            # Track redirects
-            response = requests.get(url, timeout=10, allow_redirects=True)
+            start_time = time.time()
+            # Track redirects and headers
+            response = requests.get(url, timeout=10, allow_redirects=True, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ToolkitBot/1.0'
+            })
+            end_time = time.time()
             
+            # Resolve IP
+            domain = urlparse(response.url).netloc
+            try:
+                ip_addr = socket.gethostbyname(domain)
+            except:
+                ip_addr = "Could not resolve"
+
             # Metadata extraction
             soup = BeautifulSoup(response.text, 'html.parser')
             title = soup.title.string if soup.title else "No Title"
-            desc = soup.find("meta", attrs={"name": "description"})
-            description = desc["content"] if desc else "No description available"
             
-            redirect_chain = [r.url for r in response.history] + [response.url]
+            # Headers analysis
+            server = response.headers.get('Server', 'Unknown')
+            content_type = response.headers.get('Content-Type', 'Unknown')
             
             result = {
                 "success": True,
-                "title": title.strip(),
-                "description": description.strip(),
+                "title": title.strip()[:100],
                 "status_code": response.status_code,
                 "final_url": response.url,
+                "ip": ip_addr,
+                "server": server,
+                "content_type": content_type.split(';')[0],
+                "response_time": round((end_time - start_time) * 1000, 2),
                 "is_secure": response.url.startswith('https://'),
-                "redirect_count": len(response.history),
-                "chain": redirect_chain
+                "redirect_count": len(response.history)
             }
         except Exception as e:
             result = {"success": False, "error": str(e)}
