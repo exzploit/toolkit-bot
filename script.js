@@ -75,23 +75,6 @@ const sounds = {
 };
 sounds.loading.loop = true;
 
-function unlockAudio() {
-    // Prime all sounds
-    Object.values(sounds).forEach(s => {
-        s.play().then(() => {
-            s.pause();
-            s.currentTime = 0;
-        }).catch(() => {});
-    });
-    
-    document.getElementById('unlock-overlay').style.display = 'none';
-    const app = document.getElementById('app');
-    app.style.opacity = '1';
-    app.style.pointerEvents = 'auto';
-    playSound('click');
-    haptic.impactOccurred('medium');
-}
-
 function playSound(type) {
     if (!soundsEnabled) return;
     try {
@@ -101,7 +84,6 @@ function playSound(type) {
             s.currentTime = 0;
             s.play().catch(() => {});
         } else {
-            // Clone for overlapping sounds (like fast clicks)
             const clone = s.cloneNode();
             clone.volume = 0.4;
             clone.play().catch(() => {});
@@ -188,15 +170,21 @@ function updateUIVocabulary() {
 }
 
 function switchView(viewId) {
+    // Only play sound once during transition
     playSound('click');
     haptic.impactOccurred('light');
+    
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById(`view-${viewId}`).style.display = 'block';
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(`nav-${viewId}`).classList.add('active');
     
-    if (viewId === 'media') renderMediaTabs();
+    if (viewId === 'media') {
+        // Pass 'false' to suppress the extra sound from setMediaTab
+        renderMediaTabs(false);
+    }
     if (viewId === 'settings') renderSettings();
+    
     hideTool();
     lucide.createIcons();
 }
@@ -368,7 +356,7 @@ async function playMorseHaptics() {
 }
 
 function generateInvisibleText() {
-    const invChar = "\u3164"; // U+3164 Hangul Filler (Invisible)
+    const invChar = "\u3164"; 
     navigator.clipboard.writeText(invChar);
     playSound('success');
     haptic.notificationOccurred('success');
@@ -468,7 +456,8 @@ async function runSpeedTest() {
     if (btn) { btn.disabled = false; btn.innerText = t('testAgain'); }
 }
 
-function renderMediaTabs() {
+function renderMediaTabs(shouldPlaySound = true) {
+    if (shouldPlaySound) playSound('click');
     const container = document.getElementById('media-tabs-container');
     container.innerHTML = `
         <div class="tab-container">
@@ -478,11 +467,11 @@ function renderMediaTabs() {
         </div>
         <div id="media-tab-content"></div>
     `;
-    setMediaTab('downs');
+    setMediaTab('downs', false); // Sub-call should not play sound
 }
 
-function setMediaTab(tab) {
-    playSound('click');
+function setMediaTab(tab, shouldPlaySound = true) {
+    if (shouldPlaySound) playSound('click');
     haptic.impactOccurred('light');
     const content = document.getElementById('media-tab-content');
     document.querySelectorAll('#media-tabs-container .tab-btn').forEach(b => b.classList.remove('active'));
@@ -500,7 +489,7 @@ function setMediaTab(tab) {
             </div>
             <div id="downloader-ui-box"></div>
         `;
-        showDownloaderUI('yt');
+        showDownloaderUI('yt', false); // Initial sub-tab render should not play sound
     } else if (tab === 'conv') {
         content.innerHTML = `<div class="pass-box">
             <div class="upload-box" style="border: 2px dashed var(--border-color); background:var(--secondary-bg); padding:40px 20px; border-radius:16px; text-align:center; cursor:pointer;" onclick="document.getElementById('audio-upload').click()">
@@ -525,8 +514,8 @@ function setMediaTab(tab) {
     lucide.createIcons();
 }
 
-function showDownloaderUI(type) {
-    playSound('click');
+function showDownloaderUI(type, shouldPlaySound = true) {
+    if (shouldPlaySound) playSound('click');
     const box = document.getElementById('downloader-ui-box');
     if (!box) return;
     document.querySelectorAll('#media-tab-content .tab-btn').forEach(b => b.classList.remove('active'));
@@ -603,7 +592,18 @@ function startMetronome() {
     playBeat();
 }
 
-function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearTimeout(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
+function stopMetronome() {
+    isMetronomeRunning = false;
+    if (metronomeInterval) clearTimeout(metronomeInterval);
+    const btn = document.getElementById('metro-btn');
+    if (btn) btn.innerText = "Start";
+}
+
+function toggleMetronome() {
+    if (isMetronomeRunning) stopMetronome();
+    else startMetronome();
+}
+
 function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
 let vaultFile = null;
 function handleVaultFile(input) { if (input.files && input.files[0]) { vaultFile = input.files[0]; document.getElementById('vault-filename').innerText = vaultFile.name; playSound('click'); haptic.impactOccurred('light'); } }
