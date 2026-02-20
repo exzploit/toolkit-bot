@@ -342,15 +342,15 @@ async function playMorseHaptics() {
     for (let char of code) {
         if (!isMorsePlaying) break;
         if (char === '.') {
-            haptic.impactOccurred('medium');
+            haptic.impactOccurred('light');
             playSound('click');
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 250));
         } else if (char === '-') {
-            haptic.notificationOccurred('warning');
+            haptic.impactOccurred('heavy');
             playSound('click');
-            await new Promise(r => setTimeout(r, 400));
+            await new Promise(r => setTimeout(r, 500));
         } else {
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 400));
         }
         await new Promise(r => setTimeout(r, 100));
     }
@@ -576,22 +576,28 @@ function generateComplexPassword(isUserAction) {
     if (display) display.innerText = password;
 }
 
+let nextBeatTime = 0;
 function startMetronome() {
     if (isMetronomeRunning) return;
     isMetronomeRunning = true;
     document.getElementById('metro-btn').innerText = "Stop";
     const circle = document.getElementById('metro-circle');
     
-    const playBeat = () => {
+    nextBeatTime = performance.now();
+    const tick = () => {
         if (!isMetronomeRunning) return;
+        
         playSound('click');
         haptic.impactOccurred('medium');
         circle.classList.add('metro-active');
         setTimeout(() => circle.classList.remove('metro-active'), 100);
+        
         const interval = (60 / bpm) * 1000;
-        metronomeInterval = setTimeout(playBeat, interval);
+        nextBeatTime += interval;
+        const drift = performance.now() - nextBeatTime;
+        metronomeInterval = setTimeout(tick, Math.max(0, interval - drift));
     };
-    playBeat();
+    tick();
 }
 
 function stopMetronome() {
