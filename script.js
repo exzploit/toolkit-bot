@@ -7,6 +7,7 @@ let soundsEnabled = localStorage.getItem('toolkit_sounds') !== 'false';
 let metronomeInterval = null;
 let isMetronomeRunning = false;
 let bpm = 120;
+let speedTestController = null;
 
 const i18n = {
     en: {
@@ -69,6 +70,14 @@ const morseDict = {
     '6': '-....', '7': '--...', '8': '---..', '9': '----.', '0': '-----', ' ': ' '
 };
 
+const unicodeStyles = {
+    bold: { a: '𝐚', A: '𝐀', '0': '𝟎' },
+    italic: { a: '𝑎', A: '𝑨', '0': '0' },
+    script: { a: '𝒶', A: '𝒜', '0': '0' },
+    gothic: { a: '𝔞', A: '𝔄', '0': '0' },
+    flipped: "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnuʌʍxʎzⱯᗺƆᗡƎℲ⅁HIſʞ˥WNOԀΌᴚS⊥∩ΛMX⅄Z0ƖᄅƐㄣϛ9ㄥ86"
+};
+
 const sounds = {
     click: new Audio('assets/sfx/click.wav'),
     success: new Audio('assets/sfx/success.wav'),
@@ -77,8 +86,27 @@ const sounds = {
 };
 sounds.loading.loop = true;
 
+// Audio Context Unlock for iOS
+let audioContextUnlocked = false;
+function unlockAudioContext() {
+    if (audioContextUnlocked) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+        const ctx = new AudioContext();
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+        ctx.resume().then(() => {
+            audioContextUnlocked = true;
+        });
+    }
+}
+
 function playSound(type) {
     if (!soundsEnabled) return;
+    unlockAudioContext();
     try {
         const s = sounds[type];
         if (!s) return;
@@ -129,7 +157,7 @@ function switchLang() {
     haptic.notificationOccurred('success');
     updateUIVocabulary();
     renderSettings();
-    if (document.getElementById('view-media').style.display !== 'none') renderMediaTabs();
+    if (document.getElementById('view-media').style.display !== 'none') renderMediaTabs(false);
 }
 
 function toggleSounds() {
@@ -172,17 +200,22 @@ function updateUIVocabulary() {
 }
 
 function switchView(viewId) {
-    // Only play sound once during transition
     playSound('click');
     haptic.impactOccurred('light');
     
+    // Stop speedtest if running
+    if (speedTestController) {
+        speedTestController.abort();
+        speedTestController = null;
+        stopSound('loading');
+    }
+
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById(`view-${viewId}`).style.display = 'block';
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(`nav-${viewId}`).classList.add('active');
     
     if (viewId === 'media') {
-        // Pass 'false' to suppress the extra sound from setMediaTab
         renderMediaTabs(false);
     }
     if (viewId === 'settings') renderSettings();
@@ -247,6 +280,36 @@ function showTool(toolName) {
         </div>`;
     }
 
+    if (toolName === 'textutils') {
+        title.innerText = t('textutils');
+        content.innerHTML = `<div class="pass-box">
+            <textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea>
+            <div id="text-stats" class="stats-info"></div>
+            <div class="util-grid" style="margin-bottom:15px;">
+                <button class="small-btn" onclick="processText('upper')">${t('upper')}</button>
+                <button class="small-btn" onclick="processText('lower')">${t('lower')}</button>
+                <button class="small-btn" onclick="processText('title')">${t('title')}</button>
+                <button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 10px;">
+                <div style="display:flex; gap:10px; margin-bottom:12px;">
+                    <select id="unicode-mode" class="select-input" style="flex:1; margin-bottom:0;">
+                        <option value="bold">Bold Serif</option>
+                        <option value="italic">Italic Serif</option>
+                        <option value="script">Script Style</option>
+                        <option value="gothic">Gothic Style</option>
+                        <option value="flipped">Flipped text</option>
+                        <option value="glitch">Glitch (Zalgo)</option>
+                    </select>
+                    <button class="small-btn" style="padding:0 20px; background:var(--primary-color); color:white;" onclick="transformUnicode()">${t('transform')}</button>
+                </div>
+                <button class="tool-btn" style="justify-content:center; background:var(--secondary-bg); font-size:14px; height:45px;" onclick="generateInvisibleText()">
+                    <i data-lucide="ghost"></i> ${t('invisibleText')}
+                </button>
+            </div>
+        </div>`;
+    }
+    
     if (toolName === 'vault') {
         title.innerText = t('secureVault');
         content.innerHTML = `<div class="pass-box">
@@ -296,23 +359,47 @@ function showTool(toolName) {
         title.innerText = t('qrgen');
         content.innerHTML = `<div class="pass-box" style="text-align:center;"><input type="text" id="qr-input" class="text-input" placeholder="Text..." oninput="updateQR()"><div class="qr-container" id="qr-result" style="margin: 20px auto; display:block; width:fit-content;"><p style="font-size: 14px; color: var(--secondary-text); padding: 40px;">Waiting...</p></div><button id="download-qr" class="tool-btn" style="display:none; justify-content:center;" onclick="downloadQR()">Save PNG</button></div>`;
     }
-    if (toolName === 'textutils') {
-        title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box">
-            <textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea>
-            <div id="text-stats" class="stats-info"></div>
-            <div class="util-grid" style="margin-bottom:12px;">
-                <button class="small-btn" onclick="processText('upper')">${t('upper')}</button>
-                <button class="small-btn" onclick="processText('lower')">${t('lower')}</button>
-                <button class="small-btn" onclick="processText('title')">${t('title')}</button>
-                <button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button>
-            </div>
-            <button class="tool-btn" style="justify-content:center; background:var(--primary-color); color:white;" onclick="generateInvisibleText()">
-                <i data-lucide="ghost" style="color:white"></i> ${t('invisibleText')}
-            </button>
-        </div>`;
-    }
     lucide.createIcons();
+}
+
+function transformUnicode() {
+    const input = document.getElementById('text-input');
+    const mode = document.getElementById('unicode-mode').value;
+    if (!input || !input.value) return;
+    
+    let text = input.value;
+    let res = "";
+
+    if (mode === 'glitch') {
+        const chars = "̀́̂̃̄̅̆̇̈̉̊̋̌̍̎̏̐̑̒̓̔̽̾̿̀́͂̓͋引领";
+        for (let c of text) {
+            res += c;
+            for (let i = 0; i < 3; i++) res += chars[Math.floor(Math.random() * chars.length)];
+        }
+    } else if (mode === 'flipped') {
+        const normal = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const reversed = unicodeStyles.flipped;
+        for (let c of text) {
+            const idx = normal.indexOf(c);
+            res = (idx !== -1 ? reversed[idx] : c) + res;
+        }
+    } else {
+        const mapping = unicodeStyles[mode];
+        for (let c of text) {
+            const code = c.charCodeAt(0);
+            if (c >= 'a' && c <= 'z') {
+                res += String.fromCodePoint(mapping.a.codePointAt(0) + (code - 97));
+            } else if (c >= 'A' && c <= 'Z') {
+                res += String.fromCodePoint(mapping.A.codePointAt(0) + (code - 65));
+            } else if (c >= '0' && c <= '9') {
+                res += (mapping['0'] !== '0') ? String.fromCodePoint(mapping['0'].codePointAt(0) + (code - 48)) : c;
+            } else res += c;
+        }
+    }
+    input.value = res;
+    updateTextStats();
+    playSound('click');
+    haptic.impactOccurred('light');
 }
 
 function hideTool() {
@@ -320,13 +407,22 @@ function hideTool() {
     stopMetronome();
     stopSound('loading');
     isMorsePlaying = false;
+    // Cancel speedtest if active
+    if (speedTestController) {
+        speedTestController.abort();
+        speedTestController = null;
+    }
 }
 
 function updateMorse() {
-    const input = document.getElementById('morse-input').value.toUpperCase();
+    const input = document.getElementById('morse-input');
+    if (!input) return;
     const output = document.getElementById('morse-output');
+    if (!output) return;
+    
+    const val = input.value.toUpperCase();
     let res = "";
-    for (let char of input) {
+    for (let char of val) {
         res += (morseDict[char] || "") + " ";
     }
     output.innerText = res.trim();
@@ -335,7 +431,10 @@ function updateMorse() {
 let isMorsePlaying = false;
 async function playMorseHaptics() {
     if (isMorsePlaying) return;
-    const code = document.getElementById('morse-output').innerText;
+    const output = document.getElementById('morse-output');
+    if (!output) return;
+    
+    const code = output.innerText;
     if (!code) return;
     isMorsePlaying = true;
     
@@ -402,21 +501,27 @@ async function runSpeedTest() {
     const progressBar = document.getElementById('progress-bar');
     const statusText = document.getElementById('test-status');
     const metaInfo = document.getElementById('meta-info');
+    
     if (!speedDisplay) return;
+    
+    // Create new abort controller
+    speedTestController = new AbortController();
+    const signal = speedTestController.signal;
     
     progressBar.style.width = '0%';
     statusText.innerText = t('testing') + "...";
     
     try {
-        const locateRes = await fetch('https://locate.measurementlab.net/v2/nearest/ndt/ndt7');
+        const locateRes = await fetch('https://locate.measurementlab.net/v2/nearest/ndt/ndt7', { signal });
         const locateData = await locateRes.json();
         const server = locateData.results[0];
         if (metaInfo) metaInfo.innerText = `Server: ${server.location.city} (${server.machine})`;
 
         let pings = [];
         for (let i = 0; i < 15; i++) {
+            if (signal.aborted) throw new Error('Aborted');
             const start = performance.now();
-            await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store' });
+            await fetch('https://speed.cloudflare.com/__down?bytes=0', { cache: 'no-store', signal });
             pings.push(performance.now() - start);
             progressBar.style.width = (i * 1) + '%';
         }
@@ -427,9 +532,14 @@ async function runSpeedTest() {
 
         let dlReceived = 0;
         const dlStart = performance.now();
-        const dlResponse = await fetch(`https://speed.cloudflare.com/__down?bytes=25000000`, { cache: 'no-store' });
+        const dlResponse = await fetch(`https://speed.cloudflare.com/__down?bytes=25000000`, { cache: 'no-store', signal });
         const reader = dlResponse.body.getReader();
+        
         while (true) {
+            if (signal.aborted) {
+                reader.cancel();
+                throw new Error('Aborted');
+            }
             const { done, value } = await reader.read();
             if (done) break;
             dlReceived += value.length;
@@ -443,7 +553,7 @@ async function runSpeedTest() {
 
         const ulData = new Uint8Array(5000000);
         const ulStart = performance.now();
-        await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: ulData, cache: 'no-store' });
+        await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: ulData, cache: 'no-store', signal });
         const ulElapsed = (performance.now() - ulStart) / 1000;
         const ulSpeed = (5 * 8) / ulElapsed;
         uploadDisplay.innerText = ulSpeed.toFixed(1) + ' Mbps';
@@ -454,8 +564,16 @@ async function runSpeedTest() {
         stopSound('loading');
         playSound('success');
         haptic.notificationOccurred('success');
-    } catch (e) { statusText.innerText = t('failed'); stopSound('loading'); playSound('error'); haptic.notificationOccurred('error'); }
+    } catch (e) {
+        if (e.message !== 'Aborted') {
+            statusText.innerText = t('failed');
+            stopSound('loading');
+            playSound('error');
+            haptic.notificationOccurred('error');
+        }
+    }
     if (btn) { btn.disabled = false; btn.innerText = t('testAgain'); }
+    speedTestController = null;
 }
 
 function renderMediaTabs(shouldPlaySound = true) {
@@ -576,7 +694,6 @@ function generateComplexPassword(isUserAction) {
     if (display) display.innerText = password;
 }
 
-let nextBeatTime = 0;
 function startMetronome() {
     if (isMetronomeRunning) return;
     isMetronomeRunning = true;
@@ -586,12 +703,10 @@ function startMetronome() {
     nextBeatTime = performance.now();
     const tick = () => {
         if (!isMetronomeRunning) return;
-        
         playSound('click');
         haptic.impactOccurred('medium');
         circle.classList.add('metro-active');
         setTimeout(() => circle.classList.remove('metro-active'), 100);
-        
         const interval = (60 / bpm) * 1000;
         nextBeatTime += interval;
         const drift = performance.now() - nextBeatTime;
@@ -607,11 +722,7 @@ function stopMetronome() {
     if (btn) btn.innerText = "Start";
 }
 
-function toggleMetronome() {
-    if (isMetronomeRunning) stopMetronome();
-    else startMetronome();
-}
-
+function toggleMetronome() { if (isMetronomeRunning) stopMetronome(); else startMetronome(); }
 function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
 let vaultFile = null;
 function handleVaultFile(input) { if (input.files && input.files[0]) { vaultFile = input.files[0]; document.getElementById('vault-filename').innerText = vaultFile.name; playSound('click'); haptic.impactOccurred('light'); } }
