@@ -69,22 +69,51 @@ const morseDict = {
 
 const sounds = {
     click: new Audio('assets/sfx/click.wav'),
+    success: new Audio('assets/sfx/success.wav'),
     error: new Audio('assets/sfx/error.wav'),
     loading: new Audio('assets/sfx/loading.wav')
 };
 sounds.loading.loop = true;
 
+function unlockAudio() {
+    // Prime all sounds
+    Object.values(sounds).forEach(s => {
+        s.play().then(() => {
+            s.pause();
+            s.currentTime = 0;
+        }).catch(() => {});
+    });
+    
+    document.getElementById('unlock-overlay').style.display = 'none';
+    const app = document.getElementById('app');
+    app.style.opacity = '1';
+    app.style.pointerEvents = 'auto';
+    playSound('click');
+    haptic.impactOccurred('medium');
+}
+
 function playSound(type) {
     if (!soundsEnabled) return;
     try {
         const s = sounds[type];
-        if (type === 'loading') { s.currentTime = 0; s.play().catch(() => {}); }
-        else { const clone = s.cloneNode(); clone.play().catch(() => {}); }
+        if (!s) return;
+        if (type === 'loading') {
+            s.currentTime = 0;
+            s.play().catch(() => {});
+        } else {
+            // Clone for overlapping sounds (like fast clicks)
+            const clone = s.cloneNode();
+            clone.volume = 0.4;
+            clone.play().catch(() => {});
+        }
     } catch(e) {}
 }
 
 function stopSound(type) {
-    if (sounds[type]) { sounds[type].pause(); sounds[type].currentTime = 0; }
+    if (sounds[type]) {
+        sounds[type].pause();
+        sounds[type].currentTime = 0;
+    }
 }
 
 function t(key) { return i18n[currentLang][key] || key; }
@@ -324,9 +353,11 @@ async function playMorseHaptics() {
         if (!isMorsePlaying) break;
         if (char === '.') {
             haptic.impactOccurred('medium');
+            playSound('click');
             await new Promise(r => setTimeout(r, 200));
         } else if (char === '-') {
             haptic.notificationOccurred('warning');
+            playSound('click');
             await new Promise(r => setTimeout(r, 400));
         } else {
             await new Promise(r => setTimeout(r, 300));
@@ -339,7 +370,7 @@ async function playMorseHaptics() {
 function generateInvisibleText() {
     const invChar = "\u3164"; // U+3164 Hangul Filler (Invisible)
     navigator.clipboard.writeText(invChar);
-    playSound('click');
+    playSound('success');
     haptic.notificationOccurred('success');
     tg.MainButton.setText(t('copied')).show();
     setTimeout(() => tg.MainButton.hide(), 2000);
