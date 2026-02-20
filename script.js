@@ -29,7 +29,9 @@ const i18n = {
         scanning: "Scanning...", open: "OPEN", closed: "CLOSED", target: "Target IP/Host",
         secureVault: "Secure Vault", encrypt: "Encrypt File", decrypt: "Decrypt File",
         password: "Password", dropFile: "Drop file or click", success: "Success!",
-        server: "Server", disguise: "Disguise Text", redirectType: "Redirect Type"
+        server: "Server", disguise: "Disguise Text", redirectType: "Redirect Type",
+        morse: "Morse Engine", play: "Play Haptic", invisibleText: "Invisible Text",
+        copied: "Copied to clipboard!"
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -51,8 +53,18 @@ const i18n = {
         scanning: "Se scanează...", open: "DESCHIS", closed: "ÎNCHIS", target: "IP sau Gazdă",
         secureVault: "Seif Securizat", encrypt: "Criptează Fișier", decrypt: "Decriptează Fișier",
         password: "Parolă", dropFile: "Trage fișierul sau apasă", success: "Succes!",
-        server: "Server", disguise: "Text Mascare", redirectType: "Tip Redirecționare"
+        server: "Server", disguise: "Text Mascare", redirectType: "Tip Redirecționare",
+        morse: "Motor Morse", play: "Redă Haptic", invisibleText: "Text Invizibil",
+        copied: "Copiat în clipboard!"
     }
+};
+
+const morseDict = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+    'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
+    'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+    'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
+    '6': '-....', '7': '--...', '8': '---..', '9': '----.', '0': '-----', ' ': ' '
 };
 
 const sounds = {
@@ -130,9 +142,10 @@ function updateUIVocabulary() {
     if (toolsMenu) {
         toolsMenu.children[0].innerHTML = `<i data-lucide="shield-check"></i> ${t('passgen')}`;
         toolsMenu.children[1].innerHTML = `<i data-lucide="lock"></i> ${t('secureVault')}`;
-        toolsMenu.children[2].innerHTML = `<i data-lucide="frown"></i> ${t('rickroll')}`;
-        toolsMenu.children[3].innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
-        toolsMenu.children[4].innerHTML = `<i data-lucide="type"></i> ${t('textutils')}`;
+        toolsMenu.children[2].innerHTML = `<i data-lucide="binary"></i> ${t('morse')}`;
+        toolsMenu.children[3].innerHTML = `<i data-lucide="frown"></i> ${t('rickroll')}`;
+        toolsMenu.children[4].innerHTML = `<i data-lucide="qr-code"></i> ${t('qrgen')}`;
+        toolsMenu.children[5].innerHTML = `<i data-lucide="type"></i> ${t('textutils')}`;
     }
     
     const networkMenu = document.getElementById('menu-network');
@@ -172,7 +185,7 @@ function showTool(toolName) {
             <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 15px; height: 20px;">${t('systemReady')}</div>
             <div class="speed-gauge"><span id="speed-display" class="speed-value">0.0</span><span class="speed-unit">Mbps</span></div>
             <div id="test-status" style="color: var(--secondary-text); font-size: 14px; font-weight: 600; margin-bottom: 10px;">${t('standby')}</div>
-            <div class="progress-container" style="margin: 10px 0 25px 0;"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
+            <div class="progress-container"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
             <div class="stats-grid">
                 <div class="stat-card"><span class="stat-label">${t('latency')}</span><span id="ping-display" class="stat-value">--</span></div>
                 <div class="stat-card"><span class="stat-label">${t('jitter')}</span><span id="jitter-display" class="stat-value">--</span></div>
@@ -180,6 +193,15 @@ function showTool(toolName) {
                 <div class="stat-card"><span class="stat-label">${t('upload')}</span><span id="upload-display" class="stat-value">--</span></div>
             </div>
             <button class="tool-btn" id="start-test-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
+        </div>`;
+    }
+
+    if (toolName === 'morse') {
+        title.innerText = t('morse');
+        content.innerHTML = `<div class="pass-box">
+            <textarea id="morse-input" class="text-area" placeholder="Enter text..." oninput="updateMorse()"></textarea>
+            <div id="morse-output" style="background:var(--progress-bg); padding:15px; border-radius:12px; min-height:60px; font-family:monospace; font-size:18px; word-break:break-all; margin-bottom:15px; letter-spacing:2px;"></div>
+            <button class="tool-btn" style="justify-content:center" onclick="playMorseHaptics()"><i data-lucide="vibrate"></i> ${t('play')}</button>
         </div>`;
     }
 
@@ -257,7 +279,19 @@ function showTool(toolName) {
     }
     if (toolName === 'textutils') {
         title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div></div>`;
+        content.innerHTML = `<div class="pass-box">
+            <textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea>
+            <div id="text-stats" class="stats-info"></div>
+            <div class="util-grid" style="margin-bottom:12px;">
+                <button class="small-btn" onclick="processText('upper')">${t('upper')}</button>
+                <button class="small-btn" onclick="processText('lower')">${t('lower')}</button>
+                <button class="small-btn" onclick="processText('title')">${t('title')}</button>
+                <button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button>
+            </div>
+            <button class="tool-btn" style="justify-content:center; background:var(--primary-color); color:white;" onclick="generateInvisibleText()">
+                <i data-lucide="ghost" style="color:white"></i> ${t('invisibleText')}
+            </button>
+        </div>`;
     }
     lucide.createIcons();
 }
@@ -266,21 +300,60 @@ function hideTool() {
     document.getElementById('tool-container').style.display = 'none';
     stopMetronome();
     stopSound('loading');
+    isMorsePlaying = false;
+}
+
+function updateMorse() {
+    const input = document.getElementById('morse-input').value.toUpperCase();
+    const output = document.getElementById('morse-output');
+    let res = "";
+    for (let char of input) {
+        res += (morseDict[char] || "") + " ";
+    }
+    output.innerText = res.trim();
+}
+
+let isMorsePlaying = false;
+async function playMorseHaptics() {
+    if (isMorsePlaying) return;
+    const code = document.getElementById('morse-output').innerText;
+    if (!code) return;
+    isMorsePlaying = true;
+    
+    for (let char of code) {
+        if (!isMorsePlaying) break;
+        if (char === '.') {
+            haptic.impactOccurred('medium');
+            await new Promise(r => setTimeout(r, 200));
+        } else if (char === '-') {
+            haptic.notificationOccurred('warning');
+            await new Promise(r => setTimeout(r, 400));
+        } else {
+            await new Promise(r => setTimeout(r, 300));
+        }
+        await new Promise(r => setTimeout(r, 100));
+    }
+    isMorsePlaying = false;
+}
+
+function generateInvisibleText() {
+    const invChar = "\u3164"; // U+3164 Hangul Filler (Invisible)
+    navigator.clipboard.writeText(invChar);
+    playSound('click');
+    haptic.notificationOccurred('success');
+    tg.MainButton.setText(t('copied')).show();
+    setTimeout(() => tg.MainButton.hide(), 2000);
 }
 
 function generateRickroll() {
     const alias = document.getElementById('rick-alias').value.trim() || 'Click Me';
     const type = document.getElementById('rick-type').value;
-    
     const targets = {
         youtube: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         spotify: "https://open.spotify.com/track/4cOdK2wGvWyR9m7UNvy9oE",
         tiktok: "https://www.tiktok.com/@rickastlyofficial/video/6884381585451126018"
     };
-
-    // Use a redirect service wrapper to make it look less like a Rickroll
     const finalUrl = `https://www.google.com/url?q=${encodeURIComponent(targets[type])}&disguise=${encodeURIComponent(alias)}`;
-    
     document.getElementById('rick-url').innerText = finalUrl;
     document.getElementById('rick-result').style.display = 'block';
     playSound('success');
@@ -292,37 +365,8 @@ function copyRickroll() {
     navigator.clipboard.writeText(text);
     playSound('click');
     haptic.impactOccurred('medium');
-    tg.MainButton.setText('Copied!').show();
+    tg.MainButton.setText(t('copied')).show();
     setTimeout(() => tg.MainButton.hide(), 2000);
-}
-
-async function runPortScan() {
-    const target = document.getElementById('scan-target').value.trim();
-    const resultDiv = document.getElementById('scan-results');
-    if (!target) return;
-    resultDiv.innerHTML = `<p>${t('scanning')}</p>`;
-    playSound('loading');
-    haptic.impactOccurred('medium');
-    try {
-        const response = await fetch(`/api/scan?target=${encodeURIComponent(target)}`);
-        const data = await response.json();
-        stopSound('loading');
-        let html = `<div style="display:grid; gap:8px;">`;
-        data.results.sort((a,b) => a.port - b.port).forEach(r => {
-            const color = r.open ? '#34c759' : '#ff3b30';
-            const status = r.open ? t('open') : t('closed');
-            html += `<div class="settings-cell" style="background:var(--secondary-bg); border-radius:8px; padding:10px 15px;"><span style="font-weight:600">Port ${r.port}</span><span style="color:${color}; font-weight:800; font-size:12px;">${status}</span></div>`;
-        });
-        html += `</div>`;
-        resultDiv.innerHTML = html;
-        playSound('success');
-        haptic.notificationOccurred('success');
-    } catch (e) {
-        stopSound('loading');
-        resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`;
-        playSound('error');
-        haptic.notificationOccurred('error');
-    }
 }
 
 async function runSpeedTest() {
@@ -518,26 +562,17 @@ function startMetronome() {
     
     const playBeat = () => {
         if (!isMetronomeRunning) return;
-        
         playSound('click');
         haptic.impactOccurred('medium');
         circle.classList.add('metro-active');
         setTimeout(() => circle.classList.remove('metro-active'), 100);
-        
         const interval = (60 / bpm) * 1000;
         metronomeInterval = setTimeout(playBeat, interval);
     };
-    
     playBeat();
 }
 
-function stopMetronome() {
-    isMetronomeRunning = false;
-    if (metronomeInterval) clearTimeout(metronomeInterval);
-    const btn = document.getElementById('metro-btn');
-    if (btn) btn.innerText = "Start";
-}
-
+function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearTimeout(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
 function updateBPM(val) { bpm = val; document.getElementById('bpm-val').innerText = bpm; document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
 let vaultFile = null;
 function handleVaultFile(input) { if (input.files && input.files[0]) { vaultFile = input.files[0]; document.getElementById('vault-filename').innerText = vaultFile.name; playSound('click'); haptic.impactOccurred('light'); } }
