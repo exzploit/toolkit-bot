@@ -31,7 +31,8 @@ const i18n = {
         password: "Password", dropFile: "Drop file or click", success: "Success!",
         server: "Server", disguise: "Disguise Text", redirectType: "Redirect Type",
         morse: "Morse Engine", play: "Play Haptic", invisibleText: "Invisible Text",
-        copied: "Copied to clipboard!"
+        copied: "Copied to clipboard!", fancyText: "Fancy Styles", glitchText: "Glitch (Zalgo)", 
+        flipText: "Flip Text", transform: "Transform"
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -55,7 +56,8 @@ const i18n = {
         password: "Parolă", dropFile: "Trage fișierul sau apasă", success: "Succes!",
         server: "Server", disguise: "Text Mascare", redirectType: "Tip Redirecționare",
         morse: "Motor Morse", play: "Redă Haptic", invisibleText: "Text Invizibil",
-        copied: "Copiat în clipboard!"
+        copied: "Copiat în clipboard!", fancyText: "Stiluri Speciale", glitchText: "Glitch (Zalgo)",
+        flipText: "Text Întors", transform: "Transformă"
     }
 };
 
