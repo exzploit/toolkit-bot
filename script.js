@@ -464,15 +464,32 @@ function showDownloaderUI(type, shouldPlaySound = true) {
 let exifFile = null;
 function handleExifFile(input) { if (input.files && input.files[0]) { exifFile = input.files[0]; document.getElementById('exif-filename').innerText = exifFile.name; document.getElementById('exif-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
 async function processExif() {
-    if (!exifFile) return; const status = document.getElementById('exif-status'); status.innerText = t('processing'); playSound('loading');
-    const formData = new FormData(); formData.append('file', exifFile);
+    if (!exifFile) return;
+    const status = document.getElementById('exif-status');
+    const chatId = tg.initDataUnsafe?.user?.id;
+    status.innerText = t('processing');
+    playSound('loading');
+    
+    const formData = new FormData();
+    formData.append('file', exifFile);
+    if (chatId) formData.append('chatId', chatId);
+
     try {
         const response = await fetch('/api/strip-exif', { method: 'POST', body: formData });
-        const blob = await response.blob(); stopSound('loading');
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `clean_${exifFile.name}`; document.body.appendChild(a); a.click(); a.remove();
-        status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('success')}</span>`; playSound('success'); haptic.notificationOccurred('success');
-    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
+        const data = await response.json();
+        stopSound('loading');
+        
+        if (data.success) {
+            status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('sentChat')}</span>`;
+            playSound('success');
+            haptic.notificationOccurred('success');
+        } else throw new Error(data.error);
+    } catch (e) {
+        stopSound('loading');
+        status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`;
+        playSound('error');
+        haptic.notificationOccurred('error');
+    }
 }
 
 function generateInvisibleText() { navigator.clipboard.writeText("\u3164"); playSound('success'); haptic.notificationOccurred('success'); tg.MainButton.setText(t('copied')).show(); setTimeout(() => tg.MainButton.hide(), 2000); }
