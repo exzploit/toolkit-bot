@@ -50,7 +50,8 @@ const i18n = {
         tts: "Text-to-Speech", speak: "Generate Voice", enterText: "Enter text to speak...",
         subnet: "Subnet Master", calculate: "Calculate", networkRange: "Network Range",
         broadcast: "Broadcast", usableHosts: "Usable Hosts", mask: "Subnet Mask",
-        scraper: "Deep Scraper", scrape: "Deep Scrape", scrapeResults: "Scrape Results",
+        scraper: "Scraper", scrape: "Scrape", urlScraper: "URL Scraper", tgScraper: "TG Scraper",
+        username: "Username", bio: "Bio", subscribers: "Subscribers/Members",
         desc_passgen: "Generate high-entropy secure passwords instantly.",
         desc_vault: "Client-side encryption for your sensitive files.",
         desc_morse: "Translate text to Morse code with haptic pulses.",
@@ -70,7 +71,7 @@ const i18n = {
         desc_metronome: "Rock-solid precision metronome with drift compensation.",
         desc_tts: "Convert text to high-quality speech sent to your DM.",
         desc_subnet: "Professional IPv4 CIDR and Subnet calculator.",
-        desc_scraper: "Extract Clean Text, Images, and Contact Info from any URL."
+        desc_scraper: "Powerful tools to extract data from URLs or Telegram profiles."
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -108,7 +109,8 @@ const i18n = {
         tts: "Text-to-Speech", speak: "Generează Voce", enterText: "Introdu textul pentru redare...",
         subnet: "Subnet Master", calculate: "Calculează", networkRange: "Gamă Rețea",
         broadcast: "Broadcast", usableHosts: "Host-uri Utilizabile", mask: "Mască Subnet",
-        scraper: "Deep Scraper", scrape: "Extrage Date", scrapeResults: "Rezultate Extragere",
+        scraper: "Scraper", scrape: "Extrage", urlScraper: "URL Scraper", tgScraper: "TG Scraper",
+        username: "Utilizator", bio: "Bio", subscribers: "Abonați/Membri",
         desc_passgen: "Generează parole securizate cu entropie ridicată.",
         desc_vault: "Criptare locală pentru fișierele tale sensibile.",
         desc_morse: "Tradu text în cod Morse cu impulsuri haptice.",
@@ -128,7 +130,7 @@ const i18n = {
         desc_metronome: "Metronom de precizie cu compensare a derivei temporale.",
         desc_tts: "Convertește textul în voce și îl trimite în DM.",
         desc_subnet: "Calculator profesional de IPv4 CIDR și Subnet.",
-        desc_scraper: "Extrage Text Curat, Imagini și Contacte din orice URL."
+        desc_scraper: "Instrumente puternice pentru extragere date din URL sau profile Telegram."
     }
 };
 
@@ -283,10 +285,14 @@ function showTool(toolName) {
     if (toolName === 'scraper') {
         title.innerText = t('scraper');
         content.innerHTML = `<div class="pass-box">
-            <input type="text" id="scrape-url" class="text-input" placeholder="https://example.com/article">
-            <button class="tool-btn" style="justify-content:center" onclick="runDeepScraper()"><i data-lucide="layers"></i> ${t('scrape')}</button>
+            <div class="tab-container" style="margin-bottom:20px;">
+                <button id="scrape-url-tab" class="tab-btn active" onclick="setScrapeMode('url')">${t('urlScraper')}</button>
+                <button id="scrape-tg-tab" class="tab-btn" onclick="setScrapeMode('tg')">${t('tgScraper')}</button>
+            </div>
+            <div id="scrape-ui-box"></div>
             <div id="scrape-result" style="margin-top:20px;"></div>
         </div>`;
+        setScrapeMode('url', false);
     }
 
     if (toolName === 'subnet') {
@@ -361,26 +367,42 @@ function showTool(toolName) {
     lucide.createIcons();
 }
 
-async function runDeepScraper() {
-    const url = document.getElementById('scrape-url').value.trim();
-    const resultDiv = document.getElementById('scrape-result');
-    if (!url) return;
-    resultDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+function setScrapeMode(mode, sound = true) {
+    if (sound) playSound('click'); haptic.impactOccurred('light');
+    document.getElementById('scrape-url-tab').classList.toggle('active', mode === 'url');
+    document.getElementById('scrape-tg-tab').classList.toggle('active', mode === 'tg');
+    const box = document.getElementById('scrape-ui-box');
+    document.getElementById('scrape-result').innerHTML = "";
+    if (mode === 'url') {
+        box.innerHTML = `<input type="text" id="scrape-url" class="text-input" placeholder="https://example.com/article"><button class="tool-btn" style="justify-content:center" onclick="runURLScraper()"><i data-lucide="layers"></i> ${t('scrape')}</button>`;
+    } else {
+        box.innerHTML = `<input type="text" id="scrape-tg-user" class="text-input" placeholder="@username"><button class="tool-btn" style="justify-content:center" onclick="runTGScraper()"><i data-lucide="send"></i> ${t('scrape')}</button>`;
+    }
+    lucide.createIcons();
+}
+
+async function runURLScraper() {
+    const url = document.getElementById('scrape-url').value.trim(), resDiv = document.getElementById('scrape-result'); if (!url) return;
+    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
-        const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}`);
-        const data = await res.json(); stopSound('loading');
+        const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
         if (data.success) {
-            let html = `<div class="settings-group">
-                <div class="settings-cell"><span class="settings-label">Images Found</span><span style="font-weight:600">${data.image_count}</span></div>
-                <div class="settings-cell"><span class="settings-label">Emails</span><span style="font-weight:600">${data.emails.length}</span></div>
-                <div class="settings-cell"><span class="settings-label">Phones</span><span style="font-weight:600">${data.phones.length}</span></div>
-            </div>`;
-            if (data.emails.length > 0) html += `<p style="font-size:12px; margin-top:10px;"><b>Emails:</b> ${data.emails.join(', ')}</p>`;
-            html += `<textarea class="text-area" style="font-size:12px; height:150px; margin-top:15px;" readonly>${data.text_preview}</textarea>`;
-            resultDiv.innerHTML = html;
+            resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">Images Found</span><span style="font-weight:600">${data.image_count}</span></div><div class="settings-cell"><span class="settings-label">Emails</span><span style="font-weight:600">${data.emails.length}</span></div><div class="settings-cell"><span class="settings-label">Phones</span><span style="font-weight:600">${data.phones.length}</span></div></div><textarea class="text-area" style="font-size:12px; height:150px; margin-top:15px;" readonly>${data.text_preview}</textarea>`;
             playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
-    } catch(e) { stopSound('loading'); resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+}
+
+async function runTGScraper() {
+    const username = document.getElementById('scrape-tg-user').value.trim(), resDiv = document.getElementById('scrape-result'); if (!username) return;
+    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=tg_scrape&username=${encodeURIComponent(username)}`), data = await res.json(); stopSound('loading');
+        if (data.success) {
+            resDiv.innerHTML = `<div class="pass-box" style="padding:15px; background:var(--secondary-bg);"><div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">${data.photo ? `<img src="${data.photo}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid var(--primary-color);">` : `<div style="width:60px; height:60px; border-radius:50%; background:var(--border-color); display:flex; align-items:center; justify-content:center;"><i data-lucide="user"></i></div>`}<div><h4 style="margin:0;">${data.display_name}</h4><span style="font-size:13px; color:var(--secondary-text);">${data.username}</span></div></div><div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('bio')}</span><span style="font-weight:600; font-size:13px; text-align:right;">${data.bio}</span></div>${data.extra ? `<div class="settings-cell"><span class="settings-label">${t('subscribers')}</span><span style="font-weight:600;">${data.extra}</span></div>` : ''}</div></div>`;
+            playSound('success'); haptic.notificationOccurred('success'); lucide.createIcons();
+        } else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }
 
 function runSubnetCalc() {
@@ -436,7 +458,7 @@ async function processDownload(type) {
             const a = document.createElement('a'); a.href = data.url; a.download = data.title || 'media'; document.body.appendChild(a); a.click(); a.remove();
             status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('success')}</span>`; playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
-    } catch(e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
+    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
 }
 
 async function runDecision(type) {

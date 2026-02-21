@@ -25,9 +25,40 @@ class handler(BaseHTTPRequestHandler):
             return self.handle_tts(params)
         elif tool == "scrape":
             return self.handle_scrape(params)
+        elif tool == "tg_scrape":
+            return self.handle_tg_scrape(params)
         
         self.send_response(400)
         self.end_headers()
+
+    def handle_tg_scrape(self, params):
+        username = params.get("username", [""])[0].strip().replace('@', '')
+        if not username:
+            return self.send_json({"success": False, "error": "Username required"})
+        
+        try:
+            url = f"https://t.me/{username}"
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            response = requests.get(url, timeout=10, headers=headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Extract info from Telegram's public preview page
+            name_el = soup.find('div', class_='tgme_page_title')
+            bio_el = soup.find('div', class_='tgme_page_description')
+            extra_el = soup.find('div', class_='tgme_page_extra') # e.g. "123 subscribers"
+            photo_el = soup.find('img', class_='tgme_page_photo_image')
+            
+            result = {
+                "success": True,
+                "username": f"@{username}",
+                "display_name": name_el.get_text(strip=True) if name_el else "Unknown",
+                "bio": bio_el.get_text(strip=True) if bio_el else "No Bio",
+                "extra": extra_el.get_text(strip=True) if extra_el else "",
+                "photo": photo_el.get('src') if photo_el else None
+            }
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
+        self.send_json(result)
 
     def handle_scrape(self, params):
         url = params.get("url", [""])[0]
@@ -37,24 +68,19 @@ class handler(BaseHTTPRequestHandler):
             response = requests.get(url, timeout=10, headers=headers)
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # 1. Extract Emails & Phones via RegEx
             emails = list(set(re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', response.text)))
             phones = list(set(re.findall(r'\+?\d[\d\s\-\(\)]{8,}\d', response.text)))
             
-            # 2. Extract Images
             images = []
             for img in soup.find_all('img'):
                 src = img.get('src')
                 if src: images.append(urljoin(url, src))
             
-            # 3. Clean Text (Reader Mode)
-            # Remove scripts and styles
             for script in soup(["script", "style"]): script.decompose()
             text = soup.get_text(separator=' ')
-            # Simple cleanup
             lines = (line.strip() for line in text.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            clean_text = '\n'.join(chunk for chunk in chunks if chunk)[:2000] # Limit for TG preview
+            clean_text = '\n'.join(chunk for chunk in chunks if chunk)[:2000]
 
             result = {
                 "success": True,
