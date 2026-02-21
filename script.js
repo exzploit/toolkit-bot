@@ -50,8 +50,10 @@ const i18n = {
         tts: "Text-to-Speech", speak: "Generate Voice", enterText: "Enter text to speak...",
         subnet: "Subnet Master", calculate: "Calculate", networkRange: "Network Range",
         broadcast: "Broadcast", usableHosts: "Usable Hosts", mask: "Subnet Mask",
-        scraper: "Scraper", scrape: "Scrape", urlScraper: "URL Scraper", tgScraper: "TG Scraper",
+        scraper: "Scraper", scrape: "Scrape", urlScraper: "URL Scraper", tgScraper: "Telegram Scraper",
         username: "Username", bio: "Bio", subscribers: "Subscribers/Members",
+        tracker: "Username Tracker", tracking: "Tracking...", track: "Start Tracking",
+        dorking: "Dorking Studio", dork: "Generate Dork", dorkType: "Dork Type",
         desc_passgen: "Generate high-entropy secure passwords instantly.",
         desc_vault: "Client-side encryption for your sensitive files.",
         desc_morse: "Translate text to Morse code with haptic pulses.",
@@ -71,7 +73,9 @@ const i18n = {
         desc_metronome: "Rock-solid precision metronome with drift compensation.",
         desc_tts: "Convert text to high-quality speech sent to your DM.",
         desc_subnet: "Professional IPv4 CIDR and Subnet calculator.",
-        desc_scraper: "Powerful tools to extract data from URLs or Telegram profiles."
+        desc_scraper: "Choose between URL extraction or Telegram account scraping.",
+        desc_tracker: "Find a username across 10+ social media platforms.",
+        desc_dorking: "Advanced Google search queries for domain reconnaissance."
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -109,8 +113,10 @@ const i18n = {
         tts: "Text-to-Speech", speak: "Generează Voce", enterText: "Introdu textul pentru redare...",
         subnet: "Subnet Master", calculate: "Calculează", networkRange: "Gamă Rețea",
         broadcast: "Broadcast", usableHosts: "Host-uri Utilizabile", mask: "Mască Subnet",
-        scraper: "Scraper", scrape: "Extrage", urlScraper: "URL Scraper", tgScraper: "TG Scraper",
+        scraper: "Scraper", scrape: "Extrage", urlScraper: "URL Scraper", tgScraper: "Telegram Scraper",
         username: "Utilizator", bio: "Bio", subscribers: "Abonați/Membri",
+        tracker: "Username Tracker", tracking: "Se caută...", track: "Începe Căutarea",
+        dorking: "Dorking Studio", dork: "Generează Dork", dorkType: "Tip Dork",
         desc_passgen: "Generează parole securizate cu entropie ridicată.",
         desc_vault: "Criptare locală pentru fișierele tale sensibile.",
         desc_morse: "Tradu text în cod Morse cu impulsuri haptice.",
@@ -130,7 +136,9 @@ const i18n = {
         desc_metronome: "Metronom de precizie cu compensare a derivei temporale.",
         desc_tts: "Convertește textul în voce și îl trimite în DM.",
         desc_subnet: "Calculator profesional de IPv4 CIDR și Subnet.",
-        desc_scraper: "Instrumente puternice pentru extragere date din URL sau profile Telegram."
+        desc_scraper: "Alege între extragere URL sau profil Telegram.",
+        desc_tracker: "Caută un utilizator pe 10+ platforme sociale.",
+        desc_dorking: "Interogări Google avansate pentru recunoaștere domeniu."
     }
 };
 
@@ -226,7 +234,7 @@ function updateUIVocabulary() {
 
     const menuNet = document.getElementById('menu-network');
     if (menuNet) {
-        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
+        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'tracker': 'tracker', 'dorking': 'dorking', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
         for (const btn of menuNet.querySelectorAll('button')) {
             const toolId = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
             const i18nKey = netMap[toolId];
@@ -259,11 +267,48 @@ function showTool(toolName) {
     if (toolName === 'vault') descKey = 'desc_vault';
     if (toolName === 'inspect') descKey = 'desc_inspector';
     if (toolName === 'qrcode') descKey = 'desc_qrgen';
+    if (toolName === 'scraper') descKey = 'desc_scraper';
+    if (toolName === 'tracker') descKey = 'desc_tracker';
+    if (toolName === 'dorking') descKey = 'desc_dorking';
     
     const desc = t(descKey);
     const existingDesc = document.querySelector('.tool-desc');
     if (existingDesc) existingDesc.remove();
     const descEl = document.createElement('p'); descEl.className = 'tool-desc'; descEl.innerText = desc; document.getElementById('tool-header').after(descEl);
+
+    if (toolName === 'scraper') {
+        title.innerText = t('scraper');
+        content.innerHTML = `<div class="pass-box" style="display:flex; flex-direction:column; gap:15px;">
+            <button class="tool-btn" style="justify-content:center; background:var(--secondary-bg);" onclick="setScrapeMode('url')"><i data-lucide="globe"></i> ${t('urlScraper')}</button>
+            <button class="tool-btn" style="justify-content:center; background:var(--secondary-bg);" onclick="setScrapeMode('tg')"><i data-lucide="send"></i> ${t('tgScraper')}</button>
+            <div id="scrape-ui-box" style="margin-top:10px;"></div>
+            <div id="scrape-result" style="margin-top:10px;"></div>
+        </div>`;
+    }
+
+    if (toolName === 'tracker') {
+        title.innerText = t('tracker');
+        content.innerHTML = `<div class="pass-box">
+            <input type="text" id="track-username" class="text-input" placeholder="Enter username...">
+            <button class="tool-btn" style="justify-content:center" onclick="runTracker()">${t('track')}</button>
+            <div id="track-result" style="margin-top:20px;"></div>
+        </div>`;
+    }
+
+    if (toolName === 'dorking') {
+        title.innerText = t('dorking');
+        content.innerHTML = `<div class="pass-box">
+            <input type="text" id="dork-domain" class="text-input" placeholder="example.com">
+            <select id="dork-type" class="select-input">
+                <option value="logs">Log Files</option>
+                <option value="configs">Config Files</option>
+                <option value="docs">Public Documents</option>
+                <option value="dirs">Directory Listing</option>
+                <option value="db">SQL/DB Dumps</option>
+            </select>
+            <button class="tool-btn" style="justify-content:center" onclick="runDorking()">${t('dork')}</button>
+        </div>`;
+    }
 
     if (toolName === 'speedtest') {
         title.innerText = t('speedtest');
@@ -280,19 +325,6 @@ function showTool(toolName) {
             </div>
             <button class="tool-btn" id="start-test-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
         </div>`;
-    }
-
-    if (toolName === 'scraper') {
-        title.innerText = t('scraper');
-        content.innerHTML = `<div class="pass-box">
-            <div class="tab-container" style="margin-bottom:20px;">
-                <button id="scrape-url-tab" class="tab-btn active" onclick="setScrapeMode('url')">${t('urlScraper')}</button>
-                <button id="scrape-tg-tab" class="tab-btn" onclick="setScrapeMode('tg')">${t('tgScraper')}</button>
-            </div>
-            <div id="scrape-ui-box"></div>
-            <div id="scrape-result" style="margin-top:20px;"></div>
-        </div>`;
-        setScrapeMode('url', false);
     }
 
     if (toolName === 'subnet') {
@@ -369,12 +401,10 @@ function showTool(toolName) {
 
 function setScrapeMode(mode, sound = true) {
     if (sound) playSound('click'); haptic.impactOccurred('light');
-    document.getElementById('scrape-url-tab').classList.toggle('active', mode === 'url');
-    document.getElementById('scrape-tg-tab').classList.toggle('active', mode === 'tg');
     const box = document.getElementById('scrape-ui-box');
     document.getElementById('scrape-result').innerHTML = "";
     if (mode === 'url') {
-        box.innerHTML = `<input type="text" id="scrape-url" class="text-input" placeholder="https://example.com/article"><button class="tool-btn" style="justify-content:center" onclick="runURLScraper()"><i data-lucide="layers"></i> ${t('scrape')}</button>`;
+        box.innerHTML = `<input type="text" id="scrape-url-input" class="text-input" placeholder="https://example.com/article"><button class="tool-btn" style="justify-content:center" onclick="runURLScraper()"><i data-lucide="layers"></i> ${t('scrape')}</button>`;
     } else {
         box.innerHTML = `<input type="text" id="scrape-tg-user" class="text-input" placeholder="@username"><button class="tool-btn" style="justify-content:center" onclick="runTGScraper()"><i data-lucide="send"></i> ${t('scrape')}</button>`;
     }
@@ -382,7 +412,7 @@ function setScrapeMode(mode, sound = true) {
 }
 
 async function runURLScraper() {
-    const url = document.getElementById('scrape-url').value.trim(), resDiv = document.getElementById('scrape-result'); if (!url) return;
+    const url = document.getElementById('scrape-url-input').value.trim(), resDiv = document.getElementById('scrape-result'); if (!url) return;
     resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
@@ -403,6 +433,37 @@ async function runTGScraper() {
             playSound('success'); haptic.notificationOccurred('success'); lucide.createIcons();
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+}
+
+async function runTracker() {
+    const username = document.getElementById('track-username').value.trim(), resDiv = document.getElementById('track-result'); if (!username) return;
+    resDiv.innerHTML = `<p>${t('tracking')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(username)}`), data = await res.json(); stopSound('loading');
+        if (data.success) {
+            let html = `<div class="settings-group">`;
+            data.results.forEach(r => { html += `<div class="settings-cell" onclick="window.open('${r.url}', '_blank')"><span class="settings-label">${r.name}</span><span style="color:#34c759; font-weight:800;">FOUND <i data-lucide="external-link" style="width:14px; height:14px; vertical-align:middle;"></i></span></div>`; });
+            html += `</div>`;
+            resDiv.innerHTML = html || `<p>${t('notFound')}</p>`;
+            playSound('success'); haptic.notificationOccurred('success'); lucide.createIcons();
+        } else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+}
+
+function runDorking() {
+    const domain = document.getElementById('dork-domain').value.trim();
+    const type = document.getElementById('dork-type').value;
+    if (!domain) return;
+    const dorks = {
+        logs: `site:${domain} filetype:log`,
+        configs: `site:${domain} (filetype:config OR filetype:conf OR filetype:env OR filetype:ini)`,
+        docs: `site:${domain} (filetype:pdf OR filetype:doc OR filetype:docx OR filetype:xls OR filetype:xlsx)`,
+        dirs: `site:${domain} intitle:"index of"`,
+        db: `site:${domain} (filetype:sql OR filetype:db OR filetype:dump)`
+    };
+    const query = dorks[type];
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+    playSound('click'); haptic.impactOccurred('medium');
 }
 
 function runSubnetCalc() {
