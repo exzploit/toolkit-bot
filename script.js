@@ -304,6 +304,9 @@ function showTool(toolName) {
     if (toolName === 'vault') descKey = 'desc_vault';
     if (toolName === 'inspect') descKey = 'desc_inspector';
     if (toolName === 'qrcode') descKey = 'desc_qrgen';
+    if (toolName === 'scraper') descKey = 'desc_scraper';
+    if (toolName === 'tracker') descKey = 'desc_tracker';
+    if (toolName === 'dorking') descKey = 'desc_dorking';
     
     const desc = t(descKey);
     const existingDesc = document.querySelector('.tool-desc');
@@ -447,47 +450,47 @@ function setScrapeMode(mode, sound = true) {
 }
 
 async function runURLScraper() {
-    const urlInput = document.getElementById('scrape-url-input');
-    if (!urlInput) return;
-    const url = urlInput.value.trim(), resDiv = document.getElementById('scrape-result'); if (!url) return;
+    const urlIn = document.getElementById('scrape-url-input'); if (!urlIn) return;
+    const url = urlIn.value.trim(), resDiv = document.getElementById('scrape-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!url) return;
     resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
-        const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
+        const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
         if (data.success) {
-            resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">Images Found</span><span style="font-weight:600">${data.image_count}</span></div><div class="settings-cell"><span class="settings-label">Emails</span><span style="font-weight:600">${data.emails.length}</span></div><div class="settings-cell"><span class="settings-label">Phones</span><span style="font-weight:600">${data.phones.length}</span></div></div><textarea class="text-area" style="font-size:12px; height:150px; margin-top:15px;" readonly>${data.text_preview}</textarea>`;
+            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800;">${t('sentChat')}</p><div class="settings-group"><div class="settings-cell"><span class="settings-label">Title</span><span style="font-weight:600">${data.title}</span></div><div class="settings-cell"><span class="settings-label">Emails</span><span style="font-weight:600">${data.emails.length}</span></div><div class="settings-cell"><span class="settings-label">Phones</span><span style="font-weight:600">${data.phones.length}</span></div></div>`;
             playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }
 
 async function runTGScraper() {
-    const userInput = document.getElementById('scrape-tg-user');
-    if (!userInput) return;
-    const username = userInput.value.trim(), resDiv = document.getElementById('scrape-result'); if (!username) return;
+    const userIn = document.getElementById('scrape-tg-user'); if (!userIn) return;
+    const username = userIn.value.trim(), resDiv = document.getElementById('scrape-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!username) return;
     resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
-        const res = await fetch(`/api/python_tools?tool=tg_scrape&username=${encodeURIComponent(username)}`), data = await res.json(); stopSound('loading');
+        const res = await fetch(`/api/python_tools?tool=tg_scrape&username=${encodeURIComponent(username)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
         if (data.success) {
-            resDiv.innerHTML = `<div class="pass-box" style="padding:15px; background:var(--secondary-bg);"><div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">${data.photo ? `<img src="${data.photo}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid var(--primary-color);">` : `<div style="width:60px; height:60px; border-radius:50%; background:var(--border-color); display:flex; align-items:center; justify-content:center;"><i data-lucide="user"></i></div>`}<div><h4 style="margin:0;">${data.display_name}</h4><span style="font-size:13px; color:var(--secondary-text);">${data.username}</span></div></div><div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('bio')}</span><span style="font-weight:600; font-size:13px; text-align:right;">${data.bio}</span></div>${data.extra ? `<div class="settings-cell"><span class="settings-label">${t('subscribers')}</span><span style="font-weight:600;">${data.extra}</span></div>` : ''}</div></div>`;
-            playSound('success'); haptic.notificationOccurred('success'); lucide.createIcons();
+            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800; margin-bottom:10px;">${t('sentChat')}</p><div class="pass-box" style="padding:15px; background:var(--secondary-bg);"><div style="display:flex; align-items:center; gap:15px;">${data.photo ? `<img src="${data.photo}" style="width:50px; height:50px; border-radius:50%;">` : ''}<div><h4 style="margin:0;">${data.display_name}</h4><span>${data.username}</span></div></div></div>`;
+            playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }
 
 // --- TRACKER / DORKING ---
 async function runTracker() {
-    const trackInput = document.getElementById('track-username');
-    if (!trackInput) return;
-    const username = trackInput.value.trim(), resDiv = document.getElementById('track-result'); if (!username) return;
+    const trackIn = document.getElementById('track-username'); if (!trackIn) return;
+    const username = trackIn.value.trim(), resDiv = document.getElementById('track-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!username) return;
     resDiv.innerHTML = `<p>${t('tracking')}</p>`; playSound('loading');
     try {
-        const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(username)}`), data = await res.json(); stopSound('loading');
+        const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(username)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
         if (data.success) {
-            let html = `<div class="settings-group">`;
-            data.results.forEach(r => { html += `<div class="settings-cell" onclick="window.open('${r.url}', '_blank')"><span class="settings-label">${r.name}</span><span style="color:#34c759; font-weight:800;">FOUND <i data-lucide="external-link" style="width:14px; height:14px; vertical-align:middle;"></i></span></div>`; });
-            html += `</div>`;
-            resDiv.innerHTML = html || `<p>${t('notFound')}</p>`;
-            playSound('success'); haptic.notificationOccurred('success'); lucide.createIcons();
+            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800; margin-bottom:15px;">${t('sentChat')}</p><div class="settings-group">${data.results.map(r => `<div class="settings-cell"><span class="settings-label">${r.name}</span><span style="color:#34c759; font-weight:800;">FOUND</span></div>`).join('')}</div>`;
+            playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }

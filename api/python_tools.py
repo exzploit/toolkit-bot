@@ -33,10 +33,21 @@ class handler(BaseHTTPRequestHandler):
         self.send_response(400)
         self.end_headers()
 
+    def send_telegram_msg(self, chat_id, text, photo=None):
+        token = os.environ.get('BOT_TOKEN')
+        if not token or not chat_id: return
+        
+        if photo:
+            url = f"https://api.telegram.org/bot{token}/sendPhoto"
+            requests.post(url, data={'chat_id': chat_id, 'caption': text, 'parse_mode': 'HTML'})
+        else:
+            url = f"https://api.telegram.org/bot{token}/sendMessage"
+            requests.post(url, data={'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML', 'disable_web_page_preview': True})
+
     def handle_username_search(self, params):
         username = params.get("username", [""])[0].strip()
-        if not username:
-            return self.send_json({"success": False, "error": "Username required"})
+        chat_id = params.get("chatId", [""])[0]
+        if not username: return self.send_json({"success": False, "error": "Username required"})
         
         platforms = {
             "Instagram": f"https://www.instagram.com/{username}/",
@@ -46,8 +57,7 @@ class handler(BaseHTTPRequestHandler):
             "TikTok": f"https://www.tiktok.com/@{username}",
             "YouTube": f"https://www.youtube.com/@{username}",
             "Steam": f"https://steamcommunity.com/id/{username}",
-            "Spotify": f"https://open.spotify.com/user/{username}",
-            "Medium": f"https://medium.com/@{username}"
+            "Spotify": f"https://open.spotify.com/user/{username}"
         }
         
         results = []
@@ -56,17 +66,20 @@ class handler(BaseHTTPRequestHandler):
         for name, url in platforms.items():
             try:
                 res = requests.head(url, headers=headers, timeout=3, allow_redirects=True)
-                if res.status_code == 200:
-                    results.append({"name": name, "url": url})
-            except:
-                pass
+                if res.status_code == 200: results.append({"name": name, "url": url})
+            except: pass
         
+        if chat_id and results:
+            report = f"<b>🕵️ OSINT Tracker: {username}</b>\n\n"
+            for r in results: report += f"✅ {r['name']}: {r['url']}\n"
+            self.send_telegram_msg(chat_id, report)
+            
         self.send_json({"success": True, "results": results})
 
     def handle_tg_scrape(self, params):
         username = params.get("username", [""])[0].strip().replace('@', '')
-        if not username:
-            return self.send_json({"success": False, "error": "Username required"})
+        chat_id = params.get("chatId", [""])[0]
+        if not username: return self.send_json({"success": False, "error": "Username required"})
         
         try:
             url = f"https://t.me/{username}"
@@ -74,25 +87,21 @@ class handler(BaseHTTPRequestHandler):
             response = requests.get(url, timeout=10, headers=headers)
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            name_el = soup.find('div', class_='tgme_page_title')
-            bio_el = soup.find('div', class_='tgme_page_description')
-            extra_el = soup.find('div', class_='tgme_page_extra')
-            photo_el = soup.find('img', class_='tgme_page_photo_image')
+            name = soup.find('div', class_='tgme_page_title').get_text(strip=True) if soup.find('div', class_='tgme_page_title') else "Unknown"
+            bio = soup.find('div', class_='tgme_page_description').get_text(strip=True) if soup.find('div', class_='tgme_page_description') else "No Bio"
+            extra = soup.find('div', class_='tgme_page_extra').get_text(strip=True) if soup.find('div', class_='tgme_page_extra') else ""
+            photo = soup.find('img', class_='tgme_page_photo_image').get('src') if soup.find('img', class_='tgme_page_photo_image') else None
             
-            result = {
-                "success": True,
-                "username": f"@{username}",
-                "display_name": name_el.get_text(strip=True) if name_el else "Unknown",
-                "bio": bio_el.get_text(strip=True) if bio_el else "No Bio",
-                "extra": extra_el.get_text(strip=True) if extra_el else "",
-                "photo": photo_el.get('src') if photo_el else None
-            }
-        except Exception as e:
-            result = {"success": False, "error": str(e)}
-        self.send_json(result)
+            if chat_id:
+                report = f"<b>📱 Telegram Profile: @{username}</b>\n\n<b>Name:</b> {name}\n<b>Bio:</b> {bio}\n<b>Info:</b> {extra}"
+                self.send_telegram_msg(chat_id, report, photo)
+
+            self.send_json({"success": True, "username": f"@{username}", "display_name": name, "bio": bio, "extra": extra, "photo": photo})
+        except Exception as e: self.send_json({"success": False, "error": str(e)})
 
     def handle_scrape(self, params):
         url = params.get("url", [""])[0]
+        chat_id = params.get("chatId", [""])[0]
         if not url.startswith(('http://', 'https://')): url = 'https://' + url
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
@@ -102,50 +111,28 @@ class handler(BaseHTTPRequestHandler):
             emails = list(set(re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', response.text)))
             phones = list(set(re.findall(r'\+?\d[\d\s\-\(\)]{8,}\d', response.text)))
             
-            images = []
-            for img in soup.find_all('img'):
-                src = img.get('src')
-                if src:
-                    images.append(urljoin(url, src))
-            
-            for script in soup(["script", "style"]):
-                script.decompose()
-            text = soup.get_text(separator=' ')
-            lines = (line.strip() for line in text.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            clean_text = '\n'.join(chunk for chunk in chunks if chunk)[:2000]
+            if chat_id:
+                title = soup.title.string if soup.title else "No Title"
+                report = f"<b>🌐 Web Scrape: {title}</b>\n\n<b>URL:</b> {url}\n"
+                if emails: report += f"\n<b>Emails:</b>\n" + "\n".join(emails[:10])
+                if phones: report += f"\n\n<b>Phones:</b>\n" + "\n".join(phones[:10])
+                self.send_telegram_msg(chat_id, report)
 
-            result = {
-                "success": True,
-                "title": soup.title.string if soup.title else "No Title",
-                "emails": emails[:10],
-                "phones": phones[:10],
-                "image_count": len(images),
-                "text_preview": clean_text
-            }
-        except Exception as e:
-            result = {"success": False, "error": str(e)}
-        self.send_json(result)
+            self.send_json({"success": True, "title": soup.title.string if soup.title else "No Title", "emails": emails[:10], "phones": phones[:10], "image_count": 0, "text_preview": "Summary sent to chat!"})
+        except Exception as e: self.send_json({"success": False, "error": str(e)})
 
     def handle_inspect(self, params):
         url = params.get("url", [""])[0]
         if not url.startswith(('http://', 'https://')): url = 'https://' + url
         try:
-            start_time = time.time()
-            response = requests.get(url, timeout=10, allow_redirects=True)
-            end_time = time.time()
-            domain = urlparse(response.url).netloc
-            ip_addr = socket.gethostbyname(domain)
-            result = {
-                "success": True, "ip": ip_addr, "server": response.headers.get('Server', 'Unknown'),
-                "response_time": round((end_time - start_time) * 1000, 2), "is_secure": response.url.startswith('https://')
-            }
+            start_time = time.time(); response = requests.get(url, timeout=10, allow_redirects=True); end_time = time.time()
+            domain = urlparse(response.url).netloc; ip_addr = socket.gethostbyname(domain)
+            result = {"success": True, "ip": ip_addr, "server": response.headers.get('Server', 'Unknown'), "response_time": round((end_time - start_time) * 1000, 2), "is_secure": response.url.startswith('https://')}
         except Exception as e: result = {"success": False, "error": str(e)}
         self.send_json(result)
 
     def handle_crack(self, params):
-        hash_val = params.get("hash", [""])[0].lower()
-        algo = params.get("type", ["md5"])[0].lower()
+        hash_val = params.get("hash", [""])[0].lower(); algo = params.get("type", ["md5"])[0].lower()
         wordlist = ["123456", "password", "12345678", "qwerty", "12345", "admin", "welcome"]
         found = None
         for word in wordlist:
@@ -156,29 +143,16 @@ class handler(BaseHTTPRequestHandler):
         self.send_json({"success": True, "password": found} if found else {"success": False})
 
     def handle_tts(self, params):
-        text = params.get("text", [""])[0]
-        lang = params.get("lang", ["en"])[0]
-        chat_id = params.get("chatId", [""])[0]
-        bot_token = os.environ.get('BOT_TOKEN')
+        text = params.get("text", [""])[0]; lang = params.get("lang", ["en"])[0]; chat_id = params.get("chatId", [""])[0]; bot_token = os.environ.get('BOT_TOKEN')
         try:
-            tts = gTTS(text=text, lang=lang)
-            mp3_fp = io.BytesIO()
-            tts.write_to_fp(mp3_fp)
-            mp3_fp.seek(0)
+            tts = gTTS(text=text, lang=lang); mp3_fp = io.BytesIO(); tts.write_to_fp(mp3_fp); mp3_fp.seek(0)
             if chat_id and bot_token:
                 files = {'voice': ('speech.mp3', mp3_fp, 'audio/mpeg')}
                 requests.post(f"https://api.telegram.org/bot{bot_token}/sendVoice", data={'chat_id': chat_id}, files=files)
                 self.send_json({"success": True})
             else:
-                self.send_response(200)
-                self.send_header('Content-type', 'audio/mpeg')
-                self.end_headers()
-                self.wfile.write(mp3_fp.read())
-        except Exception as e:
-            self.send_json({"success": False, "error": str(e)})
+                self.send_response(200); self.send_header('Content-type', 'audio/mpeg'); self.end_headers(); self.wfile.write(mp3_fp.read())
+        except Exception as e: self.send_json({"success": False, "error": str(e)})
 
     def send_json(self, data):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode('utf-8'))
+        self.send_response(200); self.send_header('Content-type', 'application/json'); self.end_headers(); self.wfile.write(json.dumps(data).encode('utf-8'))
