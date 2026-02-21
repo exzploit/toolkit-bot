@@ -150,23 +150,6 @@ const i18n = {
     }
 };
 
-const morseDict = {
-    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
-    'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
-    'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
-    'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
-    '6': '-....', '7': '--...', '8': '---..', '9': '----.', '0': '-----', ' ': ' '
-};
-
-const unicodeStyles = {
-    bold: { a: '𝐚', A: '𝐀', '0': '𝟎' },
-    italic: { a: '𝑎', A: '𝑨', '0': '0' },
-    script: { a: '𝒶', A: '𝒜', '0': '0' },
-    gothic: { a: '𝔞', A: '𝔄', '0': '0' },
-    leetspeak: { a: '4', e: '3', i: '1', o: '0', s: '5', t: '7', b: '8', g: '9' },
-    flipped: "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnuʌʍxʎzⱯᗺƆᗡƎℲ⅁HIſʞ˥WNOԀΌᴚS⊥∩ΛMX⅄Z0ƖᄅƐㄣϛ9ㄥ86"
-};
-
 // --- AUDIO ---
 const sounds = {
     click: new Audio('assets/sfx/click.wav'),
@@ -178,111 +161,37 @@ const sounds = {
 };
 sounds.loading.loop = true;
 
-let audioContextUnlocked = false;
-function unlockAudioContext() {
-    if (audioContextUnlocked) return;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-        const ctx = new AudioContext();
-        ctx.resume().then(() => audioContextUnlocked = true);
-    }
-}
-
 function playSound(type) {
     if (!soundsEnabled) return;
-    unlockAudioContext();
     try {
-        const s = sounds[type];
-        if (!s) return;
+        const s = sounds[type]; if (!s) return;
         if (type === 'loading') { s.currentTime = 0; s.play().catch(() => {}); }
         else { const clone = s.cloneNode(); clone.volume = 0.4; clone.play().catch(() => {}); }
     } catch(e) {}
 }
-
 function stopSound(type) { if (sounds[type]) { sounds[type].pause(); sounds[type].currentTime = 0; } }
 function t(key) { return i18n[currentLang][key] || key; }
 
-// --- THEME / LANG / SETTINGS ---
+// --- THEME / NAV ---
 function initTheme() {
     if (tg.colorScheme === 'dark' || !tg.colorScheme) document.body.classList.add('dark-mode');
     else document.body.classList.remove('dark-mode');
     updateThemeIcon();
 }
-
 function updateThemeIcon() {
     const icon = document.getElementById('theme-icon');
     if (icon) { icon.setAttribute('data-lucide', document.body.classList.contains('dark-mode') ? 'moon' : 'sun'); lucide.createIcons(); }
 }
-
 function toggleTheme() { playSound('click'); haptic.impactOccurred('light'); document.body.classList.toggle('dark-mode'); updateThemeIcon(); }
-
 function switchLang() {
     playSound('click'); currentLang = currentLang === 'en' ? 'ro' : 'en';
     localStorage.setItem('toolkit_lang', currentLang); haptic.notificationOccurred('success');
     updateUIVocabulary(); renderSettings(); if (document.getElementById('view-media').style.display !== 'none') renderMediaTabs(false);
 }
-
 function toggleSounds() { soundsEnabled = !soundsEnabled; localStorage.setItem('toolkit_sounds', soundsEnabled); if (soundsEnabled) playSound('click'); haptic.impactOccurred('light'); renderSettings(); }
-
-function renderSettings() {
-    const container = document.getElementById('settings-content');
-    if (!container) return;
-    container.innerHTML = `<div class="settings-group">
-        <div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div>
-        <div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div>
-        <div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div>
-    </div>
-    <div class="settings-group">
-        <div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div>
-    </div>
-    <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.8 • [⌬]</p>`;
-}
-
-// --- UI UPDATES ---
-function updateUIVocabulary() {
-    const keys = ['tools', 'network', 'media', 'settings'];
-    keys.forEach(k => {
-        const nav = document.querySelector(`#nav-${k} span`); if (nav) nav.innerText = t(k);
-        const hdr = document.getElementById(`header-${k}`); if (hdr) hdr.innerText = t(k);
-    });
-    
-    const menuTools = document.getElementById('menu-tools');
-    if (menuTools) {
-        const btnMap = { 'password': 'passgen', 'vault': 'secureVault', 'morse': 'morse', 'tts': 'tts', 'jailbreak': 'jailbreak', 'crack': 'crack', 'decision': 'decision', 'rickroll': 'rickroll', 'qrcode': 'qrgen', 'textutils': 'textutils' };
-        for (const btn of menuTools.querySelectorAll('button')) {
-            const onclick = btn.getAttribute('onclick');
-            if (onclick) {
-                const match = onclick.match(/'([^']+)'/);
-                if (match) {
-                    const toolId = match[1];
-                    const i18nKey = btnMap[toolId];
-                    if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
-                }
-            }
-        }
-    }
-
-    const menuNet = document.getElementById('menu-network');
-    if (menuNet) {
-        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'tracker': 'tracker', 'breach': 'breach', 'phone': 'phone', 'dorking': 'dorking', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
-        for (const btn of menuNet.querySelectorAll('button')) {
-            const onclick = btn.getAttribute('onclick');
-            if (onclick) {
-                const match = onclick.match(/'([^']+)'/);
-                if (match) {
-                    const toolId = match[1];
-                    const i18nKey = netMap[toolId];
-                    if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
-                }
-            }
-        }
-    }
-    lucide.createIcons();
-}
 
 function switchView(viewId) {
     playSound('click'); haptic.impactOccurred('light');
-    if (speedTestController) { speedTestController.abort(); speedTestController = null; stopSound('loading'); }
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById(`view-${viewId}`).style.display = 'block';
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -295,10 +204,9 @@ function switchView(viewId) {
 function hideTool() { 
     const existingDesc = document.querySelector('.tool-desc'); if (existingDesc) existingDesc.remove();
     document.getElementById('tool-container').style.display = 'none'; stopMetronome(); stopSound('loading'); isMorsePlaying = false; 
-    if (speedTestController) { speedTestController.abort(); speedTestController = null; } 
 }
 
-// --- TOOLS DISPLAY ---
+// --- CORE TOOLS LOGIC ---
 function showTool(toolName) {
     playSound('click'); haptic.impactOccurred('medium');
     document.getElementById('tool-container').style.display = 'block';
@@ -306,323 +214,198 @@ function showTool(toolName) {
     const title = document.getElementById('tool-title');
     
     let descKey = `desc_${toolName}`;
-    if (toolName === 'password') descKey = 'desc_passgen';
-    if (toolName === 'vault') descKey = 'desc_vault';
-    if (toolName === 'inspect') descKey = 'desc_inspector';
-    if (toolName === 'qrcode') descKey = 'desc_qrgen';
-    if (toolName === 'scraper') descKey = 'desc_scraper';
-    if (toolName === 'tracker') descKey = 'desc_tracker';
-    if (toolName === 'dorking') descKey = 'desc_dorking';
-    if (toolName === 'breach') descKey = 'desc_breach';
-    if (toolName === 'phone') descKey = 'desc_phone';
-    
-    const desc = t(descKey);
-    const existingDesc = document.querySelector('.tool-desc');
-    if (existingDesc) existingDesc.remove();
-    const descEl = document.createElement('p'); descEl.className = 'tool-desc'; descEl.innerText = desc; document.getElementById('tool-header').after(descEl);
-
-    if (toolName === 'scraper') {
-        title.innerText = t('scraper');
-        content.innerHTML = `<div class="pass-box" style="display:flex; flex-direction:column; gap:15px;">
-            <button class="tool-btn" style="justify-content:center; background:var(--secondary-bg);" onclick="setScrapeMode('url')"><i data-lucide="globe"></i> ${t('urlScraper')}</button>
-            <button class="tool-btn" style="justify-content:center; background:var(--secondary-bg);" onclick="setScrapeMode('tg')"><i data-lucide="send"></i> ${t('tgScraper')}</button>
-            <div id="scrape-ui-box" style="margin-top:10px;"></div>
-            <div id="scrape-result" style="margin-top:10px;"></div>
-        </div>`;
-    }
-
-    if (toolName === 'breach') {
-        title.innerText = t('breach');
-        content.innerHTML = `<div class="pass-box">
-            <input type="email" id="breach-email" class="text-input" placeholder="email@example.com">
-            <button class="tool-btn" style="justify-content:center" onclick="runBreachChecker()">${t('checkBreach')}</button>
-            <div id="breach-result" style="margin-top:20px;"></div>
-        </div>`;
-    }
-
-    if (toolName === 'phone') {
-        title.innerText = t('phone');
-        content.innerHTML = `<div class="pass-box">
-            <input type="tel" id="phone-number" class="text-input" placeholder="+1234567890">
-            <button class="tool-btn" style="justify-content:center" onclick="runPhoneLookup()">${t('lookup')}</button>
-            <div id="phone-result" style="margin-top:20px;"></div>
-        </div>`;
-    }
-
-    if (toolName === 'tracker') {
-        title.innerText = t('tracker');
-        content.innerHTML = `<div class="pass-box">
-            <input type="text" id="track-username" class="text-input" placeholder="Enter username...">
-            <button class="tool-btn" style="justify-content:center" onclick="runTracker()">${t('track')}</button>
-            <div id="track-result" style="margin-top:20px;"></div>
-        </div>`;
-    }
-
-    if (toolName === 'dorking') {
-        title.innerText = t('dorking');
-        content.innerHTML = `<div class="pass-box">
-            <input type="text" id="dork-domain" class="text-input" placeholder="example.com">
-            <select id="dork-type" class="select-input">
-                <option value="logs">Log Files</option>
-                <option value="configs">Config Files</option>
-                <option value="docs">Public Documents</option>
-                <option value="dirs">Directory Listing</option>
-                <option value="db">SQL/DB Dumps</option>
-            </select>
-            <button class="tool-btn" style="justify-content:center" onclick="runDorking()">${t('dork')}</button>
-        </div>`;
-    }
-
-    if (toolName === 'speedtest') {
-        title.innerText = t('speedtest');
-        content.innerHTML = `<div class="pass-box" style="padding-top: 10px;">
-            <div id="meta-info" style="font-size: 13px; color: var(--secondary-text); margin-bottom: 15px; height: 20px;">${t('systemReady')}</div>
-            <div class="speed-gauge"><span id="speed-display" class="speed-value">0.0</span><span class="speed-unit">Mbps</span></div>
-            <div id="test-status" style="color: var(--secondary-text); font-size: 14px; font-weight: 600; margin-bottom: 10px;">${t('standby')}</div>
-            <div class="progress-container"><div id="progress-bar" class="progress-bar" style="width:0%"></div></div>
-            <div class="stats-grid">
-                <div class="stat-card"><span class="stat-label">${t('latency')}</span><span id="ping-display" class="stat-value">--</span></div>
-                <div class="stat-card"><span class="stat-label">${t('jitter')}</span><span id="jitter-display" class="stat-value">--</span></div>
-                <div class="stat-card"><span class="stat-label">${t('download')}</span><span id="download-display" class="stat-value">--</span></div>
-                <div class="stat-card"><span class="stat-label">${t('upload')}</span><span id="upload-display" class="stat-value">--</span></div>
-            </div>
-            <button class="tool-btn" id="start-test-btn" style="margin-top:30px; justify-content:center;" onclick="runSpeedTest()">${t('startTest')}</button>
-        </div>`;
-    }
-
-    if (toolName === 'subnet') {
-        title.innerText = t('subnet');
-        content.innerHTML = `<div class="pass-box"><div style="display:flex; gap:10px;"><input type="text" id="sub-ip" class="text-input" style="flex:3" placeholder="192.168.1.1"><input type="number" id="sub-prefix" class="text-input" style="flex:1" placeholder="24" min="0" max="32"></div><button class="tool-btn" style="justify-content:center" onclick="runSubnetCalc()">${t('calculate')}</button><div id="sub-result" style="margin-top:20px;"></div></div>`;
-    }
-
-    if (toolName === 'tts') {
-        title.innerText = t('tts');
-        content.innerHTML = `<div class="pass-box"><textarea id="tts-input" class="text-area" placeholder="${t('enterText')}"></textarea><select id="tts-lang" class="select-input"><option value="en">English</option><option value="ro">Română</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option></select><button class="tool-btn" style="justify-content:center" onclick="runTTS()"><i data-lucide="volume-2"></i> ${t('speak')}</button><div id="tts-status" style="margin-top:15px; text-align:center;"></div></div>`;
-    }
-
-    if (toolName === 'jailbreak') {
-        title.innerText = t('jailbreak');
-        content.innerHTML = `<div class="pass-box"><select id="jb-model" class="select-input"><option value="" disabled selected>${t('selectModel')}</option><optgroup label="A12+ (Newer)"><option value="a12">iPhone XR / XS / XS Max</option><option value="a13">iPhone 11 Series / SE 2</option><option value="a14">iPhone 12 Series</option><option value="a15">iPhone 13 Series / 14 / SE 3</option><option value="a16">iPhone 14 Pro / 15 Series</option></optgroup><optgroup label="A8-A11 (Legacy)"><option value="a11">iPhone 8 / 8 Plus / X</option><option value="a10">iPhone 7 / 7 Plus</option><option value="a9">iPhone 6S / 6S Plus / SE 1</option></optgroup></select><select id="jb-version" class="select-input"><option value="" disabled selected>${t('selectOS')}</option><option value="17.0">iOS 17.0</option><option value="16.6">iOS 16.0 - 16.6.1</option><option value="15.4">iOS 15.0 - 15.4.1</option><option value="14.8">iOS 14.0 - 14.8</option><option value="legacy">iOS 13.7 & Below</option></select><button class="tool-btn" style="justify-content:center" onclick="checkJailbreak()">${t('check')}</button><div id="jb-result" style="margin-top:20px;"></div></div>`;
-    }
-
-    if (toolName === 'crack') {
-        title.innerText = t('crack');
-        content.innerHTML = `<div class="pass-box"><input type="text" id="hash-input" class="text-input" placeholder="${t('enterHash')}"><select id="hash-type" class="select-input"><option value="md5">MD5</option><option value="sha1">SHA-1</option><option value="sha256">SHA-256</option></select><button class="tool-btn" style="justify-content:center" onclick="runHashCracker()">${t('crack')}</button><div id="crack-result" style="margin-top:20px; text-align:center; font-weight:800; font-size:24px; color:var(--primary-color)"></div></div>`;
-    }
-
-    if (toolName === 'decision') {
-        title.innerText = t('decision');
-        content.innerHTML = `<div class="pass-box" style="text-align:center;"><div id="decision-display" style="font-size:64px; margin:40px 0; min-height:80px; display:flex; align-items:center; justify-content:center;">🎲</div><div class="util-grid"><button class="small-btn" onclick="runDecision('coin')"><i data-lucide="circle"></i> ${t('coinFlip')}</button><button class="small-btn" onclick="runDecision('dice')"><i data-lucide="dice-5"></i> ${t('diceRoll')}</button></div></div>`;
-    }
-
-    if (toolName === 'inspect') {
-        title.innerText = t('inspector');
-        content.innerHTML = `<div class="pass-box"><input type="text" id="inspect-url" class="text-input" placeholder="https://example.com"><button class="tool-btn" style="justify-content:center" onclick="runURLInspector()">${t('generate')}</button><div id="inspect-results" style="margin-top:20px;"></div></div>`;
-    }
-
-    if (toolName === 'morse') {
-        title.innerText = t('morse');
-        content.innerHTML = `<div class="pass-box"><div class="tab-container" style="margin-bottom:15px;"><button id="morse-encode-tab" class="tab-btn active" onclick="setMorseMode('encode')">${t('encode')}</button><button id="morse-decode-tab" class="tab-btn" onclick="setMorseMode('decode')">${t('decode')}</button></div><textarea id="morse-input" class="text-area" placeholder="Enter text..." oninput="updateMorse()"></textarea><div id="morse-output" style="background:var(--progress-bg); padding:15px; border-radius:12px; min-height:60px; font-family:monospace; font-size:18px; word-break:break-all; margin-bottom:15px; letter-spacing:2px;"></div><button class="tool-btn" id="morse-play-btn" style="justify-content:center" onclick="playMorseHaptics()"><i data-lucide="vibrate"></i> ${t('play')}</button></div>`;
-    }
-
-    if (toolName === 'textutils') {
-        title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid" style="margin-bottom:15px;"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div><div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 10px;"><div style="margin-bottom:15px;"><select id="unicode-mode" class="select-input" onchange="toggleZalgoSlider(this.value)"><option value="bold">Bold Serif</option><option value="italic">Italic Serif</option><option value="script">Script Style</option><option value="gothic">Gothic Style</option><option value="leetspeak">Leetspeak</option><option value="flipped">Flipped text</option><option value="glitch">Glitch (Zalgo)</option></select></div><div id="zalgo-control" style="display:none; margin-bottom:15px;"><label style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">${t('intensity')} <span id="zalgo-val">3</span></label><input type="range" id="zalgo-intensity" min="1" max="15" value="3" oninput="document.getElementById('zalgo-val').innerText=this.value"></div><button class="tool-btn" style="justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="transformUnicode()">${t('transform')}</button><button class="tool-btn" style="justify-content:center; background:var(--secondary-bg); font-size:14px; height:45px; margin-top:10px;" onclick="generateInvisibleText()"><i data-lucide="ghost"></i> ${t('invisibleText')} </button></div></div>`;
+    if (['password','vault','inspect','qrcode','scraper','tracker','dorking','breach','phone'].includes(toolName)) {
+        if (toolName === 'password') descKey = 'desc_passgen';
+        if (toolName === 'vault') descKey = 'desc_vault';
+        if (toolName === 'inspect') descKey = 'desc_inspector';
+        if (toolName === 'qrcode') descKey = 'desc_qrgen';
     }
     
-    if (toolName === 'rickroll') {
-        title.innerText = t('rickroll');
-        content.innerHTML = `<div class="pass-box"><input type="text" id="rick-alias" class="text-input" placeholder="e.g. Free Nitro"><select id="rick-type" class="select-input"><option value="youtube">YouTube</option><option value="spotify">Spotify</option><option value="tiktok">TikTok</option></select><button class="tool-btn" style="justify-content:center" onclick="generateRickroll()">${t('generate')}</button><div id="rick-result" style="display:none"><div class="rick-preview" id="rick-url"></div><button class="tool-btn" style="justify-content:center" onclick="copyRickroll()"><i data-lucide="copy"></i> ${t('copy')}</button></div></div>`;
-    }
-
-    if (toolName === 'vault') {
-        title.innerText = t('secureVault');
-        content.innerHTML = `<div class="pass-box"><div class="upload-box" onclick="document.getElementById('vault-file').click()"><i data-lucide="file-lock-2" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span id="vault-filename" style="display:block; font-weight:600">${t('dropFile')}</span><input type="file" id="vault-file" style="display:none" onchange="handleVaultFile(this)"></div><input type="password" id="vault-pass" class="text-input" placeholder="${t('password')}"><div style="display:flex; gap:10px; margin-top:15px;"><button class="tool-btn" style="justify-content:center; flex:1;" onclick="processVault('encrypt')"><i data-lucide="lock"></i> ${t('encrypt')}</button><button class="tool-btn" style="justify-content:center; flex:1;" onclick="processVault('decrypt')"><i data-lucide="unlock"></i> ${t('decrypt')}</button></div><div id="vault-status" style="margin-top:15px; text-align:center; font-weight:600;"></div></div>`;
-    }
+    const existingDesc = document.querySelector('.tool-desc'); if (existingDesc) existingDesc.remove();
+    const descEl = document.createElement('p'); descEl.className = 'tool-desc'; descEl.innerText = t(descKey);
+    document.getElementById('tool-header').after(descEl);
 
     if (toolName === 'password') {
         title.innerText = t('passgen');
-        content.innerHTML = `<div class="pass-box"><h2 id="password-display" style="color: var(--primary-color); word-break: break-all; min-height: 1.2em; font-size: 28px; margin-bottom: 25px;">-</h2><div class="options-container"><div class="option-row"><label>${t('length')} <span id="length-val">12</span></label><input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText=this.value; generateComplexPassword(true)"></div><div class="option-row"><label>${t('uppercase')}</label><input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)"></div><div class="option-row"><label>${t('numbers')}</label><input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)"></div><div class="option-row"><label>${t('symbols')}</label><input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)"></div></div><button class="tool-btn" style="justify-content:center;" onclick="generateComplexPassword(true)">${t('generate')}</button></div>`;
+        content.innerHTML = `<div class="pass-box"><h2 id="password-display" style="color:var(--primary-color); word-break:break-all; min-height:1.2em; font-size:28px; margin-bottom:25px;">-</h2><div class="options-container"><div class="option-row"><label>${t('length')} <span id="length-val">12</span></label><input type="range" id="pass-length" min="6" max="32" value="12" oninput="document.getElementById('length-val').innerText=this.value; generateComplexPassword(true)"></div><div class="option-row"><label>${t('uppercase')}</label><input type="checkbox" id="pass-upper" checked onchange="generateComplexPassword(true)"></div><div class="option-row"><label>${t('numbers')}</label><input type="checkbox" id="pass-numbers" checked onchange="generateComplexPassword(true)"></div><div class="option-row"><label>${t('symbols')}</label><input type="checkbox" id="pass-symbols" checked onchange="generateComplexPassword(true)"></div></div><button class="tool-btn" style="justify-content:center;" onclick="generateComplexPassword(true)">${t('generate')}</button></div>`;
         generateComplexPassword(false);
     }
-
-    if (toolName === 'ipinfo') {
-        title.innerText = t('ipinfo'); content.innerHTML = `<div id="loading-spinner" style="padding: 20px;">${t('query')}</div>`;
-        fetch('https://ipapi.co/json/').then(r => r.json()).then(data => { haptic.notificationOccurred('success'); content.innerHTML = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">IPv4 Address</span><span class="stat-value">${data.ip}</span></div><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">${t('provider')}</span><span class="stat-value">${data.org}</span></div></div>`; }).catch(() => haptic.notificationOccurred('error'));
+    else if (toolName === 'scraper') {
+        title.innerText = t('scraper');
+        content.innerHTML = `<div class="pass-box" style="display:flex; flex-direction:column; gap:15px;"><button class="tool-btn" style="justify-content:center; background:var(--secondary-bg);" onclick="setScrapeMode('url')"><i data-lucide="globe"></i> ${t('urlScraper')}</button><button class="tool-btn" style="justify-content:center; background:var(--secondary-bg);" onclick="setScrapeMode('tg')"><i data-lucide="send"></i> ${t('tgScraper')}</button><div id="scrape-ui-box"></div><div id="scrape-result"></div></div>`;
     }
-    
-    if (toolName === 'domain') {
-        title.innerText = t('domain');
-        content.innerHTML = `<div class="pass-box"><input type="text" id="dom-url" class="text-input" placeholder="example.com"><button class="tool-btn" style="justify-content:center;" onclick="lookupDomain()">Lookup</button><div id="dom-result" style="margin-top:20px;"></div></div>`;
+    else if (toolName === 'breach') {
+        title.innerText = t('breach');
+        content.innerHTML = `<div class="pass-box"><input type="email" id="breach-email" class="text-input" placeholder="email@example.com"><button class="tool-btn" style="justify-content:center" onclick="runBreachChecker()">${t('checkBreach')}</button><div id="breach-result" style="margin-top:20px;"></div></div>`;
     }
-    if (toolName === 'qrcode') {
-        title.innerText = t('qrgen');
-        content.innerHTML = `<div class="pass-box" style="text-align:center;"><input type="text" id="qr-input" class="text-input" placeholder="Text..." oninput="updateQR()"><div class="qr-container" id="qr-result" style="margin: 20px auto; display:block; width:fit-content;"><p style="font-size: 14px; color: var(--secondary-text); padding: 40px;">Waiting...</p></div><button id="download-qr" class="tool-btn" style="display:none; justify-content:center;" onclick="downloadQR()">Save PNG</button></div>`;
+    else if (toolName === 'phone') {
+        title.innerText = t('phone');
+        content.innerHTML = `<div class="pass-box"><input type="tel" id="phone-number" class="text-input" placeholder="+1234567890"><button class="tool-btn" style="justify-content:center" onclick="runPhoneLookup()">${t('lookup')}</button><div id="phone-result" style="margin-top:20px;"></div></div>`;
+    }
+    else if (toolName === 'tracker') {
+        title.innerText = t('tracker');
+        content.innerHTML = `<div class="pass-box"><input type="text" id="track-username" class="text-input" placeholder="Username..."><button class="tool-btn" style="justify-content:center" onclick="runTracker()">${t('track')}</button><div id="track-result" style="margin-top:20px;"></div></div>`;
+    }
+    else if (toolName === 'tts') {
+        title.innerText = t('tts');
+        content.innerHTML = `<div class="pass-box"><textarea id="tts-input" class="text-area" placeholder="${t('enterText')}"></textarea><select id="tts-lang" class="select-input"><option value="en">English</option><option value="ro">Română</option><option value="es">Español</option></select><button class="tool-btn" style="justify-content:center" onclick="runTTS()">${t('speak')}</button><div id="tts-status" style="margin-top:15px; text-align:center;"></div></div>`;
+    }
+    else if (toolName === 'decision') {
+        title.innerText = t('decision');
+        content.innerHTML = `<div class="pass-box" style="text-align:center;"><div id="decision-display" style="font-size:64px; margin:40px 0;">🎲</div><div class="util-grid"><button class="small-btn" onclick="runDecision('coin')">${t('coinFlip')}</button><button class="small-btn" onclick="runDecision('dice')">${t('diceRoll')}</button></div></div>`;
+    }
+    else if (toolName === 'vault') {
+        title.innerText = t('secureVault');
+        content.innerHTML = `<div class="pass-box"><div class="upload-box" onclick="document.getElementById('vault-file').click()"><i data-lucide="lock"></i><span id="vault-filename">${t('dropFile')}</span><input type="file" id="vault-file" style="display:none" onchange="handleVaultFile(this)"></div><input type="password" id="vault-pass" class="text-input" placeholder="${t('password')}"><div style="display:flex; gap:10px; margin-top:15px;"><button class="tool-btn" style="flex:1; justify-content:center;" onclick="processVault('encrypt')">${t('encrypt')}</button><button class="tool-btn" style="flex:1; justify-content:center;" onclick="processVault('decrypt')">${t('decrypt')}</button></div><div id="vault-status" style="margin-top:15px; text-align:center;"></div></div>`;
+    }
+    else if (toolName === 'subnet') {
+        title.innerText = t('subnet');
+        content.innerHTML = `<div class="pass-box"><div style="display:flex; gap:10px;"><input type="text" id="sub-ip" class="text-input" style="flex:3" placeholder="192.168.1.1"><input type="number" id="sub-prefix" class="text-input" style="flex:1" placeholder="24"></div><button class="tool-btn" style="justify-content:center" onclick="runSubnetCalc()">${t('calculate')}</button><div id="sub-result" style="margin-top:20px;"></div></div>`;
     }
     lucide.createIcons();
 }
 
-// --- OSINT LOGIC ---
+// --- MEDIA TAB LOGIC ---
+function renderMediaTabs(shouldPlaySound = true) {
+    if (shouldPlaySound) playSound('click');
+    const container = document.getElementById('media-tabs-container');
+    container.innerHTML = `<div class="tab-container"><button id="mtab-downs" class="tab-btn active" onclick="setMediaTab('downs')">${t('downloads')}</button><button id="mtab-conv" class="tab-btn" onclick="setMediaTab('conv')">${t('audioConv')}</button><button id="mtab-exif" class="tab-btn" onclick="setMediaTab('exif')">${t('exifStripper')}</button><button id="mtab-metro" class="tab-btn" onclick="setMediaTab('metro')">${t('metronome')}</button></div><div id="media-tab-content"></div>`;
+    setMediaTab('downs', false);
+}
+
+function setMediaTab(tab, sound = true) {
+    if (sound) playSound('click'); haptic.impactOccurred('light');
+    const content = document.getElementById('media-tab-content');
+    document.querySelectorAll('#media-tabs-container .tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`mtab-${tab}`).classList.add('active');
+    stopMetronome(); stopSound('loading');
+    
+    if (tab === 'downs') {
+        content.innerHTML = `<div class="tab-container" style="background:none; border:1px solid var(--border-color); margin-top:10px;"><button onclick="showDownloaderUI('yt')" id="st-yt" class="tab-btn active">YT</button><button onclick="showDownloaderUI('ig')" id="st-ig" class="tab-btn">IG</button><button onclick="showDownloaderUI('tt')" id="st-tt" class="tab-btn">TT</button></div><div id="downloader-ui-box"></div>`;
+        showDownloaderUI('yt', false);
+    } else if (tab === 'conv') {
+        content.innerHTML = `<div class="pass-box"><div class="upload-box" onclick="document.getElementById('audio-upload').click()"><i data-lucide="music"></i><span id="audio-filename">${t('selectFile')}</span><input type="file" id="audio-upload" style="display:none" onchange="handleAudioFile(this)"></div><button id="conv-btn" class="tool-btn" style="display:none; justify-content:center" onclick="startAudioConversion()">${t('convMp3')}</button><div id="conv-status"></div></div>`;
+    } else if (tab === 'exif') {
+        content.innerHTML = `<div class="pass-box"><div class="upload-box" onclick="document.getElementById('exif-upload').click()"><i data-lucide="image"></i><span id="exif-filename">${t('selectImage')}</span><input type="file" id="exif-upload" accept="image/*" style="display:none" onchange="handleExifFile(this)"></div><button id="exif-btn" class="tool-btn" style="display:none; justify-content:center" onclick="processExif()">${t('stripMetadata')}</button><div id="exif-status"></div></div>`;
+    } else if (tab === 'metro') {
+        content.innerHTML = `<div class="pass-box" style="text-align:center;"><div id="metro-circle" class="metro-circle" style="margin:20px auto;">${bpm}</div><input type="range" min="40" max="220" value="${bpm}" oninput="updateBPM(this.value)"><button id="metro-btn" class="tool-btn" style="justify-content:center" onclick="toggleMetronome()">Start</button></div>`;
+    }
+    lucide.createIcons();
+}
+
+// --- SUB-TOOLS LOGIC ---
+function showDownloaderUI(type, sound = true) {
+    if (sound) playSound('click');
+    const box = document.getElementById('downloader-ui-box');
+    document.querySelectorAll('#media-tab-content .tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`st-${type}`).classList.add('active');
+    box.innerHTML = `<div class="pass-box"><input type="text" id="media-url" class="text-input" placeholder="${type.toUpperCase()} Link"><button class="tool-btn" style="justify-content:center" onclick="processDownload('${type}')">Download</button><div id="dl-status"></div></div>`;
+}
+
+function generateComplexPassword(sound = true) {
+    if (sound) playSound('click');
+    const len = document.getElementById('pass-length').value;
+    const upper = document.getElementById('pass-upper').checked;
+    const nums = document.getElementById('pass-numbers').checked;
+    const syms = document.getElementById('pass-symbols').checked;
+    let chars = "abcdefghijklmnopqrstuvwxyz";
+    if (upper) chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (nums) chars += "0123456789";
+    if (syms) chars += "!@#$%^&*()_+";
+    let pass = ""; for (let i = 0; i < len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    document.getElementById('password-display').innerText = pass;
+}
+
+function handleVaultFile(input) { if (input.files && input.files[0]) { document.getElementById('vault-filename').innerText = input.files[0].name; playSound('success'); } }
+function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; document.getElementById('audio-filename').innerText = selectedAudioFile.name; document.getElementById('conv-btn').style.display = 'flex'; playSound('success'); } }
+function handleExifFile(input) { if (input.files && input.files[0]) { exifFile = input.files[0]; document.getElementById('exif-filename').innerText = exifFile.name; document.getElementById('exif-btn').style.display = 'flex'; playSound('success'); } }
+
 async function runBreachChecker() {
-    const emailIn = document.getElementById('breach-email'); if (!emailIn) return;
-    const email = emailIn.value.trim(), resDiv = document.getElementById('breach-result'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!email) return;
-    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    const email = document.getElementById('breach-email').value.trim(), resDiv = document.getElementById('breach-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!email) return; resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=email_breach&email=${encodeURIComponent(email)}${chatId ? `&chatId=${chatId}` : ''}`);
         const data = await res.json(); stopSound('loading');
         if (data.success) {
-            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800;">${t('sentChat')}</p><p style="font-size:14px; margin-top:10px;">Check your Telegram DM for the full breach report.</p>`;
+            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800;">${t('sentChat')}</p><p style="font-size:13px; margin-top:5px;">Check DM for full leak intelligence report.</p>`;
             playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }
 
 async function runPhoneLookup() {
-    const phoneIn = document.getElementById('phone-number'); if (!phoneIn) return;
-    const number = phoneIn.value.trim(), resDiv = document.getElementById('phone-result'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!number) return;
-    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    const num = document.getElementById('phone-number').value.trim(), resDiv = document.getElementById('phone-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!num) return; resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
-        const res = await fetch(`/api/python_tools?tool=phone_lookup&number=${encodeURIComponent(number)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const res = await fetch(`/api/python_tools?tool=phone_lookup&number=${encodeURIComponent(num)}${chatId ? `&chatId=${chatId}` : ''}`);
         const data = await res.json(); stopSound('loading');
         if (data.success) {
-            resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">Region</span><span style="font-weight:600">${data.region}</span></div><div class="settings-cell"><span class="settings-label">Carrier</span><span style="font-weight:600">${data.carrier}</span></div><div class="settings-cell"><span class="settings-label">Timezone</span><span style="font-weight:600">${data.timezone}</span></div></div><p style="color:#34c759; font-weight:800; margin-top:10px;">${t('sentChat')}</p>`;
+            resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">Region</span><span>${data.region}</span></div><div class="settings-cell"><span class="settings-label">Carrier</span><span>${data.carrier}</span></div></div><p style="color:#34c759; font-size:12px; margin-top:5px;">${t('sentChat')}</p>`;
             playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }
 
-async function runTracker() {
-    const trackIn = document.getElementById('track-username'); if (!trackIn) return;
-    const username = trackIn.value.trim(), resDiv = document.getElementById('track-result'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!username) return;
-    resDiv.innerHTML = `<p>${t('tracking')}</p>`; playSound('loading');
+async function runTTS() {
+    const text = document.getElementById('tts-input').value.trim(), lang = document.getElementById('tts-lang').value, status = document.getElementById('tts-status'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!text) return; status.innerText = "⏳ " + t('processing'); playSound('loading');
     try {
-        const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(username)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const res = await fetch(`/api/python_tools?tool=tts&text=${encodeURIComponent(text)}&lang=${lang}${chatId ? `&chatId=${chatId}` : ''}`);
         const data = await res.json(); stopSound('loading');
-        if (data.success) {
-            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800; margin-bottom:15px;">${t('sentChat')}</p><div class="settings-group">${data.results.map(r => `<div class="settings-cell"><span class="settings-label">${r.name}</span><span style="color:#34c759; font-weight:800;">FOUND</span></div>`).join('')}</div>`;
-            playSound('success'); haptic.notificationOccurred('success');
-        } else throw new Error();
-    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+        if (data.success) { status.innerHTML = `<span style="color:#34c759;">${t('sentChat')}</span>`; playSound('success'); haptic.notificationOccurred('success'); }
+        else throw new Error();
+    } catch(e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30;">${t('failed')}</span>`; playSound('error'); }
+}
+
+async function runURLScraper() {
+    const url = document.getElementById('scrape-url-input').value.trim(), resDiv = document.getElementById('scrape-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!url) return; resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
+        if (data.success) { resDiv.innerHTML = `<p style="color:#34c759;">${t('sentChat')}</p>`; playSound('success'); haptic.notificationOccurred('success'); }
+        else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30;">${t('failed')}</p>`; playSound('error'); }
+}
+
+async function runTGScraper() {
+    const user = document.getElementById('scrape-tg-user').value.trim(), resDiv = document.getElementById('scrape-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!user) return; resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=tg_scrape&username=${encodeURIComponent(user)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
+        if (data.success) { resDiv.innerHTML = `<p style="color:#34c759;">${t('sentChat')}</p>`; playSound('success'); haptic.notificationOccurred('success'); }
+        else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30;">${t('failed')}</p>`; playSound('error'); }
+}
+
+async function runTracker() {
+    const user = document.getElementById('track-username').value.trim(), resDiv = document.getElementById('track-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!user) return; resDiv.innerHTML = `<p>${t('tracking')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(user)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
+        if (data.success) { resDiv.innerHTML = `<p style="color:#34c759;">${t('sentChat')}</p>`; playSound('success'); haptic.notificationOccurred('success'); }
+        else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30;">${t('failed')}</p>`; playSound('error'); }
 }
 
 function setScrapeMode(mode, sound = true) {
     if (sound) playSound('click'); haptic.impactOccurred('light');
-    const box = document.getElementById('scrape-ui-box');
-    document.getElementById('scrape-result').innerHTML = "";
-    if (mode === 'url') {
-        box.innerHTML = `<input type="text" id="scrape-url-input" class="text-input" placeholder="https://example.com/article"><button class="tool-btn" style="justify-content:center" onclick="runURLScraper()"><i data-lucide="layers"></i> ${t('scrape')}</button>`;
-    } else {
-        box.innerHTML = `<input type="text" id="scrape-tg-user" class="text-input" placeholder="@username"><button class="tool-btn" style="justify-content:center" onclick="runTGScraper()"><i data-lucide="send"></i> ${t('scrape')}</button>`;
-    }
+    const box = document.getElementById('scrape-ui-box'); document.getElementById('scrape-result').innerHTML = "";
+    if (mode === 'url') box.innerHTML = `<input type="text" id="scrape-url-input" class="text-input" placeholder="https://..."><button class="tool-btn" style="justify-content:center" onclick="runURLScraper()">${t('scrape')}</button>`;
+    else box.innerHTML = `<input type="text" id="scrape-tg-user" class="text-input" placeholder="@username"><button class="tool-btn" style="justify-content:center" onclick="runTGScraper()">${t('scrape')}</button>`;
     lucide.createIcons();
 }
 
-async function runURLScraper() {
-    const urlIn = document.getElementById('scrape-url-input'); if (!urlIn) return;
-    const url = urlIn.value.trim(), resDiv = document.getElementById('scrape-result'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!url) return;
-    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
-    try {
-        const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}${chatId ? `&chatId=${chatId}` : ''}`);
-        const data = await res.json(); stopSound('loading');
-        if (data.success) {
-            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800;">${t('sentChat')}</p><div class="settings-group"><div class="settings-cell"><span class="settings-label">Title</span><span style="font-weight:600">${data.title}</span></div></div>`;
-            playSound('success'); haptic.notificationOccurred('success');
-        } else throw new Error();
-    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
-}
-
-async function runTGScraper() {
-    const userIn = document.getElementById('scrape-tg-user'); if (!userIn) return;
-    const username = userIn.value.trim(), resDiv = document.getElementById('scrape-result'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!username) return;
-    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
-    try {
-        const res = await fetch(`/api/python_tools?tool=tg_scrape&username=${encodeURIComponent(username)}${chatId ? `&chatId=${chatId}` : ''}`);
-        const data = await res.json(); stopSound('loading');
-        if (data.success) {
-            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800; margin-bottom:10px;">${t('sentChat')}</p><div class="pass-box" style="padding:15px; background:var(--secondary-bg);"><div style="display:flex; align-items:center; gap:15px;">${data.photo ? `<img src="${data.photo}" style="width:50px; height:50px; border-radius:50%;">` : ''}<div><h4 style="margin:0;">${data.display_name}</h4><span>${data.username}</span></div></div></div>`;
-            playSound('success'); haptic.notificationOccurred('success');
-        } else throw new Error();
-    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
-}
-
-function runDorking() {
-    const domInput = document.getElementById('dork-domain'), typeInput = document.getElementById('dork-type');
-    if (!domInput || !typeInput) return;
-    const domain = domInput.value.trim(), type = typeInput.value;
-    if (!domain) return;
-    const dorks = { logs: `site:${domain} filetype:log`, configs: `site:${domain} (filetype:config OR filetype:conf OR filetype:env OR filetype:ini)`, docs: `site:${domain} (filetype:pdf OR filetype:doc OR filetype:docx OR filetype:xls OR filetype:xlsx)`, dirs: `site:${domain} intitle:"index of"`, db: `site:${domain} (filetype:sql OR filetype:db OR filetype:dump)` };
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(dorks[type])}`, '_blank');
-    playSound('click'); haptic.impactOccurred('medium');
-}
-
-// --- CORE TOOLS ---
-async function runTTS() {
-    const txtInput = document.getElementById('tts-input'), langInput = document.getElementById('tts-lang');
-    if (!txtInput || !langInput) return;
-    const text = txtInput.value.trim(), lang = langInput.value, status = document.getElementById('tts-status'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!text) return;
-    status.innerText = "⏳ " + t('processing'); playSound('loading');
-    const url = `/api/python_tools?tool=tts&text=${encodeURIComponent(text)}&lang=${lang}${chatId ? `&chatId=${chatId}` : ''}`;
-    try {
-        const response = await fetch(url), data = await response.json(); stopSound('loading');
-        if (data.success) { status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('sentChat')}</span>`; playSound('success'); haptic.notificationOccurred('success'); }
-        else throw new Error();
-    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); }
-}
-
-function runSubnetCalc() {
-    const ipIn = document.getElementById('sub-ip'), prefIn = document.getElementById('sub-prefix');
-    if (!ipIn || !prefIn) return;
-    const ip = ipIn.value.trim(), prefix = parseInt(prefIn.value), resDiv = document.getElementById('sub-result');
-    if (!ip || isNaN(prefix) || prefix < 0 || prefix > 32) return;
-    const ipToLong = (ip) => ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
-    const longToIp = (long) => [(long >>> 24) & 0xFF, (long >>> 16) & 0xFF, (long >>> 8) & 0xFF, long & 0xFF].join('.');
-    const ipLong = ipToLong(ip), mask = (prefix === 0 ? 0 : 0xFFFFFFFF << (32 - prefix)) >>> 0, netAddr = (ipLong & mask) >>> 0, broadcast = (netAddr | (~mask)) >>> 0, hosts = prefix >= 31 ? 0 : (broadcast - netAddr - 1);
-    resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('networkRange')}</span><span style="font-weight:600">${longToIp(netAddr)} - ${longToIp(broadcast)}</span></div><div class="settings-cell"><span class="settings-label">${t('mask')}</span><span style="font-weight:600">${longToIp(mask)}</span></div><div class="settings-cell"><span class="settings-label">${t('usableHosts')}</span><span style="font-weight:600">${hosts.toLocaleString()}</span></div><div class="settings-cell"><span class="settings-label">Prefix</span><span style="font-weight:600">/${prefix}</span></div></div>`;
-    playSound('success'); haptic.notificationOccurred('success');
-}
-
-async function runHashCracker() {
-    const hIn = document.getElementById('hash-input'), tIn = document.getElementById('hash-type');
-    if (!hIn || !tIn) return;
-    const hash = hIn.value.trim(), type = tIn.value, resultDiv = document.getElementById('crack-result'); if (!hash) return;
-    resultDiv.innerText = t('cracking'); playSound('loading');
-    try {
-        const res = await fetch(`/api/python_tools?tool=crack&hash=${hash}&type=${type}`), data = await res.json(); stopSound('loading');
-        if (data.success) { resultDiv.innerText = data.password; playSound('success'); haptic.notificationOccurred('success'); }
-        else { resultDiv.innerText = t('notFound'); playSound('error'); }
-    } catch(e) { stopSound('loading'); resultDiv.innerText = t('failed'); playSound('error'); }
-}
-
-async function runURLInspector() {
-    const urlIn = document.getElementById('inspect-url'); if (!urlIn) return;
-    const url = urlIn.value.trim(), resultDiv = document.getElementById('inspect-results'); if (!url) return;
-    resultDiv.innerHTML = `<p>${t('inspecting')}</p>`; playSound('loading');
-    try {
-        const res = await fetch(`/api/python_tools?tool=inspect&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
-        if (data.success) {
-            resultDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">IP Address</span><span style="font-weight:600">${data.ip}</span></div><div class="settings-cell"><span class="settings-label">Response</span><span style="font-weight:600">${data.response_time}ms</span></div><div class="settings-cell"><span class="settings-label">Server</span><span style="font-weight:600">${data.server}</span></div><div class="settings-cell"><span class="settings-label">Security</span><span style="color:${data.is_secure ? '#34c759' : '#ff3b30'}; font-weight:800">${data.is_secure ? t('secure') : t('insecure')}</span></div></div>`;
-            playSound('success'); haptic.notificationOccurred('success');
-        } else throw new Error();
-    } catch(e) { stopSound('loading'); resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
-}
-
 async function processDownload(type) {
-    const urlIn = document.getElementById('media-url'); if (!urlIn) return;
-    const url = urlIn.value.trim(), status = document.getElementById('dl-status'); if (!url) return;
+    const url = document.getElementById('media-url').value.trim(), status = document.getElementById('dl-status'); if (!url) return;
     status.innerText = "⏳ " + t('processing'); playSound('loading');
     try {
         const res = await fetch(`/api/media?type=${type}&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
-        if (data.success) {
-            const a = document.createElement('a'); a.href = data.url; a.download = data.title || 'media'; document.body.appendChild(a); a.click(); a.remove();
-            status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('success')}</span>`; playSound('success'); haptic.notificationOccurred('success');
-        } else throw new Error();
-    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); }
+        if (data.success) { const a = document.createElement('a'); a.href = data.url; a.download = data.title || 'media'; document.body.appendChild(a); a.click(); a.remove(); status.innerHTML = `<span style="color:#34c759;">${t('success')}</span>`; playSound('success'); }
+        else throw new Error();
+    } catch(e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30;">${t('failed')}</span>`; playSound('error'); }
 }
 
 async function runDecision(type) {
@@ -637,28 +420,24 @@ async function runDecision(type) {
     haptic.notificationOccurred('success'); playSound('success');
 }
 
-// --- UTILS ---
-function processText(mode) {
-    const input = document.getElementById('text-input'); if (!input) return;
-    if (mode === 'upper') input.value = input.value.toUpperCase();
-    else if (mode === 'lower') input.value = input.value.toLowerCase();
-    else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase());
-    else if (mode === 'clear') input.value = "";
-    updateTextStats(); playSound('click');
+function renderSettings() {
+    const container = document.getElementById('settings-content'); if (!container) return;
+    container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div><div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.8 • [⌬]</p>`;
 }
 
-function updateTextStats() {
-    const textInput = document.getElementById('text-input'); if (!textInput) return;
-    const text = textInput.value;
-    const stats = document.getElementById('text-stats');
-    if (stats) stats.innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`;
+function updateUIVocabulary() {
+    const keys = ['tools', 'network', 'media', 'settings'];
+    keys.forEach(k => { const nav = document.querySelector(`#nav-${k} span`); if (nav) nav.innerText = t(k); const hdr = document.getElementById(`header-${k}`); if (hdr) hdr.innerText = t(k); });
+    const menuTools = document.getElementById('menu-tools'), menuNet = document.getElementById('menu-network');
+    if (menuTools) { const btnMap = { 'password': 'passgen', 'vault': 'secureVault', 'morse': 'morse', 'tts': 'tts', 'jailbreak': 'jailbreak', 'crack': 'crack', 'decision': 'decision', 'rickroll': 'rickroll', 'qrcode': 'qrgen', 'textutils': 'textutils' }; for (const btn of menuTools.querySelectorAll('button')) { const onclick = btn.getAttribute('onclick'); if (onclick) { const match = onclick.match(/'([^']+)'/); if (match) { const toolId = match[1]; const key = btnMap[toolId]; if (key) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(key)}`; } } } } }
+    if (menuNet) { const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'tracker': 'tracker', 'breach': 'breach', 'phone': 'phone', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' }; for (const btn of menuNet.querySelectorAll('button')) { const onclick = btn.getAttribute('onclick'); if (onclick) { const match = onclick.match(/'([^']+)'/); if (match) { const toolId = match[1]; const key = netMap[toolId]; if (key) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(key)}`; } } } } }
+    lucide.createIcons();
 }
 
-function initMetronome() { /* Placeholder */ }
-function startMetronome() { /* Placeholder */ }
 function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearTimeout(metronomeInterval); }
+function toggleMetronome() { /* Placeholder */ }
+function updateBPM(v) { bpm = v; }
 
-// --- INIT ---
 initTheme();
 switchView('tools');
 updateUIVocabulary();
