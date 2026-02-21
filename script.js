@@ -7,7 +7,11 @@ let soundsEnabled = localStorage.getItem('toolkit_sounds') !== 'false';
 let metronomeInterval = null;
 let isMetronomeRunning = false;
 let bpm = 120;
+let nextBeatTime = 0;
+let isMorsePlaying = false;
 let speedTestController = null;
+let selectedAudioFile = null;
+let exifFile = null;
 
 const i18n = {
     en: {
@@ -174,7 +178,8 @@ function stopSound(type) { if (sounds[type]) { sounds[type].pause(); sounds[type
 function t(key) { return i18n[currentLang][key] || key; }
 
 function initTheme() {
-    if (tg.colorScheme === 'dark') document.body.classList.add('dark-mode');
+    if (tg.colorScheme === 'dark' || !tg.colorScheme) document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
     updateThemeIcon();
 }
 
@@ -199,17 +204,37 @@ function updateUIVocabulary() {
         const nav = document.querySelector(`#nav-${k} span`); if (nav) nav.innerText = t(k);
         const hdr = document.getElementById(`header-${k}`); if (hdr) hdr.innerText = t(k);
     });
-    const toolsMenu = document.getElementById('menu-tools');
-    if (toolsMenu) {
-        const icons = ['shield-check', 'lock', 'binary', 'mic', 'zap', 'unlock', 'help-circle', 'frown', 'qr-code', 'type'];
-        const toolKeys = ['passgen', 'secureVault', 'morse', 'tts', 'jailbreak', 'crack', 'decision', 'rickroll', 'qrgen', 'textutils'];
-        toolsMenu.innerHTML = toolKeys.map((k, i) => `<button class="tool-btn" onclick="showTool('${k === 'passgen' ? 'password' : (k === 'secureVault' ? 'vault' : (k === 'morse' ? 'morse' : (k === 'jailbreak' ? 'jailbreak' : (k === 'crack' ? 'crack' : (k === 'decision' ? 'decision' : (k === 'rickroll' ? 'rickroll' : (k === 'qrgen' ? 'qrcode' : (k === 'tts' ? 'tts' : (k === 'textutils' ? 'textutils' : ''))))))))))}')"><i data-lucide="${icons[i]}"></i> ${t(k)}</button>`).join('');
+    
+    // Static button updates instead of fragile innerHTML mapping
+    const menuTools = document.getElementById('menu-tools');
+    if (menuTools) {
+        const btnMap = {
+            'password': 'passgen', 'vault': 'secureVault', 'morse': 'morse',
+            'tts': 'tts', 'jailbreak': 'jailbreak', 'crack': 'crack',
+            'decision': 'decision', 'rickroll': 'rickroll', 'qrcode': 'qrgen', 'textutils': 'textutils'
+        };
+        for (const btn of menuTools.querySelectorAll('button')) {
+            const onclick = btn.getAttribute('onclick');
+            const toolId = onclick.match(/'([^']+)'/)[1];
+            const i18nKey = btnMap[toolId];
+            if (i18nKey) {
+                const icon = btn.querySelector('i').outerHTML;
+                btn.innerHTML = `${icon} ${t(i18nKey)}`;
+            }
+        }
     }
-    const netMenu = document.getElementById('menu-network');
-    if (netMenu) {
-        const netIcons = ['zap', 'search-code', 'network', 'shield-search', 'globe', 'map-pin'];
-        const netKeys = ['speedtest', 'portscan', 'subnet', 'inspector', 'domain', 'ipinfo'];
-        netMenu.innerHTML = netKeys.map((k, i) => `<button class="tool-btn" onclick="showTool('${k === 'speedtest' ? 'speedtest' : (k === 'portscan' ? 'portscan' : (k === 'inspector' ? 'inspect' : (k === 'domain' ? 'domain' : (k === 'ipinfo' ? 'ipinfo' : 'subnet'))))}')"><i data-lucide="${netIcons[i]}"></i> ${t(k)}</button>`).join('');
+
+    const menuNet = document.getElementById('menu-network');
+    if (menuNet) {
+        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
+        for (const btn of menuNet.querySelectorAll('button')) {
+            const toolId = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+            const i18nKey = netMap[toolId];
+            if (i18nKey) {
+                const icon = btn.querySelector('i').outerHTML;
+                btn.innerHTML = `${icon} ${t(i18nKey)}`;
+            }
+        }
     }
     lucide.createIcons();
 }
@@ -452,10 +477,8 @@ function runSubnetCalc() {
     const prefix = parseInt(document.getElementById('sub-prefix').value);
     const resDiv = document.getElementById('sub-result');
     if (!ip || isNaN(prefix) || prefix < 0 || prefix > 32) return;
-
     const ipToLong = (ip) => ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
     const longToIp = (long) => [(long >>> 24) & 0xFF, (long >>> 16) & 0xFF, (long >>> 8) & 0xFF, long & 0xFF].join('.');
-
     const ipLong = ipToLong(ip);
     const mask = (prefix === 0 ? 0 : 0xFFFFFFFF << (32 - prefix)) >>> 0;
     const netAddr = (ipLong & mask) >>> 0;
@@ -463,23 +486,12 @@ function runSubnetCalc() {
     const usableStart = (netAddr + 1) >>> 0;
     const usableEnd = (broadcast - 1) >>> 0;
     const hosts = prefix >= 31 ? 0 : (broadcast - netAddr - 1);
-
-    resDiv.innerHTML = `
-        <div class="settings-group">
-            <div class="settings-cell"><span class="settings-label">${t('networkRange')}</span><span style="font-weight:600">${longToIp(netAddr)} - ${longToIp(broadcast)}</span></div>
-            <div class="settings-cell"><span class="settings-label">${t('mask')}</span><span style="font-weight:600">${longToIp(mask)}</span></div>
-            <div class="settings-cell"><span class="settings-label">${t('usableHosts')}</span><span style="font-weight:600">${hosts.toLocaleString()}</span></div>
-            <div class="settings-cell"><span class="settings-label">Prefix</span><span style="font-weight:600">/${prefix}</span></div>
-        </div>
-    `;
+    resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('networkRange')}</span><span style="font-weight:600">${longToIp(netAddr)} - ${longToIp(broadcast)}</span></div><div class="settings-cell"><span class="settings-label">${t('mask')}</span><span style="font-weight:600">${longToIp(mask)}</span></div><div class="settings-cell"><span class="settings-label">${t('usableHosts')}</span><span style="font-weight:600">${hosts.toLocaleString()}</span></div><div class="settings-cell"><span class="settings-label">Prefix</span><span style="font-weight:600">/${prefix}</span></div></div>`;
     playSound('success'); haptic.notificationOccurred('success');
 }
 
 async function runTTS() {
-    const text = document.getElementById('tts-input').value.trim();
-    const lang = document.getElementById('tts-lang').value;
-    const status = document.getElementById('tts-status');
-    const chatId = tg.initDataUnsafe?.user?.id;
+    const text = document.getElementById('tts-input').value.trim(), lang = document.getElementById('tts-lang').value, status = document.getElementById('tts-status'), chatId = tg.initDataUnsafe?.user?.id;
     if (!text) return;
     status.innerText = "⏳ " + t('processing'); playSound('loading');
     const url = `/api/python_tools?tool=tts&text=${encodeURIComponent(text)}&lang=${lang}${chatId ? `&chatId=${chatId}` : ''}`;
@@ -491,9 +503,7 @@ async function runTTS() {
 }
 
 async function runHashCracker() {
-    const hash = document.getElementById('hash-input').value.trim();
-    const type = document.getElementById('hash-type').value;
-    const resultDiv = document.getElementById('crack-result'); if (!hash) return;
+    const hash = document.getElementById('hash-input').value.trim(), type = document.getElementById('hash-type').value, resultDiv = document.getElementById('crack-result'); if (!hash) return;
     resultDiv.innerText = t('cracking'); playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=crack&hash=${hash}&type=${type}`), data = await res.json(); stopSound('loading');
@@ -523,7 +533,7 @@ async function processDownload(type) {
             const a = document.createElement('a'); a.href = data.url; a.download = data.title || 'media'; document.body.appendChild(a); a.click(); a.remove();
             status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('success')}</span>`; playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
-    } catch(e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
+    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
 }
 
 async function runDecision(type) {
@@ -640,4 +650,6 @@ function toggleMetronome() { if (isMetronomeRunning) stopMetronome(); else start
 function updateBPM(val) { bpm = val; if (document.getElementById('bpm-val')) document.getElementById('bpm-val').innerText = bpm; if (document.getElementById('metro-circle')) document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
 function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; const info = document.getElementById('audio-info'); info.innerText = `Selected: ${selectedAudioFile.name}`; info.style.display = 'block'; document.getElementById('conv-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
 function updateTextStats() { const textInput = document.getElementById('text-input'); if (!textInput) return; const text = textInput.value; document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
+function processText(mode) { const input = document.getElementById('text-input'); if (!input) return; if (mode === 'upper') input.value = input.value.toUpperCase(); else if (mode === 'lower') input.value = input.value.toLowerCase(); else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase()); else if (mode === 'clear') input.value = ""; updateTextStats(); playSound('click'); }
+function renderSettings() { const container = document.getElementById('settings-content'); container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div><div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>`; }
 initTheme(); switchView('tools'); updateUIVocabulary();
