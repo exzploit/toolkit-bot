@@ -2,6 +2,7 @@ const tg = window.Telegram.WebApp;
 const haptic = tg.HapticFeedback;
 tg.expand();
 
+// --- GLOBALS ---
 let currentLang = localStorage.getItem('toolkit_lang') || 'en';
 let soundsEnabled = localStorage.getItem('toolkit_sounds') !== 'false';
 let metronomeInterval = null;
@@ -13,6 +14,7 @@ let speedTestController = null;
 let selectedAudioFile = null;
 let exifFile = null;
 
+// --- i18n ---
 const i18n = {
     en: {
         tools: "Tools", network: "Network", media: "Media", settings: "Settings",
@@ -159,6 +161,7 @@ const unicodeStyles = {
     flipped: "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnuʌʍxʎzⱯᗺƆᗡƎℲ⅁HIſʞ˥WNOԀΌᴚS⊥∩ΛMX⅄Z0ƖᄅƐㄣϛ9ㄥ86"
 };
 
+// --- AUDIO ---
 const sounds = {
     click: new Audio('assets/sfx/click.wav'),
     success: new Audio('assets/sfx/success.wav'),
@@ -193,6 +196,7 @@ function playSound(type) {
 function stopSound(type) { if (sounds[type]) { sounds[type].pause(); sounds[type].currentTime = 0; } }
 function t(key) { return i18n[currentLang][key] || key; }
 
+// --- THEME / LANG / SETTINGS ---
 function initTheme() {
     if (tg.colorScheme === 'dark' || !tg.colorScheme) document.body.classList.add('dark-mode');
     else document.body.classList.remove('dark-mode');
@@ -214,6 +218,21 @@ function switchLang() {
 
 function toggleSounds() { soundsEnabled = !soundsEnabled; localStorage.setItem('toolkit_sounds', soundsEnabled); if (soundsEnabled) playSound('click'); haptic.impactOccurred('light'); renderSettings(); }
 
+function renderSettings() {
+    const container = document.getElementById('settings-content');
+    if (!container) return;
+    container.innerHTML = `<div class="settings-group">
+        <div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div>
+        <div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div>
+        <div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div>
+    </div>
+    <div class="settings-group">
+        <div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div>
+    </div>
+    <p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.8 • [⌬]</p>`;
+}
+
+// --- UI UPDATES ---
 function updateUIVocabulary() {
     const keys = ['tools', 'network', 'media', 'settings'];
     keys.forEach(k => {
@@ -226,9 +245,14 @@ function updateUIVocabulary() {
         const btnMap = { 'password': 'passgen', 'vault': 'secureVault', 'morse': 'morse', 'tts': 'tts', 'jailbreak': 'jailbreak', 'crack': 'crack', 'decision': 'decision', 'rickroll': 'rickroll', 'qrcode': 'qrgen', 'textutils': 'textutils' };
         for (const btn of menuTools.querySelectorAll('button')) {
             const onclick = btn.getAttribute('onclick');
-            const toolId = onclick.match(/'([^']+)'/)[1];
-            const i18nKey = btnMap[toolId];
-            if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
+            if (onclick) {
+                const match = onclick.match(/'([^']+)'/);
+                if (match) {
+                    const toolId = match[1];
+                    const i18nKey = btnMap[toolId];
+                    if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
+                }
+            }
         }
     }
 
@@ -236,9 +260,15 @@ function updateUIVocabulary() {
     if (menuNet) {
         const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'tracker': 'tracker', 'dorking': 'dorking', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
         for (const btn of menuNet.querySelectorAll('button')) {
-            const toolId = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
-            const i18nKey = netMap[toolId];
-            if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
+            const onclick = btn.getAttribute('onclick');
+            if (onclick) {
+                const match = onclick.match(/'([^']+)'/);
+                if (match) {
+                    const toolId = match[1];
+                    const i18nKey = netMap[toolId];
+                    if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
+                }
+            }
         }
     }
     lucide.createIcons();
@@ -256,6 +286,13 @@ function switchView(viewId) {
     hideTool(); lucide.createIcons();
 }
 
+function hideTool() { 
+    const existingDesc = document.querySelector('.tool-desc'); if (existingDesc) existingDesc.remove();
+    document.getElementById('tool-container').style.display = 'none'; stopMetronome(); stopSound('loading'); isMorsePlaying = false; 
+    if (speedTestController) { speedTestController.abort(); speedTestController = null; } 
+}
+
+// --- TOOLS DISPLAY ---
 function showTool(toolName) {
     playSound('click'); haptic.impactOccurred('medium');
     document.getElementById('tool-container').style.display = 'block';
@@ -267,9 +304,6 @@ function showTool(toolName) {
     if (toolName === 'vault') descKey = 'desc_vault';
     if (toolName === 'inspect') descKey = 'desc_inspector';
     if (toolName === 'qrcode') descKey = 'desc_qrgen';
-    if (toolName === 'scraper') descKey = 'desc_scraper';
-    if (toolName === 'tracker') descKey = 'desc_tracker';
-    if (toolName === 'dorking') descKey = 'desc_dorking';
     
     const desc = t(descKey);
     const existingDesc = document.querySelector('.tool-desc');
@@ -399,6 +433,7 @@ function showTool(toolName) {
     lucide.createIcons();
 }
 
+// --- SCRAPER LOGIC ---
 function setScrapeMode(mode, sound = true) {
     if (sound) playSound('click'); haptic.impactOccurred('light');
     const box = document.getElementById('scrape-ui-box');
@@ -412,7 +447,9 @@ function setScrapeMode(mode, sound = true) {
 }
 
 async function runURLScraper() {
-    const url = document.getElementById('scrape-url-input').value.trim(), resDiv = document.getElementById('scrape-result'); if (!url) return;
+    const urlInput = document.getElementById('scrape-url-input');
+    if (!urlInput) return;
+    const url = urlInput.value.trim(), resDiv = document.getElementById('scrape-result'); if (!url) return;
     resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
@@ -424,7 +461,9 @@ async function runURLScraper() {
 }
 
 async function runTGScraper() {
-    const username = document.getElementById('scrape-tg-user').value.trim(), resDiv = document.getElementById('scrape-result'); if (!username) return;
+    const userInput = document.getElementById('scrape-tg-user');
+    if (!userInput) return;
+    const username = userInput.value.trim(), resDiv = document.getElementById('scrape-result'); if (!username) return;
     resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=tg_scrape&username=${encodeURIComponent(username)}`), data = await res.json(); stopSound('loading');
@@ -435,8 +474,11 @@ async function runTGScraper() {
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }
 
+// --- TRACKER / DORKING ---
 async function runTracker() {
-    const username = document.getElementById('track-username').value.trim(), resDiv = document.getElementById('track-result'); if (!username) return;
+    const trackInput = document.getElementById('track-username');
+    if (!trackInput) return;
+    const username = trackInput.value.trim(), resDiv = document.getElementById('track-result'); if (!username) return;
     resDiv.innerHTML = `<p>${t('tracking')}</p>`; playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(username)}`), data = await res.json(); stopSound('loading');
@@ -451,23 +493,34 @@ async function runTracker() {
 }
 
 function runDorking() {
-    const domain = document.getElementById('dork-domain').value.trim();
-    const type = document.getElementById('dork-type').value;
+    const domInput = document.getElementById('dork-domain'), typeInput = document.getElementById('dork-type');
+    if (!domInput || !typeInput) return;
+    const domain = domInput.value.trim(), type = typeInput.value;
     if (!domain) return;
-    const dorks = {
-        logs: `site:${domain} filetype:log`,
-        configs: `site:${domain} (filetype:config OR filetype:conf OR filetype:env OR filetype:ini)`,
-        docs: `site:${domain} (filetype:pdf OR filetype:doc OR filetype:docx OR filetype:xls OR filetype:xlsx)`,
-        dirs: `site:${domain} intitle:"index of"`,
-        db: `site:${domain} (filetype:sql OR filetype:db OR filetype:dump)`
-    };
-    const query = dorks[type];
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+    const dorks = { logs: `site:${domain} filetype:log`, configs: `site:${domain} (filetype:config OR filetype:conf OR filetype:env OR filetype:ini)`, docs: `site:${domain} (filetype:pdf OR filetype:doc OR filetype:docx OR filetype:xls OR filetype:xlsx)`, dirs: `site:${domain} intitle:"index of"`, db: `site:${domain} (filetype:sql OR filetype:db OR filetype:dump)` };
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(dorks[type])}`, '_blank');
     playSound('click'); haptic.impactOccurred('medium');
 }
 
+// --- CORE TOOLS ---
+async function runTTS() {
+    const txtInput = document.getElementById('tts-input'), langInput = document.getElementById('tts-lang');
+    if (!txtInput || !langInput) return;
+    const text = txtInput.value.trim(), lang = langInput.value, status = document.getElementById('tts-status'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!text) return;
+    status.innerText = "⏳ " + t('processing'); playSound('loading');
+    const url = `/api/python_tools?tool=tts&text=${encodeURIComponent(text)}&lang=${lang}${chatId ? `&chatId=${chatId}` : ''}`;
+    try {
+        const response = await fetch(url), data = await response.json(); stopSound('loading');
+        if (data.success) { status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('sentChat')}</span>`; playSound('success'); haptic.notificationOccurred('success'); }
+        else throw new Error();
+    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); }
+}
+
 function runSubnetCalc() {
-    const ip = document.getElementById('sub-ip').value.trim(), prefix = parseInt(document.getElementById('sub-prefix').value), resDiv = document.getElementById('sub-result');
+    const ipIn = document.getElementById('sub-ip'), prefIn = document.getElementById('sub-prefix');
+    if (!ipIn || !prefIn) return;
+    const ip = ipIn.value.trim(), prefix = parseInt(prefIn.value), resDiv = document.getElementById('sub-result');
     if (!ip || isNaN(prefix) || prefix < 0 || prefix > 32) return;
     const ipToLong = (ip) => ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
     const longToIp = (long) => [(long >>> 24) & 0xFF, (long >>> 16) & 0xFF, (long >>> 8) & 0xFF, long & 0xFF].join('.');
@@ -476,42 +529,34 @@ function runSubnetCalc() {
     playSound('success'); haptic.notificationOccurred('success');
 }
 
-async function runTTS() {
-    const text = document.getElementById('tts-input').value.trim(), lang = document.getElementById('tts-lang').value, status = document.getElementById('tts-status'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!text) return;
-    status.innerText = "⏳ " + t('processing'); playSound('loading');
-    const url = `/api/python_tools?tool=tts&text=${encodeURIComponent(text)}&lang=${lang}${chatId ? `&chatId=${chatId}` : ''}`;
-    try {
-        const response = await fetch(url), data = await response.json(); stopSound('loading');
-        if (data.success) { status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('sentChat')}</span>`; playSound('success'); haptic.notificationOccurred('success'); }
-        else throw new Error();
-    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
-}
-
 async function runHashCracker() {
-    const hash = document.getElementById('hash-input').value.trim(), type = document.getElementById('hash-type').value, resultDiv = document.getElementById('crack-result'); if (!hash) return;
+    const hIn = document.getElementById('hash-input'), tIn = document.getElementById('hash-type');
+    if (!hIn || !tIn) return;
+    const hash = hIn.value.trim(), type = tIn.value, resultDiv = document.getElementById('crack-result'); if (!hash) return;
     resultDiv.innerText = t('cracking'); playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=crack&hash=${hash}&type=${type}`), data = await res.json(); stopSound('loading');
         if (data.success) { resultDiv.innerText = data.password; playSound('success'); haptic.notificationOccurred('success'); }
-        else { resultDiv.innerText = t('notFound'); playSound('error'); haptic.notificationOccurred('error'); }
+        else { resultDiv.innerText = t('notFound'); playSound('error'); }
     } catch(e) { stopSound('loading'); resultDiv.innerText = t('failed'); playSound('error'); }
 }
 
 async function runURLInspector() {
-    const url = document.getElementById('inspect-url').value.trim(), resultDiv = document.getElementById('inspect-results'); if (!url) return;
+    const urlIn = document.getElementById('inspect-url'); if (!urlIn) return;
+    const url = urlIn.value.trim(), resultDiv = document.getElementById('inspect-results'); if (!url) return;
     resultDiv.innerHTML = `<p>${t('inspecting')}</p>`; playSound('loading');
     try {
         const res = await fetch(`/api/python_tools?tool=inspect&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
         if (data.success) {
-            resultDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">IP Address</span><span style="font-weight:600">${data.ip}</span></div><div class="settings-cell"><span class="settings-label">Response</span><span style="font-weight:600">${data.response_time}ms</span></div><div class="settings-cell"><span class="settings-label">Server</span><span style="font-weight:600">${data.server}</span></div><div class="settings-cell"><span class="settings-label">Security</span><span style="color:${data.is_secure ? '#34c759' : '#ff3b30'}; font-weight:800">${data.is_secure ? t('secure') : t('insecure')}</span></div></div><p style="font-size:13px; color:var(--secondary-text); margin-top:10px;">${data.title}</p>`;
+            resultDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">IP Address</span><span style="font-weight:600">${data.ip}</span></div><div class="settings-cell"><span class="settings-label">Response</span><span style="font-weight:600">${data.response_time}ms</span></div><div class="settings-cell"><span class="settings-label">Server</span><span style="font-weight:600">${data.server}</span></div><div class="settings-cell"><span class="settings-label">Security</span><span style="color:${data.is_secure ? '#34c759' : '#ff3b30'}; font-weight:800">${data.is_secure ? t('secure') : t('insecure')}</span></div></div>`;
             playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
-    } catch(e) { stopSound('loading'); resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); haptic.notificationOccurred('error'); }
+    } catch(e) { stopSound('loading'); resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
 }
 
 async function processDownload(type) {
-    const url = document.getElementById('media-url').value.trim(), status = document.getElementById('dl-status'); if (!url) return;
+    const urlIn = document.getElementById('media-url'); if (!urlIn) return;
+    const url = urlIn.value.trim(), status = document.getElementById('dl-status'); if (!url) return;
     status.innerText = "⏳ " + t('processing'); playSound('loading');
     try {
         const res = await fetch(`/api/media?type=${type}&url=${encodeURIComponent(url)}`), data = await res.json(); stopSound('loading');
@@ -519,7 +564,7 @@ async function processDownload(type) {
             const a = document.createElement('a'); a.href = data.url; a.download = data.title || 'media'; document.body.appendChild(a); a.click(); a.remove();
             status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('success')}</span>`; playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
-    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
+    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); }
 }
 
 async function runDecision(type) {
@@ -534,106 +579,28 @@ async function runDecision(type) {
     haptic.notificationOccurred('success'); playSound('success');
 }
 
-let morseMode = 'encode';
-function setMorseMode(mode) {
-    morseMode = mode;
-    document.getElementById('morse-encode-tab').classList.toggle('active', mode === 'encode');
-    document.getElementById('morse-decode-tab').classList.toggle('active', mode === 'decode');
-    document.getElementById('morse-play-btn').style.display = mode === 'encode' ? 'flex' : 'none';
-    document.getElementById('morse-input').value = ""; document.getElementById('morse-output').innerText = ""; playSound('click');
+// --- UTILS ---
+function processText(mode) {
+    const input = document.getElementById('text-input'); if (!input) return;
+    if (mode === 'upper') input.value = input.value.toUpperCase();
+    else if (mode === 'lower') input.value = input.value.toLowerCase();
+    else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase());
+    else if (mode === 'clear') input.value = "";
+    updateTextStats(); playSound('click');
 }
 
-function updateMorse() {
-    const input = document.getElementById('morse-input').value.trim(), output = document.getElementById('morse-output');
-    if (morseMode === 'encode') {
-        let res = ""; for (let char of input.toUpperCase()) res += (morseDict[char] || "") + " ";
-        output.innerText = res.trim();
-    } else {
-        const revDict = Object.fromEntries(Object.entries(morseDict).map(([k,v]) => [v,k]));
-        output.innerText = input.split(' ').map(c => revDict[c] || '?').join('');
-    }
+function updateTextStats() {
+    const textInput = document.getElementById('text-input'); if (!textInput) return;
+    const text = textInput.value;
+    const stats = document.getElementById('text-stats');
+    if (stats) stats.innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`;
 }
 
-function toggleZalgoSlider(val) { document.getElementById('zalgo-control').style.display = (val === 'glitch') ? 'block' : 'none'; }
+function initMetronome() { /* Placeholder */ }
+function startMetronome() { /* Placeholder */ }
+function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearTimeout(metronomeInterval); }
 
-function transformUnicode() {
-    const input = document.getElementById('text-input'), mode = document.getElementById('unicode-mode').value; if (!input || !input.value) return;
-    let text = input.value, res = "";
-    if (mode === 'glitch') {
-        const chars = "̀́̂̃̄̅̆̇̈̉̊̋̌̍̎̏̐̑̒̓̔̽̾̿̀́͂̓͋引领", intensity = parseInt(document.getElementById('zalgo-intensity').value);
-        for (let c of text) { res += c; for (let i = 0; i < intensity; i++) res += chars[Math.floor(Math.random() * chars.length)]; }
-    } else if (mode === 'leetspeak') { for (let c of text.toLowerCase()) res += unicodeStyles.leetspeak[c] || c; }
-    else if (mode === 'flipped') {
-        const normal = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", reversed = unicodeStyles.flipped;
-        for (let c of text) { const idx = normal.indexOf(c); res = (idx !== -1 ? reversed[idx] : c) + res; }
-    } else {
-        const mapping = unicodeStyles[mode];
-        for (let c of text) {
-            const code = c.charCodeAt(0);
-            if (c >= 'a' && c <= 'z') res += String.fromCodePoint(mapping.a.codePointAt(0) + (code - 97));
-            else if (c >= 'A' && c <= 'Z') res += String.fromCodePoint(mapping.A.codePointAt(0) + (code - 65));
-            else if (c >= '0' && c <= '9') res += (mapping['0'] !== '0') ? String.fromCodePoint(mapping['0'].codePointAt(0) + (code - 48)) : c;
-            else res += c;
-        }
-    }
-    input.value = res; updateTextStats(); playSound('click'); haptic.impactOccurred('light');
-}
-
-async function playMorseHaptics() {
-    if (isMorsePlaying) return;
-    const output = document.getElementById('morse-output'); if (!output || !output.innerText) return;
-    isMorsePlaying = true;
-    for (let char of output.innerText) {
-        if (!isMorsePlaying) break;
-        if (char === '.') { haptic.impactOccurred('light'); playSound('click'); await new Promise(r => setTimeout(r, 250)); }
-        else if (char === '-') { haptic.impactOccurred('heavy'); playSound('click'); await new Promise(r => setTimeout(r, 500)); }
-        else { await new Promise(r => setTimeout(r, 400)); }
-        await new Promise(r => setTimeout(r, 100));
-    }
-    isMorsePlaying = false;
-}
-
-function hideTool() { 
-    const existingDesc = document.querySelector('.tool-desc'); if (existingDesc) existingDesc.remove();
-    document.getElementById('tool-container').style.display = 'none'; stopMetronome(); stopSound('loading'); isMorsePlaying = false; 
-    if (speedTestController) { speedTestController.abort(); speedTestController = null; } 
-}
-
-function renderMediaTabs(shouldPlaySound = true) {
-    if (shouldPlaySound) playSound('click');
-    const container = document.getElementById('media-tabs-container');
-    container.innerHTML = `<div class="tab-container"><button id="mtab-downs" class="tab-btn active" onclick="setMediaTab('downs')">${t('downloads')}</button><button id="mtab-conv" class="tab-btn" onclick="setMediaTab('conv')">${t('audioConv')}</button><button id="mtab-exif" class="tab-btn" onclick="setMediaTab('exif')">${t('exifStripper')}</button><button id="mtab-metro" class="tab-btn" onclick="setMediaTab('metro')">${t('metronome')}</button></div><div id="media-tab-content"></div>`;
-    setMediaTab('downs', false);
-}
-
-function setMediaTab(tab, shouldPlaySound = true) {
-    if (shouldPlaySound) playSound('click'); haptic.impactOccurred('light');
-    const content = document.getElementById('media-tab-content');
-    document.querySelectorAll('#media-tabs-container .tab-btn').forEach(b => b.classList.remove('active'));
-    const targetTab = document.getElementById(`mtab-${tab}`); if (targetTab) targetTab.classList.add('active'); stopMetronome(); stopSound('loading');
-    let descKey = `desc_${tab}`; if (tab === 'downs') descKey = 'desc_audioConv';
-    const existingDesc = document.querySelector('.tool-desc'); if (existingDesc) existingDesc.remove();
-    if (tab === 'downs') { content.innerHTML = `<div class="tab-container" style="background:none; border: 1px solid var(--border-color); margin-top:10px;"><button onclick="showDownloaderUI('yt')" id="st-yt" class="tab-btn active"><i data-lucide="youtube"></i> YT</button><button onclick="showDownloaderUI('ig')" id="st-ig" class="tab-btn"><i data-lucide="instagram"></i> IG</button><button onclick="showDownloaderUI('tt')" id="st-tt" class="tab-btn"><i data-lucide="music"></i> TT</button></div><div id="downloader-ui-box"></div>`; showDownloaderUI('yt', false); }
-    else if (tab === 'conv') content.innerHTML = `<div class="pass-box"><div class="upload-box" onclick="document.getElementById('audio-upload').click()"><i data-lucide="music" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span style="display:block; font-weight:600">${t('selectFile')}</span><input type="file" id="audio-upload" style="display:none" onchange="handleAudioFile(this)"></div><div id="audio-info" style="display:none; margin:15px 0; font-size:14px; font-weight:600;"></div><button id="conv-btn" class="tool-btn" style="display:none; justify-content:center" onclick="startAudioConversion()">${t('convMp3')}</button><div id="conv-status" style="margin-top:10px;"></div></div>`;
-    else if (tab === 'exif') content.innerHTML = `<div class="pass-box"><div class="upload-box" onclick="document.getElementById('exif-upload').click()"><i data-lucide="image" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span id="exif-filename" style="display:block; font-weight:600">${t('selectImage')}</span><input type="file" id="exif-upload" accept="image/*" style="display:none" onchange="handleExifFile(this)"></div><button id="exif-btn" class="tool-btn" style="display:none; justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="processExif()"> <i data-lucide="shield-check" style="color:white"></i> ${t('stripMetadata')}</button><div id="exif-status" style="margin-top:15px; text-align:center;"></div></div>`;
-    else content.innerHTML = `<div class="pass-box" style="text-align:center;"><div id="metro-circle" class="metro-circle" style="margin: 20px auto;">${bpm}</div><div style="margin-bottom:30px; text-align:left;"><label style="display:flex; justify-content:space-between; font-weight:600">BPM <span id="bpm-val">${bpm}</span></label><input type="range" min="40" max="220" value="${bpm}" oninput="updateBPM(this.value)"></div><button id="metro-btn" class="tool-btn" style="justify-content:center" onclick="toggleMetronome()">Start</button></div>`;
-    lucide.createIcons();
-}
-
-function showDownloaderUI(type, shouldPlaySound = true) { if (shouldPlaySound) playSound('click'); const box = document.getElementById('downloader-ui-box'); if (!box) return; document.querySelectorAll('#media-tab-content .tab-btn').forEach(b => b.classList.remove('active')); const subTab = document.getElementById(`st-${type}`); if (subTab) subTab.classList.add('active'); box.innerHTML = `<div class="pass-box"><input type="text" id="media-url" class="text-input" placeholder="${type.toUpperCase()} Link"><select id="media-format" class="select-input"><option value="mp4">Video</option><option value="mp3">Audio</option></select><button class="tool-btn" style="justify-content:center" onclick="processDownload('${type}')">Download</button><div id="dl-status" style="margin-top:10px; font-size:13px"></div></div>`; }
-async function processExif() { if (!exifFile) return; const status = document.getElementById('exif-status'), chatId = tg.initDataUnsafe?.user?.id; status.innerText = t('processing'); playSound('loading'); const formData = new FormData(); formData.append('file', exifFile); if (chatId) formData.append('chatId', chatId); try { const response = await fetch('/api/strip-exif', { method: 'POST', body: formData }), data = await response.json(); stopSound('loading'); if (data.success) { status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('sentChat')}</span>`; playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(data.error); } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); } }
-function generateInvisibleText() { navigator.clipboard.writeText("\u3164"); playSound('success'); haptic.notificationOccurred('success'); tg.MainButton.setText(t('copied')).show(); setTimeout(() => tg.MainButton.hide(), 2000); }
-function generateRickroll() { const alias = document.getElementById('rick-alias').value.trim() || 'Click Me', type = document.getElementById('rick-type').value, targets = { youtube: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", spotify: "https://open.spotify.com/track/4cOdK2wGvWyR9m7UNvy9oE", tiktok: "https://www.tiktok.com/@rickastlyofficial/video/6884381585451126018" }; document.getElementById('rick-url').innerText = `https://www.google.com/url?q=${encodeURIComponent(targets[type])}&disguise=${encodeURIComponent(alias)}`; document.getElementById('rick-result').style.display = 'block'; playSound('success'); haptic.notificationOccurred('success'); }
-function copyRickroll() { navigator.clipboard.writeText(document.getElementById('rick-url').innerText); playSound('click'); haptic.impactOccurred('medium'); tg.MainButton.setText(t('copied')).show(); setTimeout(() => tg.MainButton.hide(), 2000); }
-async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'), chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('loading'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }), data = await response.json(); stopSound('loading'); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
-async function lookupDomain() { const domainInput = document.getElementById('dom-url'); if (!domainInput) return; const domain = domainInput.value.trim(), resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; playSound('click'); try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`), data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('success'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
-function updateQR() { const inputEl = document.getElementById('qr-input'); if (!inputEl) return; const input = inputEl.value, result = document.getElementById('qr-result'), dlBtn = document.getElementById('download-qr'); if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; } result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`; dlBtn.style.display = 'flex'; }
-function renderSettings() { const container = document.getElementById('settings-content'); container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>`; }
-function startMetronome() { if (isMetronomeRunning) return; isMetronomeRunning = true; document.getElementById('metro-btn').innerText = "Stop"; const circle = document.getElementById('metro-circle'); nextBeatTime = performance.now(); const tick = () => { if (!isMetronomeRunning) return; playSound('click'); haptic.impactOccurred('medium'); circle.classList.add('metro-active'); setTimeout(() => circle.classList.remove('metro-active'), 100); const interval = (60 / bpm) * 1000; nextBeatTime += interval; metronomeInterval = setTimeout(tick, Math.max(0, interval - (performance.now() - nextBeatTime))); }; tick(); }
-function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearTimeout(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
-function toggleMetronome() { if (isMetronomeRunning) stopMetronome(); else startMetronome(); }
-function updateBPM(val) { bpm = val; if (document.getElementById('bpm-val')) document.getElementById('bpm-val').innerText = bpm; if (document.getElementById('metro-circle')) document.getElementById('metro-circle').innerText = bpm; if (isMetronomeRunning) { stopMetronome(); startMetronome(); } }
-function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; const info = document.getElementById('audio-info'); info.innerText = `Selected: ${selectedAudioFile.name}`; info.style.display = 'block'; document.getElementById('conv-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
-function updateTextStats() { const textInput = document.getElementById('text-input'); if (!textInput) return; const text = textInput.value; document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
-function processText(mode) { const input = document.getElementById('text-input'); if (!input) return; if (mode === 'upper') input.value = input.value.toUpperCase(); else if (mode === 'lower') input.value = input.value.toLowerCase(); else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase()); else if (mode === 'clear') input.value = ""; updateTextStats(); playSound('click'); }
-initTheme(); switchView('tools'); updateUIVocabulary();
+// --- INIT ---
+initTheme();
+switchView('tools');
+updateUIVocabulary();

@@ -35,7 +35,8 @@ class handler(BaseHTTPRequestHandler):
 
     def handle_username_search(self, params):
         username = params.get("username", [""])[0].strip()
-        if not username: return self.send_json({"success": False, "error": "Username required"})
+        if not username:
+            return self.send_json({"success": False, "error": "Username required"})
         
         platforms = {
             "Instagram": f"https://www.instagram.com/{username}/",
@@ -43,7 +44,6 @@ class handler(BaseHTTPRequestHandler):
             "Reddit": f"https://www.reddit.com/user/{username}",
             "Twitter (X)": f"https://twitter.com/{username}",
             "TikTok": f"https://www.tiktok.com/@{username}",
-            "Pinterest": f"https://www.pinterest.com/{username}/",
             "YouTube": f"https://www.youtube.com/@{username}",
             "Steam": f"https://steamcommunity.com/id/{username}",
             "Spotify": f"https://open.spotify.com/user/{username}",
@@ -55,35 +55,40 @@ class handler(BaseHTTPRequestHandler):
         
         for name, url in platforms.items():
             try:
-                # Use a small timeout for speed
                 res = requests.head(url, headers=headers, timeout=3, allow_redirects=True)
                 if res.status_code == 200:
-                    results.append({"name": name, "url": url, "found": True})
+                    results.append({"name": name, "url": url})
             except:
                 pass
         
-        self.send_json({"success": True, "results": results, "username": username})
+        self.send_json({"success": True, "results": results})
 
     def handle_tg_scrape(self, params):
         username = params.get("username", [""])[0].strip().replace('@', '')
-        if not username: return self.send_json({"success": False, "error": "Username required"})
+        if not username:
+            return self.send_json({"success": False, "error": "Username required"})
+        
         try:
             url = f"https://t.me/{username}"
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
             response = requests.get(url, timeout=10, headers=headers)
             soup = BeautifulSoup(response.text, 'html.parser')
+            
             name_el = soup.find('div', class_='tgme_page_title')
             bio_el = soup.find('div', class_='tgme_page_description')
             extra_el = soup.find('div', class_='tgme_page_extra')
             photo_el = soup.find('img', class_='tgme_page_photo_image')
+            
             result = {
-                "success": True, "username": f"@{username}",
+                "success": True,
+                "username": f"@{username}",
                 "display_name": name_el.get_text(strip=True) if name_el else "Unknown",
                 "bio": bio_el.get_text(strip=True) if bio_el else "No Bio",
                 "extra": extra_el.get_text(strip=True) if extra_el else "",
                 "photo": photo_el.get('src') if photo_el else None
             }
-        except Exception as e: result = {"success": False, "error": str(e)}
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
         self.send_json(result)
 
     def handle_scrape(self, params):
@@ -93,18 +98,33 @@ class handler(BaseHTTPRequestHandler):
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
             response = requests.get(url, timeout=10, headers=headers)
             soup = BeautifulSoup(response.text, 'html.parser')
+            
             emails = list(set(re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', response.text)))
             phones = list(set(re.findall(r'\+?\d[\d\s\-\(\)]{8,}\d', response.text)))
+            
             images = []
             for img in soup.find_all('img'):
-                src = img.get('src'); if src: images.append(urljoin(url, src))
-            for script in soup(["script", "style"]): script.decompose()
+                src = img.get('src')
+                if src:
+                    images.append(urljoin(url, src))
+            
+            for script in soup(["script", "style"]):
+                script.decompose()
             text = soup.get_text(separator=' ')
             lines = (line.strip() for line in text.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             clean_text = '\n'.join(chunk for chunk in chunks if chunk)[:2000]
-            result = {"success": True, "title": soup.title.string if soup.title else "No Title", "emails": emails[:10], "phones": phones[:10], "image_count": len(images), "images": images[:5], "text_preview": clean_text}
-        except Exception as e: result = {"success": False, "error": str(e)}
+
+            result = {
+                "success": True,
+                "title": soup.title.string if soup.title else "No Title",
+                "emails": emails[:10],
+                "phones": phones[:10],
+                "image_count": len(images),
+                "text_preview": clean_text
+            }
+        except Exception as e:
+            result = {"success": False, "error": str(e)}
         self.send_json(result)
 
     def handle_inspect(self, params):
@@ -116,10 +136,8 @@ class handler(BaseHTTPRequestHandler):
             end_time = time.time()
             domain = urlparse(response.url).netloc
             ip_addr = socket.gethostbyname(domain)
-            soup = BeautifulSoup(response.text, 'html.parser')
             result = {
-                "success": True, "title": soup.title.string.strip()[:100] if soup.title else "No Title",
-                "status_code": response.status_code, "ip": ip_addr, "server": response.headers.get('Server', 'Unknown'),
+                "success": True, "ip": ip_addr, "server": response.headers.get('Server', 'Unknown'),
                 "response_time": round((end_time - start_time) * 1000, 2), "is_secure": response.url.startswith('https://')
             }
         except Exception as e: result = {"success": False, "error": str(e)}
@@ -138,16 +156,29 @@ class handler(BaseHTTPRequestHandler):
         self.send_json({"success": True, "password": found} if found else {"success": False})
 
     def handle_tts(self, params):
-        text = params.get("text", [""])[0]; lang = params.get("lang", ["en"])[0]; chat_id = params.get("chatId", [""])[0]; bot_token = os.environ.get('BOT_TOKEN')
+        text = params.get("text", [""])[0]
+        lang = params.get("lang", ["en"])[0]
+        chat_id = params.get("chatId", [""])[0]
+        bot_token = os.environ.get('BOT_TOKEN')
         try:
-            tts = gTTS(text=text, lang=lang); mp3_fp = io.BytesIO(); tts.write_to_fp(mp3_fp); mp3_fp.seek(0)
+            tts = gTTS(text=text, lang=lang)
+            mp3_fp = io.BytesIO()
+            tts.write_to_fp(mp3_fp)
+            mp3_fp.seek(0)
             if chat_id and bot_token:
                 files = {'voice': ('speech.mp3', mp3_fp, 'audio/mpeg')}
                 requests.post(f"https://api.telegram.org/bot{bot_token}/sendVoice", data={'chat_id': chat_id}, files=files)
                 self.send_json({"success": True})
             else:
-                self.send_response(200); self.send_header('Content-type', 'audio/mpeg'); self.end_headers(); self.wfile.write(mp3_fp.read())
-        except Exception as e: self.send_json({"success": False, "error": str(e)})
+                self.send_response(200)
+                self.send_header('Content-type', 'audio/mpeg')
+                self.end_headers()
+                self.wfile.write(mp3_fp.read())
+        except Exception as e:
+            self.send_json({"success": False, "error": str(e)})
 
     def send_json(self, data):
-        self.send_response(200); self.send_header('Content-type', 'application/json'); self.end_headers(); self.wfile.write(json.dumps(data).encode('utf-8'))
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode('utf-8'))
