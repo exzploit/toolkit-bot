@@ -149,7 +149,9 @@ const sounds = {
     click: new Audio('assets/sfx/click.wav'),
     success: new Audio('assets/sfx/success.wav'),
     error: new Audio('assets/sfx/error.wav'),
-    loading: new Audio('assets/sfx/loading.wav')
+    loading: new Audio('assets/sfx/loading.wav'),
+    coin: new Audio('assets/sfx/coin.wav'),
+    dice: new Audio('assets/sfx/dice.wav')
 };
 sounds.loading.loop = true;
 
@@ -205,22 +207,14 @@ function updateUIVocabulary() {
         const hdr = document.getElementById(`header-${k}`); if (hdr) hdr.innerText = t(k);
     });
     
-    // Static button updates instead of fragile innerHTML mapping
     const menuTools = document.getElementById('menu-tools');
     if (menuTools) {
-        const btnMap = {
-            'password': 'passgen', 'vault': 'secureVault', 'morse': 'morse',
-            'tts': 'tts', 'jailbreak': 'jailbreak', 'crack': 'crack',
-            'decision': 'decision', 'rickroll': 'rickroll', 'qrcode': 'qrgen', 'textutils': 'textutils'
-        };
+        const btnMap = { 'password': 'passgen', 'vault': 'secureVault', 'morse': 'morse', 'tts': 'tts', 'jailbreak': 'jailbreak', 'crack': 'crack', 'decision': 'decision', 'rickroll': 'rickroll', 'qrcode': 'qrgen', 'textutils': 'textutils' };
         for (const btn of menuTools.querySelectorAll('button')) {
             const onclick = btn.getAttribute('onclick');
             const toolId = onclick.match(/'([^']+)'/)[1];
             const i18nKey = btnMap[toolId];
-            if (i18nKey) {
-                const icon = btn.querySelector('i').outerHTML;
-                btn.innerHTML = `${icon} ${t(i18nKey)}`;
-            }
+            if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
         }
     }
 
@@ -230,10 +224,7 @@ function updateUIVocabulary() {
         for (const btn of menuNet.querySelectorAll('button')) {
             const toolId = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
             const i18nKey = netMap[toolId];
-            if (i18nKey) {
-                const icon = btn.querySelector('i').outerHTML;
-                btn.innerHTML = `${icon} ${t(i18nKey)}`;
-            }
+            if (i18nKey) { const icon = btn.querySelector('i').outerHTML; btn.innerHTML = `${icon} ${t(i18nKey)}`; }
         }
     }
     lucide.createIcons();
@@ -266,11 +257,7 @@ function showTool(toolName) {
     const desc = t(descKey);
     const existingDesc = document.querySelector('.tool-desc');
     if (existingDesc) existingDesc.remove();
-    
-    const descEl = document.createElement('p');
-    descEl.className = 'tool-desc';
-    descEl.innerText = desc;
-    document.getElementById('tool-header').after(descEl);
+    const descEl = document.createElement('p'); descEl.className = 'tool-desc'; descEl.innerText = desc; document.getElementById('tool-header').after(descEl);
 
     if (toolName === 'speedtest') {
         title.innerText = t('speedtest');
@@ -291,163 +278,52 @@ function showTool(toolName) {
 
     if (toolName === 'subnet') {
         title.innerText = t('subnet');
-        content.innerHTML = `<div class="pass-box">
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="sub-ip" class="text-input" style="flex:3" placeholder="192.168.1.1">
-                <input type="number" id="sub-prefix" class="text-input" style="flex:1" placeholder="24" min="0" max="32">
-            </div>
-            <button class="tool-btn" style="justify-content:center" onclick="runSubnetCalc()">${t('calculate')}</button>
-            <div id="sub-result" style="margin-top:20px;"></div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><div style="display:flex; gap:10px;"><input type="text" id="sub-ip" class="text-input" style="flex:3" placeholder="192.168.1.1"><input type="number" id="sub-prefix" class="text-input" style="flex:1" placeholder="24" min="0" max="32"></div><button class="tool-btn" style="justify-content:center" onclick="runSubnetCalc()">${t('calculate')}</button><div id="sub-result" style="margin-top:20px;"></div></div>`;
     }
 
     if (toolName === 'tts') {
         title.innerText = t('tts');
-        content.innerHTML = `<div class="pass-box">
-            <textarea id="tts-input" class="text-area" placeholder="${t('enterText')}"></textarea>
-            <select id="tts-lang" class="select-input">
-                <option value="en">English</option>
-                <option value="ro">Română</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-            </select>
-            <button class="tool-btn" style="justify-content:center" onclick="runTTS()"><i data-lucide="volume-2"></i> ${t('speak')}</button>
-            <div id="tts-status" style="margin-top:15px; text-align:center;"></div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><textarea id="tts-input" class="text-area" placeholder="${t('enterText')}"></textarea><select id="tts-lang" class="select-input"><option value="en">English</option><option value="ro">Română</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option></select><button class="tool-btn" style="justify-content:center" onclick="runTTS()"><i data-lucide="volume-2"></i> ${t('speak')}</button><div id="tts-status" style="margin-top:15px; text-align:center;"></div></div>`;
     }
 
     if (toolName === 'jailbreak') {
         title.innerText = t('jailbreak');
-        content.innerHTML = `<div class="pass-box">
-            <select id="jb-model" class="select-input">
-                <option value="" disabled selected>${t('selectModel')}</option>
-                <optgroup label="A12+ (Newer)">
-                    <option value="a12">iPhone XR / XS / XS Max</option>
-                    <option value="a13">iPhone 11 Series / SE 2</option>
-                    <option value="a14">iPhone 12 Series</option>
-                    <option value="a15">iPhone 13 Series / 14 / SE 3</option>
-                    <option value="a16">iPhone 14 Pro / 15 Series</option>
-                </optgroup>
-                <optgroup label="A8-A11 (Legacy)">
-                    <option value="a11">iPhone 8 / 8 Plus / X</option>
-                    <option value="a10">iPhone 7 / 7 Plus</option>
-                    <option value="a9">iPhone 6S / 6S Plus / SE 1</option>
-                </optgroup>
-            </select>
-            <select id="jb-version" class="select-input">
-                <option value="" disabled selected>${t('selectOS')}</option>
-                <option value="17.0">iOS 17.0</option>
-                <option value="16.6">iOS 16.0 - 16.6.1</option>
-                <option value="15.4">iOS 15.0 - 15.4.1</option>
-                <option value="14.8">iOS 14.0 - 14.8</option>
-                <option value="legacy">iOS 13.7 & Below</option>
-            </select>
-            <button class="tool-btn" style="justify-content:center" onclick="checkJailbreak()">${t('check')}</button>
-            <div id="jb-result" style="margin-top:20px;"></div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><select id="jb-model" class="select-input"><option value="" disabled selected>${t('selectModel')}</option><optgroup label="A12+ (Newer)"><option value="a12">iPhone XR / XS / XS Max</option><option value="a13">iPhone 11 Series / SE 2</option><option value="a14">iPhone 12 Series</option><option value="a15">iPhone 13 Series / 14 / SE 3</option><option value="a16">iPhone 14 Pro / 15 Series</option></optgroup><optgroup label="A8-A11 (Legacy)"><option value="a11">iPhone 8 / 8 Plus / X</option><option value="a10">iPhone 7 / 7 Plus</option><option value="a9">iPhone 6S / 6S Plus / SE 1</option></optgroup></select><select id="jb-version" class="select-input"><option value="" disabled selected>${t('selectOS')}</option><option value="17.0">iOS 17.0</option><option value="16.6">iOS 16.0 - 16.6.1</option><option value="15.4">iOS 15.0 - 15.4.1</option><option value="14.8">iOS 14.0 - 14.8</option><option value="legacy">iOS 13.7 & Below</option></select><button class="tool-btn" style="justify-content:center" onclick="checkJailbreak()">${t('check')}</button><div id="jb-result" style="margin-top:20px;"></div></div>`;
     }
 
     if (toolName === 'crack') {
         title.innerText = t('crack');
-        content.innerHTML = `<div class="pass-box">
-            <input type="text" id="hash-input" class="text-input" placeholder="${t('enterHash')}">
-            <select id="hash-type" class="select-input">
-                <option value="md5">MD5</option>
-                <option value="sha1">SHA-1</option>
-                <option value="sha256">SHA-256</option>
-            </select>
-            <button class="tool-btn" style="justify-content:center" onclick="runHashCracker()">${t('crack')}</button>
-            <div id="crack-result" style="margin-top:20px; text-align:center; font-weight:800; font-size:24px; color:var(--primary-color)"></div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><input type="text" id="hash-input" class="text-input" placeholder="${t('enterHash')}"><select id="hash-type" class="select-input"><option value="md5">MD5</option><option value="sha1">SHA-1</option><option value="sha256">SHA-256</option></select><button class="tool-btn" style="justify-content:center" onclick="runHashCracker()">${t('crack')}</button><div id="crack-result" style="margin-top:20px; text-align:center; font-weight:800; font-size:24px; color:var(--primary-color)"></div></div>`;
     }
 
     if (toolName === 'decision') {
         title.innerText = t('decision');
-        content.innerHTML = `<div class="pass-box" style="text-align:center;">
-            <div id="decision-display" style="font-size:64px; margin:40px 0; min-height:80px; display:flex; align-items:center; justify-content:center;">🎲</div>
-            <div class="util-grid">
-                <button class="small-btn" onclick="runDecision('coin')"><i data-lucide="circle"></i> ${t('coinFlip')}</button>
-                <button class="small-btn" onclick="runDecision('dice')"><i data-lucide="dice-5"></i> ${t('diceRoll')}</button>
-            </div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box" style="text-align:center;"><div id="decision-display" style="font-size:64px; margin:40px 0; min-height:80px; display:flex; align-items:center; justify-content:center;">🎲</div><div class="util-grid"><button class="small-btn" onclick="runDecision('coin')"><i data-lucide="circle"></i> ${t('coinFlip')}</button><button class="small-btn" onclick="runDecision('dice')"><i data-lucide="dice-5"></i> ${t('diceRoll')}</button></div></div>`;
     }
 
     if (toolName === 'inspect') {
         title.innerText = t('inspector');
-        content.innerHTML = `<div class="pass-box">
-            <input type="text" id="inspect-url" class="text-input" placeholder="https://example.com">
-            <button class="tool-btn" style="justify-content:center" onclick="runURLInspector()">${t('generate')}</button>
-            <div id="inspect-results" style="margin-top:20px;"></div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><input type="text" id="inspect-url" class="text-input" placeholder="https://example.com"><button class="tool-btn" style="justify-content:center" onclick="runURLInspector()">${t('generate')}</button><div id="inspect-results" style="margin-top:20px;"></div></div>`;
     }
 
     if (toolName === 'morse') {
         title.innerText = t('morse');
-        content.innerHTML = `<div class="pass-box">
-            <div class="tab-container" style="margin-bottom:15px;">
-                <button id="morse-encode-tab" class="tab-btn active" onclick="setMorseMode('encode')">${t('encode')}</button>
-                <button id="morse-decode-tab" class="tab-btn" onclick="setMorseMode('decode')">${t('decode')}</button>
-            </div>
-            <textarea id="morse-input" class="text-area" placeholder="Enter text..." oninput="updateMorse()"></textarea>
-            <div id="morse-output" style="background:var(--progress-bg); padding:15px; border-radius:12px; min-height:60px; font-family:monospace; font-size:18px; word-break:break-all; margin-bottom:15px; letter-spacing:2px;"></div>
-            <button class="tool-btn" id="morse-play-btn" style="justify-content:center" onclick="playMorseHaptics()"><i data-lucide="vibrate"></i> ${t('play')}</button>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><div class="tab-container" style="margin-bottom:15px;"><button id="morse-encode-tab" class="tab-btn active" onclick="setMorseMode('encode')">${t('encode')}</button><button id="morse-decode-tab" class="tab-btn" onclick="setMorseMode('decode')">${t('decode')}</button></div><textarea id="morse-input" class="text-area" placeholder="Enter text..." oninput="updateMorse()"></textarea><div id="morse-output" style="background:var(--progress-bg); padding:15px; border-radius:12px; min-height:60px; font-family:monospace; font-size:18px; word-break:break-all; margin-bottom:15px; letter-spacing:2px;"></div><button class="tool-btn" id="morse-play-btn" style="justify-content:center" onclick="playMorseHaptics()"><i data-lucide="vibrate"></i> ${t('play')}</button></div>`;
     }
 
     if (toolName === 'textutils') {
         title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box">
-            <textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea>
-            <div id="text-stats" class="stats-info"></div>
-            <div class="util-grid" style="margin-bottom:15px;">
-                <button class="small-btn" onclick="processText('upper')">${t('upper')}</button>
-                <button class="small-btn" onclick="processText('lower')">${t('lower')}</button>
-                <button class="small-btn" onclick="processText('title')">${t('title')}</button>
-                <button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button>
-            </div>
-            <div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 10px;">
-                <div style="margin-bottom:15px;">
-                    <select id="unicode-mode" class="select-input" onchange="toggleZalgoSlider(this.value)">
-                        <option value="bold">Bold Serif</option>
-                        <option value="italic">Italic Serif</option>
-                        <option value="script">Script Style</option>
-                        <option value="gothic">Gothic Style</option>
-                        <option value="leetspeak">Leetspeak</option>
-                        <option value="flipped">Flipped text</option>
-                        <option value="glitch">Glitch (Zalgo)</option>
-                    </select>
-                </div>
-                <div id="zalgo-control" style="display:none; margin-bottom:15px;">
-                    <label style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">${t('intensity')} <span id="zalgo-val">3</span></label>
-                    <input type="range" id="zalgo-intensity" min="1" max="15" value="3" oninput="document.getElementById('zalgo-val').innerText=this.value">
-                </div>
-                <button class="tool-btn" style="justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="transformUnicode()">${t('transform')}</button>
-                <button class="tool-btn" style="justify-content:center; background:var(--secondary-bg); font-size:14px; height:45px; margin-top:10px;" onclick="generateInvisibleText()">
-                    <i data-lucide="ghost"></i> ${t('invisibleText')}
-                </button>
-            </div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid" style="margin-bottom:15px;"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div><div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 10px;"><div style="margin-bottom:15px;"><select id="unicode-mode" class="select-input" onchange="toggleZalgoSlider(this.value)"><option value="bold">Bold Serif</option><option value="italic">Italic Serif</option><option value="script">Script Style</option><option value="gothic">Gothic Style</option><option value="leetspeak">Leetspeak</option><option value="flipped">Flipped text</option><option value="glitch">Glitch (Zalgo)</option></select></div><div id="zalgo-control" style="display:none; margin-bottom:15px;"><label style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">${t('intensity')} <span id="zalgo-val">3</span></label><input type="range" id="zalgo-intensity" min="1" max="15" value="3" oninput="document.getElementById('zalgo-val').innerText=this.value"></div><button class="tool-btn" style="justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="transformUnicode()">${t('transform')}</button><button class="tool-btn" style="justify-content:center; background:var(--secondary-bg); font-size:14px; height:45px; margin-top:10px;" onclick="generateInvisibleText()"><i data-lucide="ghost"></i> ${t('invisibleText')}</button></div></div>`;
     }
     
     if (toolName === 'rickroll') {
         title.innerText = t('rickroll');
-        content.innerHTML = `<div class="pass-box">
-            <input type="text" id="rick-alias" class="text-input" placeholder="e.g. Free Nitro">
-            <select id="rick-type" class="select-input"><option value="youtube">YouTube</option><option value="spotify">Spotify</option><option value="tiktok">TikTok</option></select>
-            <button class="tool-btn" style="justify-content:center" onclick="generateRickroll()">${t('generate')}</button>
-            <div id="rick-result" style="display:none"><div class="rick-preview" id="rick-url"></div><button class="tool-btn" style="justify-content:center" onclick="copyRickroll()"><i data-lucide="copy"></i> ${t('copy')}</button></div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><input type="text" id="rick-alias" class="text-input" placeholder="e.g. Free Nitro"><select id="rick-type" class="select-input"><option value="youtube">YouTube</option><option value="spotify">Spotify</option><option value="tiktok">TikTok</option></select><button class="tool-btn" style="justify-content:center" onclick="generateRickroll()">${t('generate')}</button><div id="rick-result" style="display:none"><div class="rick-preview" id="rick-url"></div><button class="tool-btn" style="justify-content:center" onclick="copyRickroll()"><i data-lucide="copy"></i> ${t('copy')}</button></div></div>`;
     }
 
     if (toolName === 'vault') {
         title.innerText = t('secureVault');
-        content.innerHTML = `<div class="pass-box">
-            <div class="upload-box" onclick="document.getElementById('vault-file').click()"><i data-lucide="file-lock-2" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span id="vault-filename" style="display:block; font-weight:600">${t('dropFile')}</span><input type="file" id="vault-file" style="display:none" onchange="handleVaultFile(this)"></div>
-            <input type="password" id="vault-pass" class="text-input" placeholder="${t('password')}">
-            <div style="display:flex; gap:10px; margin-top:15px;"><button class="tool-btn" style="justify-content:center; flex:1;" onclick="processVault('encrypt')"><i data-lucide="lock"></i> ${t('encrypt')}</button><button class="tool-btn" style="justify-content:center; flex:1;" onclick="processVault('decrypt')"><i data-lucide="unlock"></i> ${t('decrypt')}</button></div>
-            <div id="vault-status" style="margin-top:15px; text-align:center; font-weight:600;"></div>
-        </div>`;
+        content.innerHTML = `<div class="pass-box"><div class="upload-box" onclick="document.getElementById('vault-file').click()"><i data-lucide="file-lock-2" style="width:32px; height:32px; margin-bottom:10px; color:var(--primary-color)"></i><span id="vault-filename" style="display:block; font-weight:600">${t('dropFile')}</span><input type="file" id="vault-file" style="display:none" onchange="handleVaultFile(this)"></div><input type="password" id="vault-pass" class="text-input" placeholder="${t('password')}"><div style="display:flex; gap:10px; margin-top:15px;"><button class="tool-btn" style="justify-content:center; flex:1;" onclick="processVault('encrypt')"><i data-lucide="lock"></i> ${t('encrypt')}</button><button class="tool-btn" style="justify-content:center; flex:1;" onclick="processVault('decrypt')"><i data-lucide="unlock"></i> ${t('decrypt')}</button></div><div id="vault-status" style="margin-top:15px; text-align:center; font-weight:600;"></div></div>`;
     }
 
     if (toolName === 'password') {
@@ -533,7 +409,7 @@ async function processDownload(type) {
             const a = document.createElement('a'); a.href = data.url; a.download = data.title || 'media'; document.body.appendChild(a); a.click(); a.remove();
             status.innerHTML = `<span style="color:#34c759; font-weight:800">${t('success')}</span>`; playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
-    } catch (e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
+    } catch(e) { stopSound('loading'); status.innerHTML = `<span style="color:#ff3b30">${t('failed')}</span>`; playSound('error'); haptic.notificationOccurred('error'); }
 }
 
 async function runDecision(type) {
@@ -541,7 +417,7 @@ async function runDecision(type) {
     let delay = 50;
     for (let i = 0; i < 15; i++) {
         display.innerText = icons[Math.floor(Math.random() * icons.length)];
-        haptic.impactOccurred('light'); playSound('click');
+        haptic.impactOccurred('light'); playSound(type); // Play coin or dice specific sound
         await new Promise(r => setTimeout(r, delay)); delay += 20;
     }
     const result = type === 'coin' ? (Math.random() > 0.5 ? t('heads') : t('tails')) : (Math.floor(Math.random() * 6) + 1);
