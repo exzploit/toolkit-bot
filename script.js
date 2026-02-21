@@ -50,6 +50,7 @@ const i18n = {
         tts: "Text-to-Speech", speak: "Generate Voice", enterText: "Enter text to speak...",
         subnet: "Subnet Master", calculate: "Calculate", networkRange: "Network Range",
         broadcast: "Broadcast", usableHosts: "Usable Hosts", mask: "Subnet Mask",
+        scraper: "Deep Scraper", scrape: "Deep Scrape", scrapeResults: "Scrape Results",
         desc_passgen: "Generate high-entropy secure passwords instantly.",
         desc_vault: "Client-side encryption for your sensitive files.",
         desc_morse: "Translate text to Morse code with haptic pulses.",
@@ -68,7 +69,8 @@ const i18n = {
         desc_exif: "Remove hidden metadata from photos for better privacy.",
         desc_metronome: "Rock-solid precision metronome with drift compensation.",
         desc_tts: "Convert text to high-quality speech sent to your DM.",
-        desc_subnet: "Professional IPv4 CIDR and Subnet calculator."
+        desc_subnet: "Professional IPv4 CIDR and Subnet calculator.",
+        desc_scraper: "Extract Clean Text, Images, and Contact Info from any URL."
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -106,6 +108,7 @@ const i18n = {
         tts: "Text-to-Speech", speak: "Generează Voce", enterText: "Introdu textul pentru redare...",
         subnet: "Subnet Master", calculate: "Calculează", networkRange: "Gamă Rețea",
         broadcast: "Broadcast", usableHosts: "Host-uri Utilizabile", mask: "Mască Subnet",
+        scraper: "Deep Scraper", scrape: "Extrage Date", scrapeResults: "Rezultate Extragere",
         desc_passgen: "Generează parole securizate cu entropie ridicată.",
         desc_vault: "Criptare locală pentru fișierele tale sensibile.",
         desc_morse: "Tradu text în cod Morse cu impulsuri haptice.",
@@ -124,7 +127,8 @@ const i18n = {
         desc_exif: "Elimină metadatele ascunse din poze pentru confidențialitate.",
         desc_metronome: "Metronom de precizie cu compensare a derivei temporale.",
         desc_tts: "Convertește textul în voce și îl trimite în DM.",
-        desc_subnet: "Calculator profesional de IPv4 CIDR și Subnet."
+        desc_subnet: "Calculator profesional de IPv4 CIDR și Subnet.",
+        desc_scraper: "Extrage Text Curat, Imagini și Contacte din orice URL."
     }
 };
 
@@ -220,7 +224,7 @@ function updateUIVocabulary() {
 
     const menuNet = document.getElementById('menu-network');
     if (menuNet) {
-        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
+        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
         for (const btn of menuNet.querySelectorAll('button')) {
             const toolId = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
             const i18nKey = netMap[toolId];
@@ -276,6 +280,15 @@ function showTool(toolName) {
         </div>`;
     }
 
+    if (toolName === 'scraper') {
+        title.innerText = t('scraper');
+        content.innerHTML = `<div class="pass-box">
+            <input type="text" id="scrape-url" class="text-input" placeholder="https://example.com/article">
+            <button class="tool-btn" style="justify-content:center" onclick="runDeepScraper()"><i data-lucide="layers"></i> ${t('scrape')}</button>
+            <div id="scrape-result" style="margin-top:20px;"></div>
+        </div>`;
+    }
+
     if (toolName === 'subnet') {
         title.innerText = t('subnet');
         content.innerHTML = `<div class="pass-box"><div style="display:flex; gap:10px;"><input type="text" id="sub-ip" class="text-input" style="flex:3" placeholder="192.168.1.1"><input type="number" id="sub-prefix" class="text-input" style="flex:1" placeholder="24" min="0" max="32"></div><button class="tool-btn" style="justify-content:center" onclick="runSubnetCalc()">${t('calculate')}</button><div id="sub-result" style="margin-top:20px;"></div></div>`;
@@ -313,7 +326,7 @@ function showTool(toolName) {
 
     if (toolName === 'textutils') {
         title.innerText = t('textutils');
-        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid" style="margin-bottom:15px;"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div><div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 10px;"><div style="margin-bottom:15px;"><select id="unicode-mode" class="select-input" onchange="toggleZalgoSlider(this.value)"><option value="bold">Bold Serif</option><option value="italic">Italic Serif</option><option value="script">Script Style</option><option value="gothic">Gothic Style</option><option value="leetspeak">Leetspeak</option><option value="flipped">Flipped text</option><option value="glitch">Glitch (Zalgo)</option></select></div><div id="zalgo-control" style="display:none; margin-bottom:15px;"><label style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">${t('intensity')} <span id="zalgo-val">3</span></label><input type="range" id="zalgo-intensity" min="1" max="15" value="3" oninput="document.getElementById('zalgo-val').innerText=this.value"></div><button class="tool-btn" style="justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="transformUnicode()">${t('transform')}</button><button class="tool-btn" style="justify-content:center; background:var(--secondary-bg); font-size:14px; height:45px; margin-top:10px;" onclick="generateInvisibleText()"><i data-lucide="ghost"></i> ${t('invisibleText')}</button></div></div>`;
+        content.innerHTML = `<div class="pass-box"><textarea id="text-input" class="text-area" placeholder="Enter text..." oninput="updateTextStats()"></textarea><div id="text-stats" class="stats-info"></div><div class="util-grid" style="margin-bottom:15px;"><button class="small-btn" onclick="processText('upper')">${t('upper')}</button><button class="small-btn" onclick="processText('lower')">${t('lower')}</button><button class="small-btn" onclick="processText('title')">${t('title')}</button><button class="small-btn" onclick="processText('clear')" style="color:#ff3b30">${t('clear')}</button></div><div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 10px;"><div style="margin-bottom:15px;"><select id="unicode-mode" class="select-input" onchange="toggleZalgoSlider(this.value)"><option value="bold">Bold Serif</option><option value="italic">Italic Serif</option><option value="script">Script Style</option><option value="gothic">Gothic Style</option><option value="leetspeak">Leetspeak</option><option value="flipped">Flipped text</option><option value="glitch">Glitch (Zalgo)</option></select></div><div id="zalgo-control" style="display:none; margin-bottom:15px;"><label style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">${t('intensity')} <span id="zalgo-val">3</span></label><input type="range" id="zalgo-intensity" min="1" max="15" value="3" oninput="document.getElementById('zalgo-val').innerText=this.value"></div><button class="tool-btn" style="justify-content:center; background:var(--primary-color); color:white; border:none;" onclick="transformUnicode()">${t('transform')}</button><button class="tool-btn" style="justify-content:center; background:var(--secondary-bg); font-size:14px; height:45px; margin-top:10px;" onclick="generateInvisibleText()"><i data-lucide="ghost"></i> ${t('invisibleText')} </button></div></div>`;
     }
     
     if (toolName === 'rickroll') {
@@ -348,20 +361,34 @@ function showTool(toolName) {
     lucide.createIcons();
 }
 
+async function runDeepScraper() {
+    const url = document.getElementById('scrape-url').value.trim();
+    const resultDiv = document.getElementById('scrape-result');
+    if (!url) return;
+    resultDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}`);
+        const data = await res.json(); stopSound('loading');
+        if (data.success) {
+            let html = `<div class="settings-group">
+                <div class="settings-cell"><span class="settings-label">Images Found</span><span style="font-weight:600">${data.image_count}</span></div>
+                <div class="settings-cell"><span class="settings-label">Emails</span><span style="font-weight:600">${data.emails.length}</span></div>
+                <div class="settings-cell"><span class="settings-label">Phones</span><span style="font-weight:600">${data.phones.length}</span></div>
+            </div>`;
+            if (data.emails.length > 0) html += `<p style="font-size:12px; margin-top:10px;"><b>Emails:</b> ${data.emails.join(', ')}</p>`;
+            html += `<textarea class="text-area" style="font-size:12px; height:150px; margin-top:15px;" readonly>${data.text_preview}</textarea>`;
+            resultDiv.innerHTML = html;
+            playSound('success'); haptic.notificationOccurred('success');
+        } else throw new Error();
+    } catch(e) { stopSound('loading'); resultDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+}
+
 function runSubnetCalc() {
-    const ip = document.getElementById('sub-ip').value.trim();
-    const prefix = parseInt(document.getElementById('sub-prefix').value);
-    const resDiv = document.getElementById('sub-result');
+    const ip = document.getElementById('sub-ip').value.trim(), prefix = parseInt(document.getElementById('sub-prefix').value), resDiv = document.getElementById('sub-result');
     if (!ip || isNaN(prefix) || prefix < 0 || prefix > 32) return;
     const ipToLong = (ip) => ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
     const longToIp = (long) => [(long >>> 24) & 0xFF, (long >>> 16) & 0xFF, (long >>> 8) & 0xFF, long & 0xFF].join('.');
-    const ipLong = ipToLong(ip);
-    const mask = (prefix === 0 ? 0 : 0xFFFFFFFF << (32 - prefix)) >>> 0;
-    const netAddr = (ipLong & mask) >>> 0;
-    const broadcast = (netAddr | (~mask)) >>> 0;
-    const usableStart = (netAddr + 1) >>> 0;
-    const usableEnd = (broadcast - 1) >>> 0;
-    const hosts = prefix >= 31 ? 0 : (broadcast - netAddr - 1);
+    const ipLong = ipToLong(ip), mask = (prefix === 0 ? 0 : 0xFFFFFFFF << (32 - prefix)) >>> 0, netAddr = (ipLong & mask) >>> 0, broadcast = (netAddr | (~mask)) >>> 0, hosts = prefix >= 31 ? 0 : (broadcast - netAddr - 1);
     resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('networkRange')}</span><span style="font-weight:600">${longToIp(netAddr)} - ${longToIp(broadcast)}</span></div><div class="settings-cell"><span class="settings-label">${t('mask')}</span><span style="font-weight:600">${longToIp(mask)}</span></div><div class="settings-cell"><span class="settings-label">${t('usableHosts')}</span><span style="font-weight:600">${hosts.toLocaleString()}</span></div><div class="settings-cell"><span class="settings-label">Prefix</span><span style="font-weight:600">/${prefix}</span></div></div>`;
     playSound('success'); haptic.notificationOccurred('success');
 }
@@ -417,8 +444,7 @@ async function runDecision(type) {
     let delay = 50;
     for (let i = 0; i < 15; i++) {
         display.innerText = icons[Math.floor(Math.random() * icons.length)];
-        haptic.impactOccurred('light'); playSound(type); // Play coin or dice specific sound
-        await new Promise(r => setTimeout(r, delay)); delay += 20;
+        haptic.impactOccurred('light'); playSound(type); await new Promise(r => setTimeout(r, delay)); delay += 20;
     }
     const result = type === 'coin' ? (Math.random() > 0.5 ? t('heads') : t('tails')) : (Math.floor(Math.random() * 6) + 1);
     display.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;"><span style="font-size:80px">${type === 'coin' ? (result === t('heads') ? '🌕' : '🌑') : icons[result-1]}</span><span style="font-size:24px; font-weight:800; color:var(--primary-color)">${result}</span></div>`;
@@ -519,7 +545,7 @@ function copyRickroll() { navigator.clipboard.writeText(document.getElementById(
 async function startAudioConversion() { if (!selectedAudioFile) return; const status = document.getElementById('conv-status'), chatId = tg.initDataUnsafe?.user?.id; if (!chatId) return; status.innerText = "⏳ " + t('converting'); playSound('loading'); try { const formData = new FormData(); formData.append('file', selectedAudioFile); formData.append('chatId', chatId); const response = await fetch('/api/convert-audio', { method: 'POST', body: formData }), data = await response.json(); stopSound('loading'); if (data.success) { status.innerText = "✅ " + t('sentChat'); playSound('success'); haptic.notificationOccurred('success'); } else throw new Error(); } catch (e) { stopSound('loading'); status.innerText = "❌ " + t('failed'); playSound('error'); haptic.notificationOccurred('error'); } }
 async function lookupDomain() { const domainInput = document.getElementById('dom-url'); if (!domainInput) return; const domain = domainInput.value.trim(), resultDiv = document.getElementById('dom-result'); if (!domain) return; resultDiv.innerHTML = "Querying..."; playSound('click'); try { const response = await fetch(`/api/domain?domain=${encodeURIComponent(domain)}`), data = await response.json(); let html = `<div class="stats-grid"><div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Primary IP</span><span class="stat-value">${data.dns.a[0] || 'None'}</span></div>`; if (data.whois) html += `<div class="stat-card" style="grid-column: span 2;"><span class="stat-label">Registrar</span><span class="stat-value">${data.whois.registrar}</span></div>`; html += `</div>`; resultDiv.innerHTML = html; playSound('success'); haptic.notificationOccurred('success'); } catch (e) { resultDiv.innerHTML = "Lookup failed"; playSound('error'); haptic.notificationOccurred('error'); } }
 function updateQR() { const inputEl = document.getElementById('qr-input'); if (!inputEl) return; const input = inputEl.value, result = document.getElementById('qr-result'), dlBtn = document.getElementById('download-qr'); if (!input.trim()) { result.innerHTML = '<p style="padding:40px;">Waiting...</p>'; dlBtn.style.display = 'none'; return; } result.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}" style="width:200px; height:200px;">`; dlBtn.style.display = 'flex'; }
-function renderSettings() { const container = document.getElementById('settings-content'); container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div><div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>`; }
+function renderSettings() { const container = document.getElementById('settings-content'); container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>`; }
 function startMetronome() { if (isMetronomeRunning) return; isMetronomeRunning = true; document.getElementById('metro-btn').innerText = "Stop"; const circle = document.getElementById('metro-circle'); nextBeatTime = performance.now(); const tick = () => { if (!isMetronomeRunning) return; playSound('click'); haptic.impactOccurred('medium'); circle.classList.add('metro-active'); setTimeout(() => circle.classList.remove('metro-active'), 100); const interval = (60 / bpm) * 1000; nextBeatTime += interval; metronomeInterval = setTimeout(tick, Math.max(0, interval - (performance.now() - nextBeatTime))); }; tick(); }
 function stopMetronome() { isMetronomeRunning = false; if (metronomeInterval) clearTimeout(metronomeInterval); const btn = document.getElementById('metro-btn'); if (btn) btn.innerText = "Start"; }
 function toggleMetronome() { if (isMetronomeRunning) stopMetronome(); else startMetronome(); }
@@ -527,5 +553,4 @@ function updateBPM(val) { bpm = val; if (document.getElementById('bpm-val')) doc
 function handleAudioFile(input) { if (input.files && input.files[0]) { selectedAudioFile = input.files[0]; const info = document.getElementById('audio-info'); info.innerText = `Selected: ${selectedAudioFile.name}`; info.style.display = 'block'; document.getElementById('conv-btn').style.display = 'flex'; playSound('click'); haptic.impactOccurred('light'); } }
 function updateTextStats() { const textInput = document.getElementById('text-input'); if (!textInput) return; const text = textInput.value; document.getElementById('text-stats').innerText = `${t('chars')}: ${text.length} | ${t('words')}: ${text.trim() ? text.trim().split(/\s+/).length : 0}`; }
 function processText(mode) { const input = document.getElementById('text-input'); if (!input) return; if (mode === 'upper') input.value = input.value.toUpperCase(); else if (mode === 'lower') input.value = input.value.toLowerCase(); else if (mode === 'title') input.value = input.value.replace(/\b\w/g, l => l.toUpperCase()); else if (mode === 'clear') input.value = ""; updateTextStats(); playSound('click'); }
-function renderSettings() { const container = document.getElementById('settings-content'); container.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">${t('darkMode')}</span><input type="checkbox" ${document.body.classList.contains('dark-mode') ? 'checked' : ''} onchange="toggleTheme()"></div><div class="settings-cell"><span class="settings-label">${t('soundEffects')}</span><input type="checkbox" ${soundsEnabled ? 'checked' : ''} onchange="toggleSounds()"></div><div class="settings-cell" onclick="switchLang()"><span class="settings-label">${t('language')}</span><span style="color:var(--primary-color); font-weight:600;">${currentLang === 'en' ? 'English' : 'Română'}</span></div></div><div class="settings-group"><div class="settings-cell" onclick="tg.close()"><span class="settings-label" style="color:#ff3b30">${t('closeApp')}</span></div></div><p style="font-size:12px; color:var(--secondary-text); text-align:center;">Toolkit Bot v2.5 • [⌬]</p>`; }
 initTheme(); switchView('tools'); updateUIVocabulary();
