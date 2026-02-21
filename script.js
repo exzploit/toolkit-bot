@@ -56,6 +56,7 @@ const i18n = {
         username: "Username", bio: "Bio", subscribers: "Subscribers/Members",
         tracker: "Username Tracker", tracking: "Tracking...", track: "Start Tracking",
         dorking: "Dorking Studio", dork: "Generate Dork", dorkType: "Dork Type",
+        breach: "Breach Checker", phone: "Phone Lookup", checkBreach: "Check Breach", lookup: "Lookup",
         desc_passgen: "Generate high-entropy secure passwords instantly.",
         desc_vault: "Client-side encryption for your sensitive files.",
         desc_morse: "Translate text to Morse code with haptic pulses.",
@@ -77,7 +78,9 @@ const i18n = {
         desc_subnet: "Professional IPv4 CIDR and Subnet calculator.",
         desc_scraper: "Choose between URL extraction or Telegram account scraping.",
         desc_tracker: "Find a username across 10+ social media platforms.",
-        desc_dorking: "Advanced Google search queries for domain reconnaissance."
+        desc_dorking: "Advanced Google search queries for domain reconnaissance.",
+        desc_breach: "Check if an email has been leaked in known data breaches.",
+        desc_phone: "Extract carrier, region, and metadata from any phone number."
     },
     ro: {
         tools: "Utilități", network: "Rețea", media: "Media", settings: "Setări",
@@ -119,6 +122,7 @@ const i18n = {
         username: "Utilizator", bio: "Bio", subscribers: "Abonați/Membri",
         tracker: "Username Tracker", tracking: "Se caută...", track: "Începe Căutarea",
         dorking: "Dorking Studio", dork: "Generează Dork", dorkType: "Tip Dork",
+        breach: "Verificare Leak", phone: "Căutare Telefon", checkBreach: "Verifică", lookup: "Caută",
         desc_passgen: "Generează parole securizate cu entropie ridicată.",
         desc_vault: "Criptare locală pentru fișierele tale sensibile.",
         desc_morse: "Tradu text în cod Morse cu impulsuri haptice.",
@@ -140,7 +144,9 @@ const i18n = {
         desc_subnet: "Calculator profesional de IPv4 CIDR și Subnet.",
         desc_scraper: "Alege între extragere URL sau profil Telegram.",
         desc_tracker: "Caută un utilizator pe 10+ platforme sociale.",
-        desc_dorking: "Interogări Google avansate pentru recunoaștere domeniu."
+        desc_dorking: "Interogări Google avansate pentru recunoaștere domeniu.",
+        desc_breach: "Verifică dacă un email a fost expus în scurgeri de date.",
+        desc_phone: "Extrage operatorul, regiunea și metadatele oricărui număr."
     }
 };
 
@@ -258,7 +264,7 @@ function updateUIVocabulary() {
 
     const menuNet = document.getElementById('menu-network');
     if (menuNet) {
-        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'tracker': 'tracker', 'dorking': 'dorking', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
+        const netMap = { 'speedtest': 'speedtest', 'portscan': 'portscan', 'subnet': 'subnet', 'scraper': 'scraper', 'tracker': 'tracker', 'breach': 'breach', 'phone': 'phone', 'dorking': 'dorking', 'inspect': 'inspector', 'domain': 'domain', 'ipinfo': 'ipinfo' };
         for (const btn of menuNet.querySelectorAll('button')) {
             const onclick = btn.getAttribute('onclick');
             if (onclick) {
@@ -307,6 +313,8 @@ function showTool(toolName) {
     if (toolName === 'scraper') descKey = 'desc_scraper';
     if (toolName === 'tracker') descKey = 'desc_tracker';
     if (toolName === 'dorking') descKey = 'desc_dorking';
+    if (toolName === 'breach') descKey = 'desc_breach';
+    if (toolName === 'phone') descKey = 'desc_phone';
     
     const desc = t(descKey);
     const existingDesc = document.querySelector('.tool-desc');
@@ -320,6 +328,24 @@ function showTool(toolName) {
             <button class="tool-btn" style="justify-content:center; background:var(--secondary-bg);" onclick="setScrapeMode('tg')"><i data-lucide="send"></i> ${t('tgScraper')}</button>
             <div id="scrape-ui-box" style="margin-top:10px;"></div>
             <div id="scrape-result" style="margin-top:10px;"></div>
+        </div>`;
+    }
+
+    if (toolName === 'breach') {
+        title.innerText = t('breach');
+        content.innerHTML = `<div class="pass-box">
+            <input type="email" id="breach-email" class="text-input" placeholder="email@example.com">
+            <button class="tool-btn" style="justify-content:center" onclick="runBreachChecker()">${t('checkBreach')}</button>
+            <div id="breach-result" style="margin-top:20px;"></div>
+        </div>`;
+    }
+
+    if (toolName === 'phone') {
+        title.innerText = t('phone');
+        content.innerHTML = `<div class="pass-box">
+            <input type="tel" id="phone-number" class="text-input" placeholder="+1234567890">
+            <button class="tool-btn" style="justify-content:center" onclick="runPhoneLookup()">${t('lookup')}</button>
+            <div id="phone-result" style="margin-top:20px;"></div>
         </div>`;
     }
 
@@ -436,7 +462,52 @@ function showTool(toolName) {
     lucide.createIcons();
 }
 
-// --- SCRAPER LOGIC ---
+// --- OSINT LOGIC ---
+async function runBreachChecker() {
+    const emailIn = document.getElementById('breach-email'); if (!emailIn) return;
+    const email = emailIn.value.trim(), resDiv = document.getElementById('breach-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!email) return;
+    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=email_breach&email=${encodeURIComponent(email)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
+        if (data.success) {
+            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800;">${t('sentChat')}</p><p style="font-size:14px; margin-top:10px;">Check your Telegram DM for the full breach report.</p>`;
+            playSound('success'); haptic.notificationOccurred('success');
+        } else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+}
+
+async function runPhoneLookup() {
+    const phoneIn = document.getElementById('phone-number'); if (!phoneIn) return;
+    const number = phoneIn.value.trim(), resDiv = document.getElementById('phone-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!number) return;
+    resDiv.innerHTML = `<p>${t('processing')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=phone_lookup&number=${encodeURIComponent(number)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
+        if (data.success) {
+            resDiv.innerHTML = `<div class="settings-group"><div class="settings-cell"><span class="settings-label">Region</span><span style="font-weight:600">${data.region}</span></div><div class="settings-cell"><span class="settings-label">Carrier</span><span style="font-weight:600">${data.carrier}</span></div><div class="settings-cell"><span class="settings-label">Timezone</span><span style="font-weight:600">${data.timezone}</span></div></div><p style="color:#34c759; font-weight:800; margin-top:10px;">${t('sentChat')}</p>`;
+            playSound('success'); haptic.notificationOccurred('success');
+        } else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+}
+
+async function runTracker() {
+    const trackIn = document.getElementById('track-username'); if (!trackIn) return;
+    const username = trackIn.value.trim(), resDiv = document.getElementById('track-result'), chatId = tg.initDataUnsafe?.user?.id;
+    if (!username) return;
+    resDiv.innerHTML = `<p>${t('tracking')}</p>`; playSound('loading');
+    try {
+        const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(username)}${chatId ? `&chatId=${chatId}` : ''}`);
+        const data = await res.json(); stopSound('loading');
+        if (data.success) {
+            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800; margin-bottom:15px;">${t('sentChat')}</p><div class="settings-group">${data.results.map(r => `<div class="settings-cell"><span class="settings-label">${r.name}</span><span style="color:#34c759; font-weight:800;">FOUND</span></div>`).join('')}</div>`;
+            playSound('success'); haptic.notificationOccurred('success');
+        } else throw new Error();
+    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
+}
+
 function setScrapeMode(mode, sound = true) {
     if (sound) playSound('click'); haptic.impactOccurred('light');
     const box = document.getElementById('scrape-ui-box');
@@ -458,7 +529,7 @@ async function runURLScraper() {
         const res = await fetch(`/api/python_tools?tool=scrape&url=${encodeURIComponent(url)}${chatId ? `&chatId=${chatId}` : ''}`);
         const data = await res.json(); stopSound('loading');
         if (data.success) {
-            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800;">${t('sentChat')}</p><div class="settings-group"><div class="settings-cell"><span class="settings-label">Title</span><span style="font-weight:600">${data.title}</span></div><div class="settings-cell"><span class="settings-label">Emails</span><span style="font-weight:600">${data.emails.length}</span></div><div class="settings-cell"><span class="settings-label">Phones</span><span style="font-weight:600">${data.phones.length}</span></div></div>`;
+            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800;">${t('sentChat')}</p><div class="settings-group"><div class="settings-cell"><span class="settings-label">Title</span><span style="font-weight:600">${data.title}</span></div></div>`;
             playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
@@ -474,22 +545,6 @@ async function runTGScraper() {
         const data = await res.json(); stopSound('loading');
         if (data.success) {
             resDiv.innerHTML = `<p style="color:#34c759; font-weight:800; margin-bottom:10px;">${t('sentChat')}</p><div class="pass-box" style="padding:15px; background:var(--secondary-bg);"><div style="display:flex; align-items:center; gap:15px;">${data.photo ? `<img src="${data.photo}" style="width:50px; height:50px; border-radius:50%;">` : ''}<div><h4 style="margin:0;">${data.display_name}</h4><span>${data.username}</span></div></div></div>`;
-            playSound('success'); haptic.notificationOccurred('success');
-        } else throw new Error();
-    } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
-}
-
-// --- TRACKER / DORKING ---
-async function runTracker() {
-    const trackIn = document.getElementById('track-username'); if (!trackIn) return;
-    const username = trackIn.value.trim(), resDiv = document.getElementById('track-result'), chatId = tg.initDataUnsafe?.user?.id;
-    if (!username) return;
-    resDiv.innerHTML = `<p>${t('tracking')}</p>`; playSound('loading');
-    try {
-        const res = await fetch(`/api/python_tools?tool=track_user&username=${encodeURIComponent(username)}${chatId ? `&chatId=${chatId}` : ''}`);
-        const data = await res.json(); stopSound('loading');
-        if (data.success) {
-            resDiv.innerHTML = `<p style="color:#34c759; font-weight:800; margin-bottom:15px;">${t('sentChat')}</p><div class="settings-group">${data.results.map(r => `<div class="settings-cell"><span class="settings-label">${r.name}</span><span style="color:#34c759; font-weight:800;">FOUND</span></div>`).join('')}</div>`;
             playSound('success'); haptic.notificationOccurred('success');
         } else throw new Error();
     } catch(e) { stopSound('loading'); resDiv.innerHTML = `<p style="color:#ff3b30">${t('failed')}</p>`; playSound('error'); }
