@@ -1,5 +1,18 @@
-node_modules/
+# Secrets
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Rust / WASM build output
+rust-vault/target/
+rust-vault/pkg/
+
+# Runtime
+*.log
+tmp/
 .DS_Store
-dist/
-build/

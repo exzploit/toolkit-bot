@@ -1,5 +1,0 @@
-gTTS
-requests
-beautifulsoup4
-Pillow
-phonenumbers

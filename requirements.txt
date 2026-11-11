@@ -1,0 +1,13 @@
+# --- Toolkit Bot: single consolidated service ---
+# Core bot + web server
+python-telegram-bot==21.9
+aiohttp==3.11.11
+
+# Tool dependencies
+yt-dlp==2025.1.26          # media downloads (YouTube / Instagram / TikTok)
+phonenumbers==8.13.52      # phone metadata (region / carrier / timezone)
+dnspython==2.7.0           # DNS lookups for Domain Info
+Pillow==11.1.0             # EXIF stripping
+gTTS==2.5.4                # text-to-speech
+qrcode[pil]==8.0           # QR generation (server fallback)
+beautifulsoup4==4.12.3     # URL inspector / public page parsing
