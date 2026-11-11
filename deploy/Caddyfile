@@ -1,0 +1,31 @@
+# Caddy reverse proxy for Toolkit Bot.
+# Caddy gives you automatic, auto-renewing HTTPS (Telegram requires valid TLS
+# for both Mini Apps and webhooks). Replace the domain below with yours.
+#
+# Install:  sudo cp deploy/Caddyfile /etc/caddy/Caddyfile  (then edit the domain)
+# Reload :  sudo systemctl reload caddy
+
+toolkit.example.com {
+    encode gzip zstd
+
+    # Static Mini App (served straight from disk — fast, no Python needed).
+    root * /opt/toolkit-bot/webapp
+    file_server
+
+    # Mini App JSON API -> Python service.
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8080
+    }
+
+    # Telegram webhook -> Python service.
+    handle /telegram/* {
+        reverse_proxy 127.0.0.1:8080
+    }
+
+    # Sensible headers.
+    header {
+        -Server
+        Referrer-Policy "strict-origin-when-cross-origin"
+        X-Content-Type-Options "nosniff"
+    }
+}

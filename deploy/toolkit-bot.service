@@ -1,0 +1,34 @@
+# systemd unit for the Toolkit bot service.
+# Install:
+#   sudo cp deploy/toolkit-bot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now toolkit-bot
+# Logs:  journalctl -u toolkit-bot -f
+
+[Unit]
+Description=Toolkit Telegram Bot + Mini App
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=toolkit
+Group=toolkit
+WorkingDirectory=/opt/toolkit-bot
+EnvironmentFile=/opt/toolkit-bot/.env
+ExecStart=/opt/toolkit-bot/.venv/bin/python -m bot.main
+Restart=on-failure
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/toolkit-bot
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
