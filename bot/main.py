@@ -28,6 +28,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
+# python-telegram-bot sends requests via httpx, which logs the full API URL —
+# and that URL contains the bot token. Quiet httpx so the token is never logged.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 log = logging.getLogger("toolkit")
 
 WEBAPP_DIR = Path(__file__).resolve().parent.parent / "webapp"
