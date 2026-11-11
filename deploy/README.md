@@ -131,11 +131,27 @@ Mini App directly.
 
 ## 8. Updating later
 
+One command pulls the latest code, refreshes dependencies and restarts:
+
 ```bash
-cd /opt/toolkit-bot
-sudo -u toolkit git pull
-sudo -u toolkit .venv/bin/pip install -r requirements.txt
-sudo systemctl restart toolkit-bot
+/opt/toolkit-bot/deploy/update.sh
+```
+
+## 8b. Keep DNS pointed at the server (recommended)
+
+Oracle "ephemeral" public IPs can change if the instance is ever stopped and
+started. This keeps your DuckDNS subdomain following the server automatically:
+
+```bash
+# Save your DuckDNS domain + token (token stays local, never committed)
+printf 'DUCKDNS_DOMAIN=toolkitbot\nDUCKDNS_TOKEN=YOUR_DUCKDNS_TOKEN\n' > /opt/toolkit-bot/duckdns.conf
+chmod 600 /opt/toolkit-bot/duckdns.conf
+
+# Run it now to confirm it prints "OK"
+/opt/toolkit-bot/deploy/duckdns-update.sh
+
+# Then run it every 5 minutes via cron
+( crontab -l 2>/dev/null; echo '*/5 * * * * /opt/toolkit-bot/deploy/duckdns-update.sh' ) | crontab -
 ```
 
 ---

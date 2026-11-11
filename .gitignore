@@ -16,3 +16,6 @@ rust-vault/pkg/
 *.log
 tmp/
 .DS_Store
+
+# DuckDNS updater config (holds your token)
+duckdns.conf

@@ -11,34 +11,38 @@
 </head>
 <body>
     <div id="app">
-        <header class="app-header">
-            <h1 id="view-title">Tools</h1>
-        </header>
+        <div class="topbar">
+            <h1 id="view-title">Toolkit</h1>
+            <button class="icon-btn" id="btn-settings" aria-label="Settings"><i data-lucide="settings-2"></i></button>
+        </div>
 
-        <main id="grid-view">
-            <div class="tool-grid" id="tool-grid"></div>
+        <!-- HOME -->
+        <main id="home-view">
+            <div class="search-wrap">
+                <i data-lucide="search" class="s-ico"></i>
+                <input class="search-input" id="search" type="text" placeholder="Search tools…" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <div id="home-sections"></div>
         </main>
 
+        <!-- DETAIL -->
         <section id="detail-view" class="hidden">
             <div class="detail-head">
-                <button class="back-btn" id="back-btn"><i data-lucide="chevron-left"></i></button>
-                <div>
+                <button class="icon-btn" id="btn-back" aria-label="Back"><i data-lucide="chevron-left"></i></button>
+                <div class="meta">
                     <h2 id="detail-title">Tool</h2>
                     <p id="detail-desc"></p>
                 </div>
+                <button class="icon-btn fav-toggle" id="btn-fav" aria-label="Favorite"><i data-lucide="star"></i></button>
             </div>
             <div id="detail-body"></div>
         </section>
 
+        <!-- SETTINGS -->
         <section id="settings-view" class="hidden"></section>
-
-        <nav class="tab-bar">
-            <button class="tab" data-tab="tools"><i data-lucide="wrench"></i><span>Tools</span></button>
-            <button class="tab" data-tab="network"><i data-lucide="globe"></i><span>Network</span></button>
-            <button class="tab" data-tab="media"><i data-lucide="clapperboard"></i><span>Media</span></button>
-            <button class="tab" data-tab="settings"><i data-lucide="settings"></i><span>Settings</span></button>
-        </nav>
     </div>
+
+    <div id="toast-host"></div>
     <script src="script.js"></script>
 </body>
 </html>
