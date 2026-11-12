@@ -32,7 +32,7 @@ const catName = k => T(k);
 const RO = {
   password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
   base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"],
-  text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"], linetools:["Unelte Linii","Sortează, elimină dubluri…"], findreplace:["Caută & Înlocuiește","Înlocuire cu regex"], textanalysis:["Analiză Text","Lizibilitate & cuvinte cheie"], textclean:["Curăță Text","Diacritice, ghilimele, spații"], ciphers:["Cifruri Clasice","Atbash & Vigenère"],
+  text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"], linetools:["Unelte Linii","Sortează, elimină dubluri…"], findreplace:["Caută & Înlocuiește","Înlocuire cu regex"], textanalysis:["Analiză Text","Lizibilitate & cuvinte cheie"], textclean:["Curăță Text","Diacritice, ghilimele, spații"], ciphers:["Cifruri Clasice","Atbash & Vigenère"], aidetect:["Detector AI","Verifică text/fișiere pentru AI"],
   subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
   download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"], stego:["Steganografie","Ascunde un mesaj în imagine"],
 };
@@ -126,6 +126,7 @@ const TOOLS = [
   { id: "textanalysis", cat: "text", icon: "scan-text", name: "Text Analysis", sub: "Readability & keywords", kw: "flesch density stats", render: rTextAnalysis },
   { id: "textclean", cat: "text", icon: "eraser", name: "Text Cleaner", sub: "Accents, smart quotes, spaces", kw: "diacritics normalize", render: rTextClean },
   { id: "ciphers", cat: "text", icon: "square-asterisk", name: "Classic Ciphers", sub: "Atbash & Vigenère", kw: "vigenere atbash encrypt", render: rCiphers },
+  { id: "aidetect", cat: "text", icon: "bot", name: "AI Detector", sub: "Check text/files for AI authorship", kw: "chatgpt gpt detect plagiarism", render: rAiDetect },
 
   // --- NETWORK ---
   { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4/IPv6 CIDR breakdown", kw: "cidr netmask ip", render: rSubnet },
@@ -1465,6 +1466,37 @@ function rStego(c) {
   };
   seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { seg.querySelector(".active").classList.remove("active"); b.classList.add("active"); play("click"); render(b.dataset.m); }));
   render("hide");
+}
+
+/* ---- AI detector (server, multi-provider) ---- */
+function rAiDetect(c) {
+  let file = null;
+  c.innerHTML = `<div class="card">
+    <div class="field"><label>Text</label><textarea id="ai-in" style="min-height:120px" placeholder="Paste text to check…"></textarea></div>
+    <div class="upload" id="ai-drop"><i data-lucide="file-up"></i><div id="ai-name">…or upload .txt / .pdf / .docx</div></div>
+    <input type="file" id="ai-file" accept=".txt,.md,.csv,.pdf,.docx" hidden>
+    <button class="btn" id="ai-go" style="margin-top:14px"><i data-lucide="bot"></i> Check</button>
+    <div id="tool-status"></div><div id="tool-result" class="result"></div>
+    <p class="muted" style="margin-top:12px">⚠️ AI detectors are unreliable — they misclassify both human and AI writing. Treat results as rough estimates, never proof.</p>
+  </div>`;
+  iconsRefresh();
+  $("#ai-drop").onclick = () => $("#ai-file").click();
+  $("#ai-file").onchange = e => { file = e.target.files[0]; if (file) { $("#ai-name").textContent = file.name; $("#ai-drop").classList.add("active"); play("success"); } };
+  const bar = s => s == null ? `<span class="muted">—</span>` : `<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;border-radius:999px;background:var(--bg-2);overflow:hidden"><div style="height:100%;width:${Math.round(s * 100)}%;background:${s > .5 ? "var(--err)" : "var(--ok)"}"></div></div><b style="font-family:var(--mono)">${Math.round(s * 100)}%</b></div>`;
+  $("#ai-go").onclick = async () => {
+    const text = $("#ai-in").value.trim();
+    if (!text && !file) return setStatus("Paste text or pick a file", "err");
+    play("click"); haptic(); setStatus(spin() + " Running detectors…");
+    const fd = new FormData(); fd.append("initData", INIT_DATA); if (text) fd.append("text", text); if (file) fd.append("file", file);
+    try {
+      const r = await fetch("/api/aidetect", { method: "POST", body: fd }); const d = await r.json();
+      if (!d.success) return setStatus("❌ " + esc(d.error), "err");
+      setStatus("");
+      const rows = d.results.map(x => `<div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><span class="k">${esc(x.name)}${x.score == null && x.note ? ` · <i>${esc(x.note)}</i>` : ""}</span>${bar(x.score)}</div>`).join("");
+      resultCard(`<div class="rows">${rows}</div>${d.aggregate != null ? `<div style="margin-top:14px"><label>Average · ${d.detectors_used} detector${d.detectors_used === 1 ? "" : "s"}</label>${bar(d.aggregate)}</div>` : ""}<p class="muted" style="margin-top:12px">${esc(d.disclaimer)}</p>${d.delivered ? `<p class="status ok">✅ Report sent to your chat</p>` : ""}`);
+      play("success"); notify();
+    } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); }
+  };
 }
 
 /* =========================================================================

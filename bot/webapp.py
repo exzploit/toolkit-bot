@@ -7,6 +7,7 @@ client can never make the bot act on behalf of someone else.
 """
 from __future__ import annotations
 
+import asyncio
 import io
 import logging
 
@@ -15,7 +16,7 @@ from telegram import Update
 
 from .config import Config
 from .telegram_auth import InvalidInitData, TelegramUser, verify_init_data
-from .tools import media, network, osint, security
+from .tools import aidetect, media, network, osint, security
 
 log = logging.getLogger("toolkit.webapp")
 
@@ -173,6 +174,61 @@ async def h_tts(request):
         return _ok({"success": False, "error": "Could not deliver to chat. Have you started the bot?"})
 
 
+def _bar(score):
+    if score is None:
+        return "—"
+    filled = round(score * 10)
+    return "█" * filled + "░" * (10 - filled) + f" {round(score * 100)}%"
+
+
+async def h_aidetect(request):
+    cfg: Config = request.app["config"]
+    bot = request.app["bot"]
+    reader = await request.multipart()
+    init_data = ""
+    text = ""
+    file_bytes = b""
+    filename = ""
+    async for part in reader:
+        if part.name == "initData":
+            init_data = (await part.text()).strip()
+        elif part.name == "text":
+            text = await part.text()
+        elif part.name == "file":
+            filename = part.filename or "file"
+            file_bytes = await part.read(decode=False)
+    user = _auth(request, init_data)
+
+    if file_bytes:
+        try:
+            text = await asyncio.to_thread(aidetect.extract_text, filename, file_bytes)
+        except Exception as e:
+            return _ok({"success": False, "error": f"Could not read file: {e}"})
+    if not (text or "").strip():
+        return _ok({"success": False, "error": "Provide text or a file with readable text"})
+
+    res = await aidetect.detect(text, hf_token=cfg.hf_token, sapling_key=cfg.sapling_api_key)
+    if not res.get("success"):
+        return _ok(res)
+
+    # Build a chat report and deliver it.
+    lines = [f"🤖 <b>AI detection</b> · {res['chars']} chars"]
+    for r in res["results"]:
+        s = r.get("score")
+        lines.append(f"• <b>{r['name']}</b>: {_bar(s)}" + (f"  <i>{r['note']}</i>" if s is None and r.get("note") else ""))
+    if res["aggregate"] is not None:
+        lines.append(f"\n<b>Average</b>: {_bar(res['aggregate'])}  ({res['detectors_used']} detectors)")
+    lines.append(f"\n⚠️ <i>{res['disclaimer']}</i>")
+    report = "\n".join(lines)
+    try:
+        await bot.send_message(chat_id=user.id, text=report, parse_mode="HTML")
+        res["delivered"] = True
+    except Exception as e:
+        log.warning("aidetect delivery failed: %s", e)
+        res["delivered"] = False
+    return _ok(res)
+
+
 async def h_exif(request):
     bot = request.app["bot"]
     reader = await request.multipart()
@@ -244,4 +300,5 @@ def build_api_routes() -> list:
         web.post("/api/share", h_share),
         web.post("/api/tts", h_tts),
         web.post("/api/exif", h_exif),
+        web.post("/api/aidetect", h_aidetect),
     ]

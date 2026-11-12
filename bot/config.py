@@ -27,6 +27,8 @@ class Config:
     port: int
     webhook_secret: str
     hibp_api_key: str
+    hf_token: str
+    sapling_api_key: str
     run_mode: str  # "webhook" | "polling"
 
     @property
@@ -47,5 +49,7 @@ def load_config() -> Config:
         port=int(_get("PORT", "8080")),
         webhook_secret=_get("WEBHOOK_SECRET", "dev-secret"),
         hibp_api_key=_get("HIBP_API_KEY"),
+        hf_token=_get("HF_TOKEN"),
+        sapling_api_key=_get("SAPLING_API_KEY"),
         run_mode=_get("RUN_MODE", "webhook").lower(),
     )
