@@ -7,8 +7,10 @@ never block the service.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import ipaddress
 import socket
+import ssl
 from urllib.parse import urlparse
 
 import aiohttp
@@ -182,6 +184,53 @@ async def ip_info(ip: str | None = None) -> dict:
 # --------------------------------------------------------------------------- #
 # URL inspector: final URL, status, server header, resolved IP, page title
 # --------------------------------------------------------------------------- #
+async def ssl_check(host: str) -> dict:
+    host = (host or "").strip().lower()
+    host = host.removeprefix("http://").removeprefix("https://").split("/")[0].split(":")[0]
+    if not host or "." not in host:
+        return {"success": False, "error": "Enter a valid hostname"}
+
+    def _fetch():
+        ctx = ssl.create_default_context()
+        with socket.create_connection((host, 443), timeout=8) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as ss:
+                return ss.getpeercert()
+
+    try:
+        cert = await asyncio.to_thread(_fetch)
+    except ssl.SSLCertVerificationError as e:
+        return {"success": False, "error": f"Certificate verification failed: {e.verify_message or e}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    def _name(field):
+        try:
+            return dict(x[0] for x in field).get("commonName", "Unknown")
+        except Exception:
+            return "Unknown"
+
+    fmt = "%b %d %H:%M:%S %Y %Z"
+    try:
+        not_after = datetime.datetime.strptime(cert["notAfter"], fmt)
+        not_before = datetime.datetime.strptime(cert["notBefore"], fmt)
+    except Exception:
+        not_after = not_before = None
+    days_left = (not_after - datetime.datetime.utcnow()).days if not_after else None
+    sans = [v for k, v in cert.get("subjectAltName", []) if k == "DNS"]
+
+    return {
+        "success": True,
+        "host": host,
+        "subject": _name(cert.get("subject", [])),
+        "issuer": _name(cert.get("issuer", [])),
+        "valid_from": cert.get("notBefore"),
+        "valid_to": cert.get("notAfter"),
+        "days_left": days_left,
+        "expired": (days_left is not None and days_left < 0),
+        "san_count": len(sans),
+    }
+
+
 async def inspect_url(url: str) -> dict:
     url = (url or "").strip()
     if not url:

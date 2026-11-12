@@ -27,10 +27,10 @@ const T = k => (UI[lang] && UI[lang][k]) ?? UI.en[k] ?? k;
 const catName = k => T(k);
 // Romanian name/sub per tool id: [name, sub]
 const RO = {
-  password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], tts:["Text în Voce","Mesaj vocal în chat"],
-  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"],
+  password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"],
   text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"],
-  subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
+  subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
   download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"],
 };
 const tname = t => (lang === "ro" && RO[t.id]) ? RO[t.id][0] : t.name;
@@ -85,6 +85,9 @@ const TOOLS = [
   { id: "countdown", cat: "tools", icon: "timer", name: "Countdown", sub: "Live countdown to a date", kw: "timer event", render: rCountdown },
   { id: "calc", cat: "tools", icon: "percent", name: "Calculators", sub: "BMI · Loan · Tip", kw: "bmi loan tip math", render: rCalc },
   { id: "fakeid", cat: "tools", icon: "user-round", name: "Fake Identity", sub: "Random test persona", kw: "mock data name address", render: rFakeId },
+  { id: "worldclock", cat: "tools", icon: "clock-9", name: "World Clock", sub: "Time across time zones", kw: "timezone utc", render: rWorldClock },
+  { id: "picker", cat: "tools", icon: "list-checks", name: "Random Picker", sub: "Pick or shuffle a list", kw: "raffle shuffle choose", render: rPicker },
+  { id: "stopwatch", cat: "tools", icon: "watch", name: "Stopwatch", sub: "Timer with laps", kw: "chronometer time", render: rStopwatch },
   { id: "tts", cat: "tools", icon: "mic", name: "Text to Speech", sub: "Voice message to your chat", kw: "voice speak audio", render: rTTS },
 
   // --- DEV ---
@@ -101,6 +104,7 @@ const TOOLS = [
   { id: "regex", cat: "dev", icon: "regex", name: "Regex Tester", sub: "Live matches & groups", kw: "regular expression pattern", render: rRegex },
   { id: "binascii", cat: "dev", icon: "file-digit", name: "Text ⇄ Binary", sub: "ASCII to binary / hex", kw: "ascii bits encode", render: rBinAscii },
   { id: "filechecksum", cat: "dev", icon: "file-check", name: "File Checksum", sub: "Hash any file (MD5/SHA)", kw: "hash verify integrity", render: rFileChecksum },
+  { id: "csvjson", cat: "dev", icon: "table", name: "CSV ⇄ JSON", sub: "Convert tabular data", kw: "spreadsheet convert", render: rCsvJson },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
@@ -117,6 +121,7 @@ const TOOLS = [
   { id: "domain", cat: "network", icon: "globe", name: "Domain Info", sub: "DNS + WHOIS/RDAP", kw: "dns whois mx", render: rDomain },
   { id: "ipinfo", cat: "network", icon: "map-pin", name: "IP Info", sub: "Geolocation & ASN", kw: "geoip location", render: rIP },
   { id: "inspect", cat: "network", icon: "search-code", name: "URL Inspector", sub: "Status, server, IP, title", kw: "headers redirect", render: rInspect },
+  { id: "ssl", cat: "network", icon: "lock", name: "SSL Checker", sub: "Cert expiry & issuer", kw: "https certificate tls", render: rSSL },
   { id: "phone", cat: "network", icon: "phone", name: "Phone Lookup", sub: "Carrier, region, timezone", kw: "number osint", render: rPhone },
   { id: "username", cat: "network", icon: "users", name: "Username Check", sub: "Across public platforms", kw: "social osint", render: rUsername },
   { id: "dork", cat: "network", icon: "search", name: "Dork Builder", sub: "Google recon queries", kw: "osint google", render: rDork },
@@ -1081,6 +1086,92 @@ function rCalc(c) {
     }
     play("success");
   }
+}
+
+/* ---- SSL certificate checker (server) ---- */
+function rSSL(c) {
+  form(`<div class="field"><label>Hostname</label><input type="text" class="mono" id="ssl-in" placeholder="example.com"></div>`, "Check", async () => {
+    await serverRun("Fetching certificate…", async () => {
+      const d = await api("ssl", { host: $("#ssl-in").value }); if (!d.success) return setStatus("❌ " + esc(d.error), "err");
+      setStatus("");
+      const dl = d.days_left;
+      const badge = d.expired ? `<span class="pill err">expired</span>` : dl != null && dl < 21 ? `<span class="pill warn">${dl}d left</span>` : `<span class="pill ok">${dl}d left</span>`;
+      resultCard(rowsHTML({ Host: `<span class="v mono">${esc(d.host)}</span>`, Status: badge, Issuer: esc(d.issuer), Subject: `<span class="v mono" style="font-size:12px">${esc(d.subject)}</span>`, "Valid to": `<span class="v mono" style="font-size:12px">${esc(d.valid_to)}</span>`, "SAN hosts": d.san_count }));
+      play(d.expired ? "error" : "success");
+    });
+  }, "lock");
+}
+
+/* ---- CSV ⇄ JSON (client) ---- */
+function parseCSVLine(line) { const out = []; let cur = "", q = false; for (let i = 0; i < line.length; i++) { const ch = line[i]; if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; } else { if (ch === '"') q = true; else if (ch === ",") { out.push(cur); cur = ""; } else cur += ch; } } out.push(cur); return out; }
+function rCsvJson(c) {
+  form(`<div class="seg" id="cj-seg"><button data-m="c2j" class="active">CSV → JSON</button><button data-m="j2c">JSON → CSV</button></div>
+    <div class="field"><textarea id="cj-in" class="mono" placeholder="Paste CSV or JSON…"></textarea></div>`, "Convert", () => {
+    const m = $("#cj-seg .active").dataset.m, v = $("#cj-in").value.trim();
+    let out;
+    try {
+      if (m === "c2j") {
+        const lines = v.split(/\r?\n/).filter(l => l.length);
+        const head = parseCSVLine(lines[0]);
+        const arr = lines.slice(1).map(l => { const f = parseCSVLine(l); return Object.fromEntries(head.map((h, i) => [h, f[i] ?? ""])); });
+        out = JSON.stringify(arr, null, 2);
+      } else {
+        let arr = JSON.parse(v); if (!Array.isArray(arr)) arr = [arr];
+        const keys = [...new Set(arr.flatMap(o => Object.keys(o)))];
+        const esc2 = x => { x = x == null ? "" : String(x); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+        out = [keys.join(","), ...arr.map(o => keys.map(k => esc2(o[k])).join(","))].join("\n");
+      }
+    } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); return; }
+    resultCard(`<div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>`); play("success");
+  }, "table");
+  segWire("cj-seg");
+}
+
+/* ---- World clock (client) ---- */
+let _wcTimer = null;
+const WC_ZONES = [["UTC", "UTC"], ["New York", "America/New_York"], ["London", "Europe/London"], ["Bucharest", "Europe/Bucharest"], ["Dubai", "Asia/Dubai"], ["Tokyo", "Asia/Tokyo"], ["Sydney", "Australia/Sydney"], ["Los Angeles", "America/Los_Angeles"]];
+function rWorldClock(c) {
+  c.innerHTML = `<div class="card"><div class="rows" id="wc-out"></div></div>`;
+  const tick = () => {
+    const out = $("#wc-out"); if (!out) { clearInterval(_wcTimer); return; }
+    const now = new Date();
+    out.innerHTML = WC_ZONES.map(([label, tz]) => {
+      let t = "—"; try { t = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", second: "2-digit", weekday: "short" }).format(now); } catch (_) {}
+      return `<div class="row"><span class="k">${esc(label)}</span><span class="v mono">${esc(t)}</span></div>`;
+    }).join("");
+  };
+  tick(); if (_wcTimer) clearInterval(_wcTimer); _wcTimer = setInterval(tick, 1000);
+}
+
+/* ---- Random picker (client) ---- */
+function rPicker(c) {
+  c.innerHTML = `<div class="card"><div class="field"><label>Items (one per line)</label><textarea id="pk-in" placeholder="Alice\nBob\nCarol"></textarea></div>
+    <div class="btn-row"><button class="btn" id="pk-pick"><i data-lucide="target"></i> Pick one</button><button class="btn ghost" id="pk-shuf"><i data-lucide="shuffle"></i> Shuffle</button></div>
+    <div id="pk-out" class="result"></div></div>`;
+  iconsRefresh();
+  const items = () => $("#pk-in").value.split(/\n/).map(x => x.trim()).filter(Boolean);
+  $("#pk-pick").onclick = () => { const a = items(); if (!a.length) return; haptic(); play("success"); const w = a[crypto.getRandomValues(new Uint32Array(1))[0] % a.length]; $("#pk-out").innerHTML = `<div class="big-out" style="font-size:20px">${esc(w)}</div>`; notify(); };
+  $("#pk-shuf").onclick = () => { const a = items(); if (!a.length) return; haptic(); play("success"); for (let i = a.length - 1; i > 0; i--) { const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);[a[i], a[j]] = [a[j], a[i]]; } $("#pk-out").innerHTML = `<div class="out-area">${a.map((x, i) => `${i + 1}. ${esc(x)}`).join("\n")}</div>`; };
+}
+
+/* ---- Stopwatch (client) ---- */
+let _swTimer = null;
+function rStopwatch(c) {
+  let start = 0, elapsed = 0, running = false, laps = [];
+  c.innerHTML = `<div class="card center"><div class="big-out" id="sw-d" style="font-size:40px">00:00.00</div>
+    <div class="btn-row" style="margin-top:8px"><button class="btn" id="sw-go"><i data-lucide="play"></i> Start</button><button class="btn ghost" id="sw-lap"><i data-lucide="flag"></i> Lap</button><button class="btn ghost" id="sw-rst" style="flex:0 0 52px"><i data-lucide="rotate-ccw"></i></button></div>
+    <div id="sw-laps" class="rows" style="margin-top:14px"></div></div>`;
+  iconsRefresh();
+  const fmt = ms => { const m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000), cs = Math.floor(ms % 1000 / 10); return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(cs).padStart(2, "0")}`; };
+  const upd = () => { const d = $("#sw-d"); if (!d) { clearInterval(_swTimer); return; } d.textContent = fmt(elapsed + (running ? Date.now() - start : 0)); };
+  $("#sw-go").onclick = () => {
+    haptic(); play("click"); running = !running;
+    if (running) { start = Date.now(); if (_swTimer) clearInterval(_swTimer); _swTimer = setInterval(upd, 31); $("#sw-go").innerHTML = `<i data-lucide="pause"></i> Pause`; }
+    else { elapsed += Date.now() - start; clearInterval(_swTimer); $("#sw-go").innerHTML = `<i data-lucide="play"></i> Start`; }
+    iconsRefresh();
+  };
+  $("#sw-lap").onclick = () => { if (!running && !elapsed) return; haptic(); laps.unshift(fmt(elapsed + (running ? Date.now() - start : 0))); $("#sw-laps").innerHTML = laps.map((l, i) => `<div class="row"><span class="k">Lap ${laps.length - i}</span><span class="v mono">${l}</span></div>`).join(""); };
+  $("#sw-rst").onclick = () => { haptic(); play("click"); running = false; elapsed = 0; laps = []; clearInterval(_swTimer); $("#sw-d").textContent = "00:00.00"; $("#sw-laps").innerHTML = ""; $("#sw-go").innerHTML = `<i data-lucide="play"></i> Start`; iconsRefresh(); };
 }
 
 /* =========================================================================
