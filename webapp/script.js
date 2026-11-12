@@ -57,6 +57,8 @@ const TOOLS = [
   { id: "hashgen", cat: "tools", icon: "hash", name: "Hash Generator", sub: "MD5 / SHA-1 / SHA-256 / 512", kw: "checksum digest", render: rHashGen },
   { id: "hashcrack", cat: "tools", icon: "fingerprint", name: "Hash Cracker", sub: "Test hash vs common list", kw: "md5 sha reverse", render: rHashCrack },
   { id: "decision", cat: "tools", icon: "dices", name: "Decision", sub: "Coin flip / dice roll", kw: "random coin dice", render: rDecision },
+  { id: "pwcheck", cat: "tools", icon: "shield", name: "Password Strength", sub: "Entropy & weakness check", kw: "security strong audit", render: rPwCheck },
+  { id: "currency", cat: "tools", icon: "banknote", name: "Currency", sub: "Live exchange rates", kw: "money convert forex usd eur", render: rCurrency },
   { id: "tts", cat: "tools", icon: "mic", name: "Text to Speech", sub: "Voice message to your chat", kw: "voice speak audio", render: rTTS },
 
   // --- DEV ---
@@ -67,6 +69,9 @@ const TOOLS = [
   { id: "timestamp", cat: "dev", icon: "clock", name: "Timestamp", sub: "Unix ⇄ human time", kw: "epoch unix date", render: rTimestamp },
   { id: "uuid", cat: "dev", icon: "shuffle", name: "UUID", sub: "Generate UUID v4", kw: "guid random id", render: rUUID },
   { id: "color", cat: "dev", icon: "palette", name: "Color", sub: "HEX ⇄ RGB ⇄ HSL", kw: "colour convert", render: rColor },
+  { id: "diff", cat: "dev", icon: "git-compare", name: "Text Diff", sub: "Compare two blocks of text", kw: "compare changes", render: rDiff },
+  { id: "baseconv", cat: "dev", icon: "calculator", name: "Base Convert", sub: "bin ⇄ oct ⇄ dec ⇄ hex", kw: "radix binary hexadecimal number", render: rBaseConv },
+  { id: "cron", cat: "dev", icon: "calendar-clock", name: "Cron Explainer", sub: "Cron expression → English", kw: "schedule crontab", render: rCron },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
@@ -76,6 +81,7 @@ const TOOLS = [
 
   // --- NETWORK ---
   { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4/IPv6 CIDR breakdown", kw: "cidr netmask ip", render: rSubnet },
+  { id: "speedtest", cat: "network", icon: "gauge", name: "Speed Test", sub: "Your connection speed", kw: "bandwidth download ping", render: rSpeedtest },
   { id: "portscan", cat: "network", icon: "scan-search", name: "Port Probe", sub: "Common open ports on a host", kw: "scan tcp", render: rPortscan },
   { id: "domain", cat: "network", icon: "globe", name: "Domain Info", sub: "DNS + WHOIS/RDAP", kw: "dns whois mx", render: rDomain },
   { id: "ipinfo", cat: "network", icon: "map-pin", name: "IP Info", sub: "Geolocation & ASN", kw: "geoip location", render: rIP },
@@ -89,6 +95,7 @@ const TOOLS = [
   // --- MEDIA ---
   { id: "download", cat: "media", icon: "download", name: "Downloader", sub: "YouTube / Instagram / TikTok", kw: "video yt ig", render: rDownload },
   { id: "exif", cat: "media", icon: "image-off", name: "EXIF Stripper", sub: "Remove photo metadata", kw: "gps privacy image", render: rExif },
+  { id: "exifview", cat: "media", icon: "scan-eye", name: "EXIF Viewer", sub: "See a photo's hidden metadata", kw: "gps camera inspect", render: rExifView },
 ];
 const byId = id => TOOLS.find(t => t.id === id);
 const CATS = { tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media" };
@@ -553,6 +560,223 @@ function rExif(c) {
       if (d.success) { setStatus("✅ Sent to your chat", "ok"); play("success"); notify(); toast("Sent to chat", "ok"); } else setStatus("❌ " + esc(d.error || "Failed"), "err");
     } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); }
   }; iconsRefresh();
+}
+
+/* =========================================================================
+   MORE TOOLS (added in v4.1)
+   ========================================================================= */
+
+/* ---- Password strength checker ---- */
+function rPwCheck(c) {
+  c.innerHTML = `<div class="card"><div class="field"><label>Password to test</label><input type="text" class="mono" id="psc" placeholder="Type or paste a password"></div><div id="psc-out"></div></div>`;
+  const out = $("#psc-out");
+  const upd = () => {
+    const pw = $("#psc").value;
+    if (!pw) { out.innerHTML = `<p class="muted center">Enter a password to analyze</p>`; return; }
+    let pool = 0;
+    if (/[a-z]/.test(pw)) pool += 26;
+    if (/[A-Z]/.test(pw)) pool += 26;
+    if (/[0-9]/.test(pw)) pool += 10;
+    if (/[^a-zA-Z0-9]/.test(pw)) pool += 32;
+    const bits = Math.round(pw.length * Math.log2(pool || 1));
+    const notes = [];
+    if (pw.length < 12) notes.push("Too short — aim for 12+ characters");
+    if (!/[A-Z]/.test(pw) || !/[a-z]/.test(pw)) notes.push("Mix upper- and lower-case");
+    if (!/[0-9]/.test(pw)) notes.push("Add numbers");
+    if (!/[^a-zA-Z0-9]/.test(pw)) notes.push("Add symbols");
+    if (COMMON_PW.includes(pw.toLowerCase())) notes.push("⚠️ This is a very common password");
+    if (/(.)\1{2,}/.test(pw)) notes.push("Avoid repeated characters (aaa, 111)");
+    if (/(0123|1234|2345|3456|4567|5678|6789|abcd|qwer)/i.test(pw)) notes.push("Avoid sequences (1234, abcd, qwerty)");
+    let label, cls;
+    if (COMMON_PW.includes(pw.toLowerCase()) || bits < 28) { label = "Very weak"; cls = "err"; }
+    else if (bits < 40) { label = "Weak"; cls = "err"; }
+    else if (bits < 60) { label = "Fair"; cls = "warn"; }
+    else if (bits < 80) { label = "Good"; cls = "ok"; }
+    else { label = "Strong"; cls = "ok"; }
+    const pct = Math.min(100, Math.round(bits / 90 * 100));
+    out.innerHTML = `<div style="margin-top:4px"><span class="pill ${cls}">${label}</span> <span class="muted">· ~${bits} bits entropy</span></div>
+      <div style="height:8px;border-radius:999px;background:var(--bg-2);margin:12px 0;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--${cls === "ok" ? "ok" : cls === "warn" ? "warn" : "err"});transition:width .25s"></div></div>
+      ${notes.length ? `<ul style="margin:8px 0 0 18px;color:var(--hint);font-size:13px;line-height:1.7">${notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : `<p class="status ok">✅ Looks strong</p>`}
+      <p class="muted" style="margin-top:10px">Checked entirely in your browser — nothing is sent anywhere.</p>`;
+  };
+  $("#psc").addEventListener("input", upd); upd();
+}
+
+/* ---- Currency converter (fawazahmed0 free API, no key) ---- */
+let _curCodes = null;
+async function rCurrency(c) {
+  form(`<div class="btn-row"><div class="field" style="flex:1"><label>Amount</label><input type="number" id="cur-amt" value="1" class="mono"></div></div>
+    <div class="btn-row">
+      <div class="field" style="flex:1"><label>From</label><select id="cur-from"></select></div>
+      <div class="field" style="flex:1"><label>To</label><select id="cur-to"></select></div>
+    </div>`, "Convert", doCur, "banknote");
+  const fromSel = $("#cur-from"), toSel = $("#cur-to");
+  fromSel.innerHTML = toSel.innerHTML = `<option>loading…</option>`;
+  try {
+    if (!_curCodes) _curCodes = await (await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies.min.json")).json();
+    const opts = Object.entries(_curCodes).map(([k, v]) => `<option value="${k}">${k.toUpperCase()} — ${esc(v)}</option>`).join("");
+    fromSel.innerHTML = opts; toSel.innerHTML = opts;
+    fromSel.value = "usd"; toSel.value = "eur";
+  } catch (_) { fromSel.innerHTML = toSel.innerHTML = `<option value="usd">USD</option><option value="eur">EUR</option>`; }
+  async function doCur() {
+    const from = fromSel.value, to = toSel.value, amt = parseFloat($("#cur-amt").value) || 0;
+    await serverRun("Fetching rate…", async () => {
+      try {
+        const data = await (await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${from}.json`)).json();
+        const rate = data[from]?.[to];
+        if (rate == null) throw new Error("Pair unavailable");
+        setStatus("");
+        resultCard(`<div class="big-out">${(amt * rate).toLocaleString(undefined, { maximumFractionDigits: 4 })} ${to.toUpperCase()}</div>
+          <p class="muted center">${amt} ${from.toUpperCase()} · rate ${rate.toPrecision(6)} · ${esc(data.date)}</p>`);
+        play("success");
+      } catch (e) { setStatus("❌ " + esc(e.message || "Failed"), "err"); play("error"); }
+    });
+  }
+}
+
+/* ---- Text diff (line-level LCS) ---- */
+function rDiff(c) {
+  form(`<div class="field"><label>Original</label><textarea id="df-a" class="mono" placeholder="First text…"></textarea></div>
+    <div class="field"><label>Changed</label><textarea id="df-b" class="mono" placeholder="Second text…"></textarea></div>`, "Compare", () => {
+    const a = $("#df-a").value.split("\n"), b = $("#df-b").value.split("\n");
+    const diff = lcsDiff(a, b);
+    let add = 0, del = 0;
+    const html = diff.map(d => {
+      if (d.t === "+") { add++; return `<div style="background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok);padding:1px 6px;border-radius:4px">+ ${esc(d.v)}</div>`; }
+      if (d.t === "-") { del++; return `<div style="background:color-mix(in srgb,var(--err) 16%,transparent);color:var(--err);padding:1px 6px;border-radius:4px">- ${esc(d.v)}</div>`; }
+      return `<div style="padding:1px 6px;color:var(--hint)">&nbsp;&nbsp;${esc(d.v)}</div>`;
+    }).join("");
+    resultCard(`<div style="margin-bottom:10px"><span class="pill ok">+${add}</span> <span class="pill err">-${del}</span></div><div class="out-area">${html || "<span class='muted'>identical</span>"}</div>`);
+    play("success");
+  }, "git-compare");
+}
+function lcsDiff(a, b) {
+  const n = a.length, m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+    dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const out = []; let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { out.push({ t: " ", v: a[i] }); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push({ t: "-", v: a[i++] }); }
+    else { out.push({ t: "+", v: b[j++] }); }
+  }
+  while (i < n) out.push({ t: "-", v: a[i++] });
+  while (j < m) out.push({ t: "+", v: b[j++] });
+  return out;
+}
+
+/* ---- Base converter (BigInt) ---- */
+function rBaseConv(c) {
+  form(`<div class="field"><label>Value</label><input type="text" class="mono" id="bc-in" placeholder="255"></div>
+    <div class="field"><label>Input base</label><select id="bc-base"><option value="0">Auto-detect</option><option value="2">Binary (2)</option><option value="8">Octal (8)</option><option value="10" selected>Decimal (10)</option><option value="16">Hex (16)</option></select></div>`, "Convert", () => {
+    let s = $("#bc-in").value.trim().toLowerCase().replace(/^0x|^0b|^0o/, "");
+    let base = +$("#bc-base").value;
+    if (base === 0) base = /^[01]+$/.test(s) ? 2 : /^[0-7]+$/.test(s) ? 8 : /^[0-9a-f]+$/.test(s) && /[a-f]/.test(s) ? 16 : 10;
+    const digits = "0123456789abcdef";
+    let val = 0n; const B = BigInt(base);
+    for (const ch of s) { const d = digits.indexOf(ch); if (d < 0 || d >= base) { setStatus(`❌ "${esc(ch)}" is not valid in base ${base}`, "err"); play("error"); return; } val = val * B + BigInt(d); }
+    resultCard(rowsHTML({ Binary: `<span class="v mono">${val.toString(2)}</span>`, Octal: `<span class="v mono">${val.toString(8)}</span>`, Decimal: `<span class="v mono">${val.toString(10)}</span>`, Hex: `<span class="v mono">${val.toString(16).toUpperCase()}</span>` }));
+    play("success");
+  }, "calculator");
+}
+
+/* ---- Cron explainer ---- */
+function rCron(c) {
+  form(`<div class="field"><label>Cron expression (5 fields)</label><input type="text" class="mono" id="cr-in" placeholder="*/5 * * * *"></div>`, "Explain", () => {
+    const txt = explainCron($("#cr-in").value.trim());
+    if (!txt) { setStatus("❌ Need 5 fields: minute hour day month weekday", "err"); play("error"); return; }
+    resultCard(`<p style="font-size:16px;font-weight:600">${esc(txt)}</p>`); play("success");
+  }, "calendar-clock");
+}
+function explainCron(expr) {
+  const f = expr.split(/\s+/); if (f.length !== 5) return null;
+  const [mi, ho, dom, mo, dow] = f;
+  const DOW = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const MON = ["","January","February","March","April","May","June","July","August","September","October","November","December"];
+  const part = (v, kind) => {
+    if (v === "*") return null;
+    const named = n => kind === "dow" ? (DOW[n % 7] || n) : kind === "mon" ? (MON[n] || n) : n;
+    if (/^\*\/(\d+)$/.test(v)) return `every ${RegExp.$1} ${kind}`;
+    if (/^\d+(-\d+)$/.test(v)) { const [a, b] = v.split("-"); return `${named(+a)}–${named(+b)}`; }
+    if (v.includes(",")) return v.split(",").map(x => named(+x)).join(", ");
+    return named(+v);
+  };
+  let s = "At ";
+  const everyMin = mi === "*", everyHr = ho === "*";
+  if (/^\*\/(\d+)$/.test(mi) && everyHr) s = `Every ${mi.split("/")[1]} minutes`;
+  else if (everyMin && everyHr) s = "Every minute";
+  else {
+    const m = everyMin ? "every minute" : `minute ${mi}`;
+    const h = everyHr ? "every hour" : `hour ${ho}`;
+    if (!everyMin && !everyHr) s = `At ${ho.padStart(2, "0")}:${mi.padStart(2, "0")}`;
+    else s = `At ${m} past ${h}`;
+  }
+  if (dom !== "*") s += `, on day-of-month ${part(dom)}`;
+  if (mo !== "*") s += `, in ${part(mo, "mon")}`;
+  if (dow !== "*") s += `, on ${part(dow, "dow")}`;
+  return s + ".";
+}
+
+/* ---- Real client-side speed test (Cloudflare) ---- */
+function rSpeedtest(c) {
+  c.innerHTML = `<div class="card center"><div class="big-out" id="st-main" style="font-size:40px">–</div><p class="muted" id="st-sub">Tap start to measure your connection</p>
+    <div id="st-rows" style="margin:14px 0"></div>
+    <button class="btn" id="st-go"><i data-lucide="gauge"></i> Start test</button>
+    <p class="muted" style="margin-top:10px">Measured against Cloudflare's network, in your browser.</p></div>`;
+  iconsRefresh();
+  $("#st-go").onclick = async () => {
+    const go = $("#st-go"); go.disabled = true; play("click"); haptic();
+    const main = $("#st-main"), sub = $("#st-sub"), rows = $("#st-rows");
+    // latency
+    sub.textContent = "Measuring latency…"; main.textContent = "…";
+    let pings = [];
+    for (let i = 0; i < 5; i++) { const t = performance.now(); try { await fetch(`https://speed.cloudflare.com/__down?bytes=0&r=${Math.random()}`, { cache: "no-store" }); pings.push(performance.now() - t); } catch (_) {} }
+    const ping = pings.length ? Math.min(...pings) : null;
+    // download
+    sub.textContent = "Measuring download…";
+    const dl = await measure("https://speed.cloudflare.com/__down?bytes=25000000", 25000000);
+    main.textContent = dl ? dl.toFixed(1) : "—"; sub.innerHTML = `<b>Mbps</b> download`;
+    // upload (best effort)
+    sub.textContent = "Measuring upload…";
+    let up = null;
+    try { const blob = new Uint8Array(6000000); const t = performance.now(); await fetch("https://speed.cloudflare.com/__up", { method: "POST", body: blob, cache: "no-store" }); const sec = (performance.now() - t) / 1000; up = (6000000 * 8) / sec / 1e6; } catch (_) {}
+    rows.innerHTML = rowsHTML({ "⬇ Download": `<b>${dl ? dl.toFixed(1) : "—"} Mbps</b>`, "⬆ Upload": `${up ? up.toFixed(1) + " Mbps" : "—"}`, "⚡ Latency": `${ping ? Math.round(ping) + " ms" : "—"}` });
+    main.textContent = dl ? dl.toFixed(1) : "—"; sub.innerHTML = `<b>Mbps</b> download`;
+    go.disabled = false; go.innerHTML = `<i data-lucide="refresh-cw"></i> Test again`; iconsRefresh(); play("success"); notify();
+  };
+  async function measure(url, bytes) {
+    try { const t = performance.now(); const res = await fetch(url + "&r=" + Math.random(), { cache: "no-store" }); const reader = res.body.getReader(); let got = 0; while (true) { const { done, value } = await reader.read(); if (done) break; got += value.length; } const sec = (performance.now() - t) / 1000; return (bytes * 8) / sec / 1e6; } catch (_) { return null; }
+  }
+}
+
+/* ---- EXIF viewer (client-side via exifr) ---- */
+function rExifView(c) {
+  let file = null;
+  c.innerHTML = `<div class="card"><div class="upload" id="ev-drop"><i data-lucide="scan-eye"></i><div id="ev-name">Choose a photo</div></div><input type="file" id="ev-file" accept="image/*" hidden><div id="ev-out" style="margin-top:14px"></div><p class="muted" style="margin-top:12px">Read entirely in your browser — the photo is never uploaded.</p></div>`;
+  iconsRefresh();
+  $("#ev-drop").onclick = () => $("#ev-file").click();
+  $("#ev-file").onchange = async e => {
+    file = e.target.files[0]; if (!file) return;
+    $("#ev-name").textContent = file.name; $("#ev-drop").classList.add("active"); play("success");
+    const out = $("#ev-out"); out.innerHTML = spin() + " Reading…";
+    try {
+      const d = await exifr.parse(file, { gps: true, tiff: true, exif: true, ifd0: true });
+      if (!d || !Object.keys(d).length) { out.innerHTML = `<p class="status ok">✅ No metadata found — this photo is clean.</p>`; return; }
+      const fmt = v => v instanceof Date ? v.toLocaleString() : Array.isArray(v) ? v.join(", ") : typeof v === "number" ? Math.round(v * 1e4) / 1e4 : esc(String(v));
+      const pick = {};
+      const map = { Make: "Camera make", Model: "Camera model", LensModel: "Lens", DateTimeOriginal: "Taken", ISO: "ISO", FNumber: "Aperture ƒ", ExposureTime: "Shutter", FocalLength: "Focal length", Software: "Software", Orientation: "Orientation" };
+      for (const [k, label] of Object.entries(map)) if (d[k] != null) pick[label] = fmt(d[k]);
+      if (d.latitude != null && d.longitude != null) {
+        pick["📍 GPS"] = `<a href="https://maps.google.com/?q=${d.latitude},${d.longitude}" target="_blank">${d.latitude.toFixed(5)}, ${d.longitude.toFixed(5)}</a>`;
+      }
+      const extra = Object.keys(d).length;
+      out.innerHTML = (d.latitude != null ? `<p class="status err" style="margin-bottom:8px">⚠️ Contains GPS location</p>` : "") +
+        rowsHTML(Object.keys(pick).length ? pick : { Fields: extra + " metadata fields" }) +
+        `<p class="muted" style="margin-top:10px">${extra} total fields. Use <b>EXIF Stripper</b> to remove them.</p>`;
+      notify();
+    } catch (err) { out.innerHTML = `<p class="status err">❌ Could not read: ${esc(err.message || "error")}</p>`; }
+  };
 }
 
 /* =========================================================================
