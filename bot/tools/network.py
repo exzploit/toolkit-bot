@@ -184,6 +184,28 @@ async def ip_info(ip: str | None = None) -> dict:
 # --------------------------------------------------------------------------- #
 # URL inspector: final URL, status, server header, resolved IP, page title
 # --------------------------------------------------------------------------- #
+async def dns_query(domain: str, rtype: str) -> dict:
+    domain = (domain or "").strip().lower().removeprefix("http://").removeprefix("https://").split("/")[0]
+    rtype = (rtype or "A").upper()
+    allowed = {"A", "AAAA", "MX", "TXT", "NS", "CNAME", "SOA", "CAA", "SRV", "PTR"}
+    if rtype not in allowed:
+        return {"success": False, "error": "Unsupported record type"}
+    if not domain or "." not in domain:
+        return {"success": False, "error": "Enter a valid domain"}
+    resolver = dns.asyncresolver.Resolver()
+    resolver.lifetime = 5.0
+    try:
+        ans = await resolver.resolve(domain, rtype)
+        return {"success": True, "domain": domain, "type": rtype,
+                "records": [r.to_text().strip('"') for r in ans]}
+    except dns.resolver.NXDOMAIN:
+        return {"success": False, "error": "Domain not found (NXDOMAIN)"}
+    except dns.resolver.NoAnswer:
+        return {"success": True, "domain": domain, "type": rtype, "records": []}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 async def ssl_check(host: str) -> dict:
     host = (host or "").strip().lower()
     host = host.removeprefix("http://").removeprefix("https://").split("/")[0].split(":")[0]

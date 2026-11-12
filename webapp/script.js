@@ -16,6 +16,9 @@ let favorites = store.get("tk_favs", []);
 let recents = store.get("tk_recents", []);
 let soundOn = store.get("tk_sound", true);
 let activeCat = "all";
+let accent = store.get("tk_accent", "teal");
+const ACCENTS = { teal: ["#2dd4bf", "#0f2a2a", "#052e2b"], green: ["#3fb950", "#0d2615", "#04140a"], cyan: ["#22d3ee", "#07323f", "#021b23"], amber: ["#f59e0b", "#2a1e05", "#1a1304"], magenta: ["#e879f9", "#2a0f33", "#180820"] };
+function applyAccent() { const a = ACCENTS[accent] || ACCENTS.teal; const r = document.documentElement.style; r.setProperty("--accent", a[0]); r.setProperty("--accent-dim", a[1]); r.setProperty("--accent-text", a[2]); }
 let lang = store.get("tk_lang", (USER?.language_code === "ro" ? "ro" : "en"));
 
 /* ---------- i18n ---------- */
@@ -28,9 +31,9 @@ const catName = k => T(k);
 // Romanian name/sub per tool id: [name, sub]
 const RO = {
   password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
-  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"],
   text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"],
-  subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
+  subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
   download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"],
 };
 const tname = t => (lang === "ro" && RO[t.id]) ? RO[t.id][0] : t.name;
@@ -105,6 +108,8 @@ const TOOLS = [
   { id: "binascii", cat: "dev", icon: "file-digit", name: "Text ⇄ Binary", sub: "ASCII to binary / hex", kw: "ascii bits encode", render: rBinAscii },
   { id: "filechecksum", cat: "dev", icon: "file-check", name: "File Checksum", sub: "Hash any file (MD5/SHA)", kw: "hash verify integrity", render: rFileChecksum },
   { id: "csvjson", cat: "dev", icon: "table", name: "CSV ⇄ JSON", sub: "Convert tabular data", kw: "spreadsheet convert", render: rCsvJson },
+  { id: "validator", cat: "dev", icon: "badge-check", name: "Validator", sub: "IBAN & card (Luhn)", kw: "checksum credit card", render: rValidator },
+  { id: "markdown", cat: "dev", icon: "file-text", name: "Markdown", sub: "Live preview", kw: "md render preview", render: rMarkdown },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
@@ -122,6 +127,7 @@ const TOOLS = [
   { id: "ipinfo", cat: "network", icon: "map-pin", name: "IP Info", sub: "Geolocation & ASN", kw: "geoip location", render: rIP },
   { id: "inspect", cat: "network", icon: "search-code", name: "URL Inspector", sub: "Status, server, IP, title", kw: "headers redirect", render: rInspect },
   { id: "ssl", cat: "network", icon: "lock", name: "SSL Checker", sub: "Cert expiry & issuer", kw: "https certificate tls", render: rSSL },
+  { id: "dns", cat: "network", icon: "list-tree", name: "DNS Lookup", sub: "Any record type", kw: "resolve a mx txt cname", render: rDns },
   { id: "phone", cat: "network", icon: "phone", name: "Phone Lookup", sub: "Carrier, region, timezone", kw: "number osint", render: rPhone },
   { id: "username", cat: "network", icon: "users", name: "Username Check", sub: "Across public platforms", kw: "social osint", render: rUsername },
   { id: "dork", cat: "network", icon: "search", name: "Dork Builder", sub: "Google recon queries", kw: "osint google", render: rDork },
@@ -246,21 +252,23 @@ function form(fieldsHTML, btnLabel, onRun, icon = "play") {
   iconsRefresh();
 }
 const rowsHTML = o => `<div class="rows">${Object.entries(o).map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${v}</span></div>`).join("")}</div>`;
-function resultCard(inner) { $("#tool-result").innerHTML = `<div class="card">${inner}</div>`; addShare($("#tool-result .card")); iconsRefresh(); }
+function resultCard(inner) { $("#tool-result").innerHTML = `<div class="card">${inner}</div>`; addActions($("#tool-result .card")); iconsRefresh(); }
 async function shareToChat(text) {
   if (!text) return; play("click"); haptic();
   try { const d = await api("share", { text }); if (d.success) { toast(T("shared"), "ok"); notify(); } else toast(d.error || "Failed", "err"); }
   catch (e) { toast(e.message || "Failed", "err"); }
 }
-function addShare(card) {
+function downloadText(text, name = "result.txt") {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" })); a.download = name; a.click(); URL.revokeObjectURL(a.href); play("success"); toast("Saved " + name, "ok");
+}
+function addActions(card) {
   if (!card) return;
   const clone = card.cloneNode(true); clone.querySelectorAll("button,a").forEach(e => e.remove());
   const text = clone.innerText.trim(); if (!text) return;
-  const b = document.createElement("button");
-  b.className = "btn ghost sm"; b.style.marginTop = "12px";
-  b.innerHTML = `<i data-lucide="send"></i> ${T("share")}`;
-  b.addEventListener("click", () => shareToChat(text));
-  card.appendChild(b);
+  const row = document.createElement("div"); row.className = "btn-row"; row.style.marginTop = "12px";
+  const s = document.createElement("button"); s.className = "btn ghost sm"; s.innerHTML = `<i data-lucide="send"></i> ${T("share")}`; s.addEventListener("click", () => shareToChat(text));
+  const d = document.createElement("button"); d.className = "btn ghost sm"; d.style.flex = "0 0 48px"; d.innerHTML = `<i data-lucide="download"></i>`; d.addEventListener("click", () => downloadText(text));
+  row.append(s, d); card.appendChild(row);
 }
 function copyBtn(text, label = "Copy") { return `<button class="btn ghost sm" data-copy="${esc(text)}"><i data-lucide="copy"></i> ${label}</button>`; }
 document.addEventListener("click", e => { const b = e.target.closest("[data-copy]"); if (b) copy(b.getAttribute("data-copy")); });
@@ -1189,6 +1197,52 @@ function rStopwatch(c) {
   $("#sw-rst").onclick = () => { haptic(); play("click"); running = false; elapsed = 0; laps = []; clearInterval(_swTimer); $("#sw-d").textContent = "00:00.00"; $("#sw-laps").innerHTML = ""; $("#sw-go").innerHTML = `<i data-lucide="play"></i> Start`; iconsRefresh(); };
 }
 
+/* ---- DNS lookup (server) ---- */
+function rDns(c) {
+  form(`<div class="field"><label>Domain</label><input type="text" class="mono" id="dn-in" placeholder="example.com"></div>
+    <div class="field"><label>Record type</label><select id="dn-t">${["A","AAAA","MX","TXT","CNAME","NS","SOA","CAA","SRV"].map(x => `<option>${x}</option>`).join("")}</select></div>`, "Lookup", async () => {
+    await serverRun("Resolving…", async () => {
+      const d = await api("dns", { domain: $("#dn-in").value, type: $("#dn-t").value }); if (!d.success) return setStatus("❌ " + esc(d.error), "err");
+      setStatus("");
+      resultCard(d.records.length ? `<label>${esc(d.type)} records</label><div class="out-area">${d.records.map(esc).join("\n")}</div>` : `<p class="muted center">No ${esc(d.type)} records</p>`);
+      play("success");
+    });
+  }, "list-tree");
+}
+
+/* ---- Validator (IBAN / card Luhn) ---- */
+function ibanValid(v) { v = v.replace(/\s+/g, "").toUpperCase(); if (!/^[A-Z0-9]{15,34}$/.test(v)) return null; const re = v.slice(4) + v.slice(0, 4); let s = ""; for (const ch of re) s += (ch >= "A" && ch <= "Z") ? (ch.charCodeAt(0) - 55).toString() : ch; let rem = 0; for (const d of s) rem = (rem * 10 + (+d)) % 97; return rem === 1; }
+function luhnValid(v) { v = v.replace(/\D/g, ""); if (v.length < 12) return null; let sum = 0, alt = false; for (let i = v.length - 1; i >= 0; i--) { let n = +v[i]; if (alt) { n *= 2; if (n > 9) n -= 9; } sum += n; alt = !alt; } return sum % 10 === 0; }
+function rValidator(c) {
+  form(`<div class="seg" id="vl-seg"><button data-m="iban" class="active">IBAN</button><button data-m="card">Card (Luhn)</button></div>
+    <div class="field"><input type="text" class="mono" id="vl-in" placeholder="Enter value…"></div>`, "Validate", () => {
+    const m = $("#vl-seg .active").dataset.m, v = $("#vl-in").value;
+    const ok = m === "iban" ? ibanValid(v) : luhnValid(v);
+    if (ok === null) { setStatus("❌ Doesn't look like a valid " + (m === "iban" ? "IBAN" : "card number"), "err"); play("error"); return; }
+    resultCard(`<p class="center">${ok ? '<span class="pill ok">✓ Valid</span>' : '<span class="pill err">✗ Invalid checksum</span>'}</p>`);
+    play(ok ? "success" : "error");
+  }, "badge-check");
+  segWire("vl-seg");
+}
+
+/* ---- Markdown preview (client, sanitized) ---- */
+function mdToHtml(md) {
+  let h = esc(md);
+  h = h.replace(/```([\s\S]*?)```/g, (m, c) => `<pre class="out-area" style="margin:8px 0">${c.trim()}</pre>`);
+  h = h.replace(/`([^`\n]+)`/g, '<code style="background:var(--bg);padding:1px 5px;border-radius:4px;font-family:var(--mono)">$1</code>');
+  for (let i = 6; i >= 1; i--) h = h.replace(new RegExp(`^#{${i}} (.*)$`, "gm"), `<h${i} style="margin:10px 0 6px">$1</h${i}>`);
+  h = h.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<i>$2</i>");
+  h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, u) => /^(https?:|mailto:)/i.test(u) ? `<a href="${u}" target="_blank">${t}</a>` : t);
+  h = h.replace(/^(?:- |\* )(.*)$/gm, "<li>$1</li>").replace(/(<li>[\s\S]*?<\/li>)/g, "<ul style='margin:6px 0 6px 18px'>$1</ul>");
+  h = h.replace(/\n{2,}/g, "<br><br>").replace(/\n/g, "<br>");
+  return h;
+}
+function rMarkdown(c) {
+  c.innerHTML = `<div class="card"><div class="field"><label>Markdown</label><textarea id="md-in" class="mono" style="min-height:140px" placeholder="# Hello\n**bold** and *italic*\n- a list\n[link](https://x.com)"></textarea></div><label>Preview</label><div id="md-out" class="out-area" style="font-family:var(--sans)"></div></div>`;
+  const upd = () => { $("#md-out").innerHTML = mdToHtml($("#md-in").value) || "<span class='muted'>…</span>"; };
+  $("#md-in").addEventListener("input", upd); upd();
+}
+
 /* =========================================================================
    SETTINGS
    ========================================================================= */
@@ -1199,6 +1253,7 @@ function renderSettings() {
     <div class="group">
       <div class="switch-row"><span>${T("sound")}</span><input type="checkbox" class="sw" id="setsound" ${soundOn ? "checked" : ""}></div>
       <div class="list-row" id="setlang"><span>${T("language")}</span><b style="color:var(--accent);font-family:var(--mono)">${lang === "ro" ? "Română" : "English"}</b></div>
+      <div class="switch-row"><span>Accent</span><div id="accent-row" style="display:flex;gap:10px">${Object.entries(ACCENTS).map(([k, v]) => `<button data-acc="${k}" style="width:28px;height:28px;border-radius:50%;background:${v[0]};border:2px solid ${accent === k ? "var(--text)" : "transparent"};cursor:pointer"></button>`).join("")}</div></div>
     </div>
     <div class="group">
       <div class="list-row" id="setclearfav"><span>${T("clearFav")}</span><i data-lucide="star-off"></i></div>
@@ -1208,6 +1263,7 @@ function renderSettings() {
     <p class="foot">Toolkit v5 ${USER ? "· " + esc(USER.first_name) : ""}<br>self-hosted · ${TOOLS.length} tools</p>`;
   $("#setsound").onchange = e => { soundOn = e.target.checked; store.set("tk_sound", soundOn); if (soundOn) play("click"); };
   $("#setlang").onclick = () => { lang = lang === "en" ? "ro" : "en"; store.set("tk_lang", lang); play("click"); haptic(); applyLang(); renderSettings(); };
+  v.querySelectorAll("[data-acc]").forEach(btn => btn.addEventListener("click", () => { accent = btn.dataset.acc; store.set("tk_accent", accent); applyAccent(); play("click"); haptic(); renderSettings(); }));
   $("#setclearfav").onclick = () => { favorites = []; store.set("tk_favs", []); toast(T("clearFav")); haptic(); };
   $("#setclearrec").onclick = () => { recents = []; store.set("tk_recents", []); toast(T("clearRec")); haptic(); };
   $("#setclose").onclick = () => { try { tg?.close(); } catch (_) {} };
@@ -1218,6 +1274,7 @@ function applyLang() { const s = $("#search"); if (s) s.placeholder = T("search"
 /* ---------- boot ---------- */
 function applyTheme() { document.body.classList.toggle("dark", tg?.colorScheme === "dark"); }
 applyTheme(); tg?.onEvent?.("themeChanged", applyTheme);
+applyAccent();
 applyLang();
 renderHome();
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }

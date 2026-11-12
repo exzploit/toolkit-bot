@@ -94,6 +94,12 @@ async def h_ssl(request):
     return _ok(await network.ssl_check(b.get("host", "")))
 
 
+async def h_dns(request):
+    _auth(request)
+    b = await _json_body(request)
+    return _ok(await network.dns_query(b.get("domain", ""), b.get("type", "A")))
+
+
 async def h_phone(request):
     _auth(request)
     b = await _json_body(request)
@@ -228,6 +234,7 @@ def build_api_routes() -> list:
         web.post("/api/ipinfo", h_ipinfo),
         web.post("/api/inspect", h_inspect),
         web.post("/api/ssl", h_ssl),
+        web.post("/api/dns", h_dns),
         web.post("/api/phone", h_phone),
         web.post("/api/username", h_username),
         web.post("/api/breach", h_breach),
