@@ -15,6 +15,7 @@ const store = {
 let favorites = store.get("tk_favs", []);
 let recents = store.get("tk_recents", []);
 let soundOn = store.get("tk_sound", true);
+let activeCat = "all";
 
 /* ---------- haptics / sound / toast ---------- */
 function haptic(k = "light") { try { tg?.HapticFeedback?.impactOccurred(k); } catch (_) {} }
@@ -126,18 +127,39 @@ function section(title, tools, extra = "") {
           <div class="grid">${tools.map(cardHTML).join("")}</div>`;
 }
 
+const CAT_ICON = { all: "layout-grid", tools: "wrench", dev: "code", text: "type", network: "globe", media: "clapperboard" };
+function renderChips() {
+  const bar = $("#cat-bar");
+  const entries = [["all", "All"], ...Object.entries(CATS)];
+  bar.innerHTML = entries.map(([k, label]) =>
+    `<button class="chip${activeCat === k ? " active" : ""}" data-cat="${k}"><i data-lucide="${CAT_ICON[k]}"></i> ${esc(label)}</button>`).join("");
+  bar.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => {
+    activeCat = ch.dataset.cat; $("#search").value = ""; play("click"); haptic();
+    renderHome();
+    ch.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }));
+}
+
 function renderHome() {
   show("home"); $("#view-title").textContent = "Toolkit";
+  renderChips();
   const q = $("#search").value.trim().toLowerCase();
   const host = $("#home-sections");
 
   if (q) {
     const hits = TOOLS.filter(t => (t.name + " " + t.sub + " " + t.kw + " " + CATS[t.cat]).toLowerCase().includes(q));
-    host.innerHTML = hits.length ? section(`Results`, hits)
+    host.innerHTML = hits.length ? section("Results", hits)
       : `<div class="empty"><i data-lucide="search-x"></i><div>No tools match “${esc(q)}”</div></div>`;
     wireCards(host); iconsRefresh(); return;
   }
 
+  // Single category selected → show just that group.
+  if (activeCat !== "all") {
+    host.innerHTML = section(CATS[activeCat], TOOLS.filter(t => t.cat === activeCat));
+    wireCards(host); iconsRefresh(); window.scrollTo(0, 0); return;
+  }
+
+  // "All" → favorites, recents, then every category.
   let html = "";
   const favTools = favorites.map(byId).filter(Boolean);
   const recTools = recents.map(byId).filter(Boolean).filter(t => !favorites.includes(t.id));
@@ -168,7 +190,7 @@ function openTool(id) {
   body().innerHTML = ""; t.render(body()); iconsRefresh(); window.scrollTo(0, 0);
 }
 
-$("#search").addEventListener("input", renderHome);
+$("#search").addEventListener("input", () => { if ($("#search").value.trim()) activeCat = "all"; renderHome(); });
 $("#btn-back").addEventListener("click", () => { play("click"); haptic(); renderHome(); });
 $("#btn-settings").addEventListener("click", () => { play("click"); haptic(); renderSettings(); });
 
