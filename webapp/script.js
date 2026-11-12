@@ -20,8 +20,8 @@ let lang = store.get("tk_lang", (USER?.language_code === "ro" ? "ro" : "en"));
 
 /* ---------- i18n ---------- */
 const UI = {
-  en: { search: "Search tools…", all: "All", fav: "★ Favorites", recent: "Recent", results: "Results", noMatch: "No tools match", toolScreen: "Tool", settings: "Settings", sound: "Sound effects", language: "Language", clearFav: "Clear favorites", clearRec: "Clear recents", close: "Close app", tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media" },
-  ro: { search: "Caută unelte…", all: "Toate", fav: "★ Favorite", recent: "Recente", results: "Rezultate", noMatch: "Nicio unealtă găsită", toolScreen: "Unealtă", settings: "Setări", sound: "Efecte sonore", language: "Limbă", clearFav: "Șterge favoritele", clearRec: "Șterge recentele", close: "Închide aplicația", tools: "Unelte", dev: "Developer", text: "Text", network: "Rețea", media: "Media" },
+  en: { search: "Search tools…", all: "All", fav: "★ Favorites", recent: "Recent", results: "Results", noMatch: "No tools match", toolScreen: "Tool", settings: "Settings", sound: "Sound effects", language: "Language", clearFav: "Clear favorites", clearRec: "Clear recents", close: "Close app", tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media", share: "Send to chat", shared: "Sent to your chat" },
+  ro: { search: "Caută unelte…", all: "Toate", fav: "★ Favorite", recent: "Recente", results: "Rezultate", noMatch: "Nicio unealtă găsită", toolScreen: "Unealtă", settings: "Setări", sound: "Efecte sonore", language: "Limbă", clearFav: "Șterge favoritele", clearRec: "Șterge recentele", close: "Închide aplicația", tools: "Unelte", dev: "Developer", text: "Text", network: "Rețea", media: "Media", share: "Trimite în chat", shared: "Trimis în chat" },
 };
 const T = k => (UI[lang] && UI[lang][k]) ?? UI.en[k] ?? k;
 const catName = k => T(k);
@@ -246,7 +246,22 @@ function form(fieldsHTML, btnLabel, onRun, icon = "play") {
   iconsRefresh();
 }
 const rowsHTML = o => `<div class="rows">${Object.entries(o).map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${v}</span></div>`).join("")}</div>`;
-function resultCard(inner) { $("#tool-result").innerHTML = `<div class="card">${inner}</div>`; iconsRefresh(); }
+function resultCard(inner) { $("#tool-result").innerHTML = `<div class="card">${inner}</div>`; addShare($("#tool-result .card")); iconsRefresh(); }
+async function shareToChat(text) {
+  if (!text) return; play("click"); haptic();
+  try { const d = await api("share", { text }); if (d.success) { toast(T("shared"), "ok"); notify(); } else toast(d.error || "Failed", "err"); }
+  catch (e) { toast(e.message || "Failed", "err"); }
+}
+function addShare(card) {
+  if (!card) return;
+  const clone = card.cloneNode(true); clone.querySelectorAll("button,a").forEach(e => e.remove());
+  const text = clone.innerText.trim(); if (!text) return;
+  const b = document.createElement("button");
+  b.className = "btn ghost sm"; b.style.marginTop = "12px";
+  b.innerHTML = `<i data-lucide="send"></i> ${T("share")}`;
+  b.addEventListener("click", () => shareToChat(text));
+  card.appendChild(b);
+}
 function copyBtn(text, label = "Copy") { return `<button class="btn ghost sm" data-copy="${esc(text)}"><i data-lucide="copy"></i> ${label}</button>`; }
 document.addEventListener("click", e => { const b = e.target.closest("[data-copy]"); if (b) copy(b.getAttribute("data-copy")); });
 

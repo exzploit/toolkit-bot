@@ -134,6 +134,23 @@ async def h_media(request):
 # --------------------------------------------------------------------------- #
 # Endpoints that deliver a result to the user's Telegram chat
 # --------------------------------------------------------------------------- #
+async def h_share(request):
+    user = _auth(request)
+    bot = request.app["bot"]
+    b = await _json_body(request)
+    text = (b.get("text") or "").strip()
+    if not text:
+        return _ok({"success": False, "error": "Nothing to share"})
+    text = text[:3800]  # Telegram message limit headroom
+    try:
+        # Plain text (no parse_mode) so user content can't inject markup.
+        await bot.send_message(chat_id=user.id, text=text, disable_web_page_preview=True)
+        return _ok({"success": True})
+    except Exception as e:
+        log.warning("share delivery failed: %s", e)
+        return _ok({"success": False, "error": "Could not deliver. Open a chat with the bot first."})
+
+
 async def h_tts(request):
     user = _auth(request)
     b = await _json_body(request)
@@ -217,6 +234,7 @@ def build_api_routes() -> list:
         web.post("/api/dork", h_dork),
         web.post("/api/tgprofile", h_tgprofile),
         web.post("/api/media", h_media),
+        web.post("/api/share", h_share),
         web.post("/api/tts", h_tts),
         web.post("/api/exif", h_exif),
     ]
