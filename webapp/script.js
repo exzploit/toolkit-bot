@@ -16,6 +16,25 @@ let favorites = store.get("tk_favs", []);
 let recents = store.get("tk_recents", []);
 let soundOn = store.get("tk_sound", true);
 let activeCat = "all";
+let lang = store.get("tk_lang", (USER?.language_code === "ro" ? "ro" : "en"));
+
+/* ---------- i18n ---------- */
+const UI = {
+  en: { search: "Search tools…", all: "All", fav: "★ Favorites", recent: "Recent", results: "Results", noMatch: "No tools match", toolScreen: "Tool", settings: "Settings", sound: "Sound effects", language: "Language", clearFav: "Clear favorites", clearRec: "Clear recents", close: "Close app", tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media" },
+  ro: { search: "Caută unelte…", all: "Toate", fav: "★ Favorite", recent: "Recente", results: "Rezultate", noMatch: "Nicio unealtă găsită", toolScreen: "Unealtă", settings: "Setări", sound: "Efecte sonore", language: "Limbă", clearFav: "Șterge favoritele", clearRec: "Șterge recentele", close: "Închide aplicația", tools: "Unelte", dev: "Developer", text: "Text", network: "Rețea", media: "Media" },
+};
+const T = k => (UI[lang] && UI[lang][k]) ?? UI.en[k] ?? k;
+const catName = k => T(k);
+// Romanian name/sub per tool id: [name, sub]
+const RO = {
+  password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], tts:["Text în Voce","Mesaj vocal în chat"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"],
+  text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"],
+  subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
+  download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"],
+};
+const tname = t => (lang === "ro" && RO[t.id]) ? RO[t.id][0] : t.name;
+const tsub = t => (lang === "ro" && RO[t.id]) ? RO[t.id][1] : t.sub;
 
 /* ---------- haptics / sound / toast ---------- */
 function haptic(k = "light") { try { tg?.HapticFeedback?.impactOccurred(k); } catch (_) {} }
@@ -63,6 +82,9 @@ const TOOLS = [
   { id: "passphrase", cat: "tools", icon: "lock-keyhole", name: "Passphrase", sub: "Memorable word-based password", kw: "diceware words secure", render: rPassphrase },
   { id: "units", cat: "tools", icon: "ruler", name: "Unit Convert", sub: "Length, mass, temp, data, speed", kw: "metric imperial measure", render: rUnits },
   { id: "datecalc", cat: "tools", icon: "calendar-days", name: "Date Calc", sub: "Days between / add days", kw: "age duration difference", render: rDateCalc },
+  { id: "countdown", cat: "tools", icon: "timer", name: "Countdown", sub: "Live countdown to a date", kw: "timer event", render: rCountdown },
+  { id: "calc", cat: "tools", icon: "percent", name: "Calculators", sub: "BMI · Loan · Tip", kw: "bmi loan tip math", render: rCalc },
+  { id: "fakeid", cat: "tools", icon: "user-round", name: "Fake Identity", sub: "Random test persona", kw: "mock data name address", render: rFakeId },
   { id: "tts", cat: "tools", icon: "mic", name: "Text to Speech", sub: "Voice message to your chat", kw: "voice speak audio", render: rTTS },
 
   // --- DEV ---
@@ -78,6 +100,7 @@ const TOOLS = [
   { id: "cron", cat: "dev", icon: "calendar-clock", name: "Cron Explainer", sub: "Cron expression → English", kw: "schedule crontab", render: rCron },
   { id: "regex", cat: "dev", icon: "regex", name: "Regex Tester", sub: "Live matches & groups", kw: "regular expression pattern", render: rRegex },
   { id: "binascii", cat: "dev", icon: "file-digit", name: "Text ⇄ Binary", sub: "ASCII to binary / hex", kw: "ascii bits encode", render: rBinAscii },
+  { id: "filechecksum", cat: "dev", icon: "file-check", name: "File Checksum", sub: "Hash any file (MD5/SHA)", kw: "hash verify integrity", render: rFileChecksum },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
@@ -113,6 +136,7 @@ const CATS = { tools: "Tools", dev: "Developer", text: "Text", network: "Network
    ========================================================================= */
 function show(view) {
   for (const v of ["home", "detail", "settings"]) $(`#${v}-view`).classList.toggle("hidden", v !== view);
+  try { const bb = tg?.BackButton; if (bb) { view === "home" ? bb.hide() : bb.show(); } } catch (_) {}
 }
 function iconsRefresh() { try { lucide.createIcons(); } catch (_) {} }
 
@@ -121,8 +145,8 @@ function cardHTML(t) {
   return `<button class="card-btn${fav}" data-tool="${t.id}" data-cat="${t.cat}">
     <i data-lucide="star" class="fav-star"></i>
     <span class="ico"><i data-lucide="${t.icon}"></i></span>
-    <span class="name">${esc(t.name)}</span>
-    <span class="sub">${esc(t.sub)}</span>
+    <span class="name">${esc(tname(t))}</span>
+    <span class="sub">${esc(tsub(t))}</span>
   </button>`;
 }
 function wireCards(root) {
@@ -137,9 +161,9 @@ function section(title, tools, extra = "") {
 const CAT_ICON = { all: "layout-grid", tools: "wrench", dev: "code", text: "type", network: "globe", media: "clapperboard" };
 function renderChips() {
   const bar = $("#cat-bar");
-  const entries = [["all", "All"], ...Object.entries(CATS)];
-  bar.innerHTML = entries.map(([k, label]) =>
-    `<button class="chip${activeCat === k ? " active" : ""}" data-cat="${k}"><i data-lucide="${CAT_ICON[k]}"></i> ${esc(label)}</button>`).join("");
+  const keys = ["all", ...Object.keys(CATS)];
+  bar.innerHTML = keys.map(k =>
+    `<button class="chip${activeCat === k ? " active" : ""}" data-cat="${k}"><i data-lucide="${CAT_ICON[k]}"></i> ${esc(catName(k))}</button>`).join("");
   bar.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => {
     activeCat = ch.dataset.cat; $("#search").value = ""; play("click"); haptic();
     renderHome();
@@ -154,15 +178,15 @@ function renderHome() {
   const host = $("#home-sections");
 
   if (q) {
-    const hits = TOOLS.filter(t => (t.name + " " + t.sub + " " + t.kw + " " + CATS[t.cat]).toLowerCase().includes(q));
-    host.innerHTML = hits.length ? section("Results", hits)
-      : `<div class="empty"><i data-lucide="search-x"></i><div>No tools match “${esc(q)}”</div></div>`;
+    const hits = TOOLS.filter(t => (t.name + " " + t.sub + " " + t.kw + " " + tname(t) + " " + tsub(t) + " " + catName(t.cat)).toLowerCase().includes(q));
+    host.innerHTML = hits.length ? section(T("results"), hits)
+      : `<div class="empty"><i data-lucide="search-x"></i><div>${T("noMatch")} “${esc(q)}”</div></div>`;
     wireCards(host); iconsRefresh(); return;
   }
 
   // Single category selected → show just that group.
   if (activeCat !== "all") {
-    host.innerHTML = section(CATS[activeCat], TOOLS.filter(t => t.cat === activeCat));
+    host.innerHTML = section(catName(activeCat), TOOLS.filter(t => t.cat === activeCat));
     wireCards(host); iconsRefresh(); window.scrollTo(0, 0); return;
   }
 
@@ -170,10 +194,10 @@ function renderHome() {
   let html = "";
   const favTools = favorites.map(byId).filter(Boolean);
   const recTools = recents.map(byId).filter(Boolean).filter(t => !favorites.includes(t.id));
-  if (favTools.length) html += section("★ Favorites", favTools);
-  if (recTools.length) html += section("Recent", recTools.slice(0, 4));
-  for (const [cat, label] of Object.entries(CATS)) {
-    html += section(label, TOOLS.filter(t => t.cat === cat));
+  if (favTools.length) html += section(T("fav"), favTools);
+  if (recTools.length) html += section(T("recent"), recTools.slice(0, 4));
+  for (const cat of Object.keys(CATS)) {
+    html += section(catName(cat), TOOLS.filter(t => t.cat === cat));
   }
   host.innerHTML = html;
   wireCards(host); iconsRefresh();
@@ -184,9 +208,9 @@ function openTool(id) {
   play("click"); haptic("medium");
   recents = [id, ...recents.filter(x => x !== id)].slice(0, 8); store.set("tk_recents", recents);
   show("detail");
-  $("#view-title").textContent = t.name;
-  $("#detail-title").textContent = t.name;
-  $("#detail-desc").textContent = t.sub;
+  $("#view-title").textContent = tname(t);
+  $("#detail-title").textContent = tname(t);
+  $("#detail-desc").textContent = tsub(t);
   const favBtn = $("#btn-fav"); favBtn.classList.toggle("on", favorites.includes(id));
   favBtn.onclick = () => {
     const on = favorites.includes(id);
@@ -199,7 +223,11 @@ function openTool(id) {
 
 $("#search").addEventListener("input", () => { if ($("#search").value.trim()) activeCat = "all"; renderHome(); });
 $("#btn-back").addEventListener("click", () => { play("click"); haptic(); renderHome(); });
-$("#btn-settings").addEventListener("click", () => { play("click"); haptic(); renderSettings(); });
+$("#btn-settings").addEventListener("click", () => {
+  play("click"); haptic();
+  $("#settings-view").classList.contains("hidden") ? renderSettings() : renderHome();
+});
+try { tg?.BackButton?.onClick(() => { play("click"); haptic(); renderHome(); }); } catch (_) {}
 
 /* ---------- generic form helper ---------- */
 function form(fieldsHTML, btnLabel, onRun, icon = "play") {
@@ -259,7 +287,7 @@ async function sha(algo, str) {
   const buf = await crypto.subtle.digest(algo, new TextEncoder().encode(str));
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
 }
-function md5(s){function rl(n,c){return(n<<c)|(n>>>(32-c))}function au(x,y){var l=(x&0xFFFF)+(y&0xFFFF),m=(x>>16)+(y>>16)+(l>>16);return(m<<16)|(l&0xFFFF)}function cmn(q,a,b,x,s,t){return au(rl(au(au(a,q),au(x,t)),s),b)}function ff(a,b,c,d,x,s,t){return cmn((b&c)|(~b&d),a,b,x,s,t)}function gg(a,b,c,d,x,s,t){return cmn((b&d)|(c&~d),a,b,x,s,t)}function hh(a,b,c,d,x,s,t){return cmn(b^c^d,a,b,x,s,t)}function ii(a,b,c,d,x,s,t){return cmn(c^(b|~d),a,b,x,s,t)}function tb(str){var n=str.length,b=[],i;for(i=0;i<n*8;i+=8)b[i>>5]|=(str.charCodeAt(i/8)&0xFF)<<(i%32);return b}var x=tb(unescape(encodeURIComponent(s))),len=s?unescape(encodeURIComponent(s)).length*8:0;x[len>>5]|=0x80<<(len%32);x[(((len+64)>>>9)<<4)+14]=len;var a=1732584193,b=-271733879,c=-1732584194,d=271733878,i;for(i=0;i<x.length;i+=16){var oa=a,ob=b,oc=c,od=d;a=ff(a,b,c,d,x[i],7,-680876936);d=ff(d,a,b,c,x[i+1],12,-389564586);c=ff(c,d,a,b,x[i+2],17,606105819);b=ff(b,c,d,a,x[i+3],22,-1044525330);a=ff(a,b,c,d,x[i+4],7,-176418897);d=ff(d,a,b,c,x[i+5],12,1200080426);c=ff(c,d,a,b,x[i+6],17,-1473231341);b=ff(b,c,d,a,x[i+7],22,-45705983);a=ff(a,b,c,d,x[i+8],7,1770035416);d=ff(d,a,b,c,x[i+9],12,-1958414417);c=ff(c,d,a,b,x[i+10],17,-42063);b=ff(b,c,d,a,x[i+11],22,-1990404162);a=ff(a,b,c,d,x[i+12],7,1804603682);d=ff(d,a,b,c,x[i+13],12,-40341101);c=ff(c,d,a,b,x[i+14],17,-1502002290);b=ff(b,c,d,a,x[i+15],22,1236535329);a=gg(a,b,c,d,x[i+1],5,-165796510);d=gg(d,a,b,c,x[i+6],9,-1069501632);c=gg(c,d,a,b,x[i+11],14,643717713);b=gg(b,c,d,a,x[i],20,-373897302);a=gg(a,b,c,d,x[i+5],5,-701558691);d=gg(d,a,b,c,x[i+10],9,38016083);c=gg(c,d,a,b,x[i+15],14,-660478335);b=gg(b,c,d,a,x[i+4],20,-405537848);a=gg(a,b,c,d,x[i+9],5,568446438);d=gg(d,a,b,c,x[i+14],9,-1019803690);c=gg(c,d,a,b,x[i+3],14,-187363961);b=gg(b,c,d,a,x[i+8],20,1163531501);a=gg(a,b,c,d,x[i+13],5,-1444681467);d=gg(d,a,b,c,x[i+2],9,-51403784);c=gg(c,d,a,b,x[i+7],14,1735328473);b=gg(b,c,d,a,x[i+12],20,-1926607734);a=hh(a,b,c,d,x[i+5],4,-378558);d=hh(d,a,b,c,x[i+8],11,-2022574463);c=hh(c,d,a,b,x[i+11],16,1839030562);b=hh(b,c,d,a,x[i+14],23,-35309556);a=hh(a,b,c,d,x[i+1],4,-1530992060);d=hh(d,a,b,c,x[i+4],11,1272893353);c=hh(c,d,a,b,x[i+7],16,-155497632);b=hh(b,c,d,a,x[i+10],23,-1094730640);a=hh(a,b,c,d,x[i+13],4,681279174);d=hh(d,a,b,c,x[i],11,-358537222);c=hh(c,d,a,b,x[i+3],16,-722521979);b=hh(b,c,d,a,x[i+6],23,76029189);a=hh(a,b,c,d,x[i+9],4,-640364487);d=hh(d,a,b,c,x[i+12],11,-421815835);c=hh(c,d,a,b,x[i+15],16,530742520);b=hh(b,c,d,a,x[i+2],23,-995338651);a=ii(a,b,c,d,x[i],6,-198630844);d=ii(d,a,b,c,x[i+7],10,1126891415);c=ii(c,d,a,b,x[i+14],15,-1416354905);b=ii(b,c,d,a,x[i+5],21,-57434055);a=ii(a,b,c,d,x[i+12],6,1700485571);d=ii(d,a,b,c,x[i+3],10,-1894986606);c=ii(c,d,a,b,x[i+10],15,-1051523);b=ii(b,c,d,a,x[i+1],21,-2054922799);a=ii(a,b,c,d,x[i+8],6,1873313359);d=ii(d,a,b,c,x[i+15],10,-30611744);c=ii(c,d,a,b,x[i+6],15,-1560198380);b=ii(b,c,d,a,x[i+13],21,1309151649);a=ii(a,b,c,d,x[i+4],6,-145523070);d=ii(d,a,b,c,x[i+11],10,-1120210379);c=ii(c,d,a,b,x[i+2],15,718787259);b=ii(b,c,d,a,x[i+9],21,-343485551);a=au(a,oa);b=au(b,ob);c=au(c,oc);d=au(d,od)}function rh(n){var s="",j;for(j=0;j<4;j++)s+=((n>>(j*8+4))&0x0F).toString(16)+((n>>(j*8))&0x0F).toString(16);return s}return rh(a)+rh(b)+rh(c)+rh(d)}
+function md5(s,raw){function rl(n,c){return(n<<c)|(n>>>(32-c))}function au(x,y){var l=(x&0xFFFF)+(y&0xFFFF),m=(x>>16)+(y>>16)+(l>>16);return(m<<16)|(l&0xFFFF)}function cmn(q,a,b,x,s,t){return au(rl(au(au(a,q),au(x,t)),s),b)}function ff(a,b,c,d,x,s,t){return cmn((b&c)|(~b&d),a,b,x,s,t)}function gg(a,b,c,d,x,s,t){return cmn((b&d)|(c&~d),a,b,x,s,t)}function hh(a,b,c,d,x,s,t){return cmn(b^c^d,a,b,x,s,t)}function ii(a,b,c,d,x,s,t){return cmn(c^(b|~d),a,b,x,s,t)}function tb(str){var n=str.length,b=[],i;for(i=0;i<n*8;i+=8)b[i>>5]|=(str.charCodeAt(i/8)&0xFF)<<(i%32);return b}var _u=raw?(s||""):unescape(encodeURIComponent(s)),x=tb(_u),len=_u.length*8;x[len>>5]|=0x80<<(len%32);x[(((len+64)>>>9)<<4)+14]=len;var a=1732584193,b=-271733879,c=-1732584194,d=271733878,i;for(i=0;i<x.length;i+=16){var oa=a,ob=b,oc=c,od=d;a=ff(a,b,c,d,x[i],7,-680876936);d=ff(d,a,b,c,x[i+1],12,-389564586);c=ff(c,d,a,b,x[i+2],17,606105819);b=ff(b,c,d,a,x[i+3],22,-1044525330);a=ff(a,b,c,d,x[i+4],7,-176418897);d=ff(d,a,b,c,x[i+5],12,1200080426);c=ff(c,d,a,b,x[i+6],17,-1473231341);b=ff(b,c,d,a,x[i+7],22,-45705983);a=ff(a,b,c,d,x[i+8],7,1770035416);d=ff(d,a,b,c,x[i+9],12,-1958414417);c=ff(c,d,a,b,x[i+10],17,-42063);b=ff(b,c,d,a,x[i+11],22,-1990404162);a=ff(a,b,c,d,x[i+12],7,1804603682);d=ff(d,a,b,c,x[i+13],12,-40341101);c=ff(c,d,a,b,x[i+14],17,-1502002290);b=ff(b,c,d,a,x[i+15],22,1236535329);a=gg(a,b,c,d,x[i+1],5,-165796510);d=gg(d,a,b,c,x[i+6],9,-1069501632);c=gg(c,d,a,b,x[i+11],14,643717713);b=gg(b,c,d,a,x[i],20,-373897302);a=gg(a,b,c,d,x[i+5],5,-701558691);d=gg(d,a,b,c,x[i+10],9,38016083);c=gg(c,d,a,b,x[i+15],14,-660478335);b=gg(b,c,d,a,x[i+4],20,-405537848);a=gg(a,b,c,d,x[i+9],5,568446438);d=gg(d,a,b,c,x[i+14],9,-1019803690);c=gg(c,d,a,b,x[i+3],14,-187363961);b=gg(b,c,d,a,x[i+8],20,1163531501);a=gg(a,b,c,d,x[i+13],5,-1444681467);d=gg(d,a,b,c,x[i+2],9,-51403784);c=gg(c,d,a,b,x[i+7],14,1735328473);b=gg(b,c,d,a,x[i+12],20,-1926607734);a=hh(a,b,c,d,x[i+5],4,-378558);d=hh(d,a,b,c,x[i+8],11,-2022574463);c=hh(c,d,a,b,x[i+11],16,1839030562);b=hh(b,c,d,a,x[i+14],23,-35309556);a=hh(a,b,c,d,x[i+1],4,-1530992060);d=hh(d,a,b,c,x[i+4],11,1272893353);c=hh(c,d,a,b,x[i+7],16,-155497632);b=hh(b,c,d,a,x[i+10],23,-1094730640);a=hh(a,b,c,d,x[i+13],4,681279174);d=hh(d,a,b,c,x[i],11,-358537222);c=hh(c,d,a,b,x[i+3],16,-722521979);b=hh(b,c,d,a,x[i+6],23,76029189);a=hh(a,b,c,d,x[i+9],4,-640364487);d=hh(d,a,b,c,x[i+12],11,-421815835);c=hh(c,d,a,b,x[i+15],16,530742520);b=hh(b,c,d,a,x[i+2],23,-995338651);a=ii(a,b,c,d,x[i],6,-198630844);d=ii(d,a,b,c,x[i+7],10,1126891415);c=ii(c,d,a,b,x[i+14],15,-1416354905);b=ii(b,c,d,a,x[i+5],21,-57434055);a=ii(a,b,c,d,x[i+12],6,1700485571);d=ii(d,a,b,c,x[i+3],10,-1894986606);c=ii(c,d,a,b,x[i+10],15,-1051523);b=ii(b,c,d,a,x[i+1],21,-2054922799);a=ii(a,b,c,d,x[i+8],6,1873313359);d=ii(d,a,b,c,x[i+15],10,-30611744);c=ii(c,d,a,b,x[i+6],15,-1560198380);b=ii(b,c,d,a,x[i+13],21,1309151649);a=ii(a,b,c,d,x[i+4],6,-145523070);d=ii(d,a,b,c,x[i+11],10,-1120210379);c=ii(c,d,a,b,x[i+2],15,718787259);b=ii(b,c,d,a,x[i+9],21,-343485551);a=au(a,oa);b=au(b,ob);c=au(c,oc);d=au(d,od)}function rh(n){var s="",j;for(j=0;j<4;j++)s+=((n>>(j*8+4))&0x0F).toString(16)+((n>>(j*8))&0x0F).toString(16);return s}return rh(a)+rh(b)+rh(c)+rh(d)}
 
 function rHashGen(c) {
   form(`<div class="field"><label>Text</label><textarea id="hgin" placeholder="Anything…"></textarea></div>`, "Hash", async () => {
@@ -954,31 +982,136 @@ function rCipher(c) {
   $("#ci-s").addEventListener("input", e => $("#ci-sv").textContent = e.target.value);
 }
 
+/* ---- File checksum (client-side) ---- */
+function rFileChecksum(c) {
+  let file = null;
+  c.innerHTML = `<div class="card"><div class="upload" id="fc-drop"><i data-lucide="file-check"></i><div id="fc-name">Choose any file</div></div><input type="file" id="fc-file" hidden><div id="fc-out" style="margin-top:14px"></div><p class="muted" style="margin-top:12px">Hashed entirely in your browser — the file is never uploaded.</p></div>`;
+  iconsRefresh();
+  $("#fc-drop").onclick = () => $("#fc-file").click();
+  $("#fc-file").onchange = async e => {
+    file = e.target.files[0]; if (!file) return;
+    $("#fc-name").textContent = `${file.name} · ${(file.size / 1024).toFixed(1)} KB`; $("#fc-drop").classList.add("active"); play("success");
+    const out = $("#fc-out"); out.innerHTML = spin() + " Hashing…";
+    try {
+      const buf = await file.arrayBuffer();
+      const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+      const [s1, s256] = await Promise.all([crypto.subtle.digest("SHA-1", buf), crypto.subtle.digest("SHA-256", buf)]);
+      // MD5 over raw bytes (latin1), chunked to avoid call-stack limits
+      const u8 = new Uint8Array(buf); let bin = ""; for (let i = 0; i < u8.length; i += 8192) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+      const m = md5(bin, true);
+      out.innerHTML = rowsHTML({ MD5: `<span class="v mono">${m}</span>`, "SHA-1": `<span class="v mono">${hex(s1)}</span>`, "SHA-256": `<span class="v mono" style="font-size:11px">${hex(s256)}</span>` }) + `<div class="btn-row" style="margin-top:12px">${copyBtn(hex(s256), "Copy SHA-256")}</div>`;
+      iconsRefresh(); notify();
+    } catch (err) { out.innerHTML = `<p class="status err">❌ ${esc(err.message || "error")}</p>`; }
+  };
+}
+
+/* ---- Fake identity generator ---- */
+const FN = "Alex Maria Ion Andrei Elena Sofia Luca David Ana Mihai Ioana Gabriel Daria Victor Nina Emil Clara Felix Lena Theo Ruby Noah Mila Leo Ada Max Vera Ivan Lea Omar".split(" ");
+const LN = "Pop Ionescu Popescu Stan Dumitru Rusu Novak Kovac Smith Jones Garcia Rossi Muller Chen Kim Silva Novak Horvat Weber Dubois Marin Barbu Cruz Ford Lang Reid Vance Hale".split(" ");
+const CITY = ["Bucharest","Cluj","Berlin","Lisbon","Austin","Osaka","Lyon","Milan","Porto","Prague","Oslo","Tallinn","Gdansk","Zurich","Leeds"];
+const STREET = ["Oak","Maple","Cedar","Pine","Birch","Elm","Willow","Aspen","Linden","Rowan"];
+const DOMAINS = ["example.com","mail.test","inbox.dev","demo.io","sample.net"];
+function rnd(a) { return a[crypto.getRandomValues(new Uint32Array(1))[0] % a.length]; }
+function rFakeId(c) {
+  c.innerHTML = `<div class="card"><div id="fi-out"></div><button class="btn" id="fi-gen" style="margin-top:14px"><i data-lucide="refresh-cw"></i> New identity</button><p class="muted" style="margin-top:12px">Random, fictitious data for testing/forms — not real people.</p></div>`;
+  const gen = () => {
+    const fn = rnd(FN), ln = rnd(LN), n = crypto.getRandomValues(new Uint32Array(1))[0];
+    const user = (fn + ln).toLowerCase() + (n % 1000);
+    const id = {
+      Name: `${fn} ${ln}`, Username: user, Email: `${fn.toLowerCase()}.${ln.toLowerCase()}@${rnd(DOMAINS)}`,
+      Phone: `+40 7${n % 10}${(n % 90 + 10)} ${n % 900 + 100} ${n % 900 + 100}`,
+      Address: `${n % 200 + 1} ${rnd(STREET)} St, ${rnd(CITY)}`,
+      "Date of birth": `${1970 + n % 35}-${String(n % 12 + 1).padStart(2, "0")}-${String(n % 28 + 1).padStart(2, "0")}`,
+    };
+    $("#fi-out").innerHTML = rowsHTML(Object.fromEntries(Object.entries(id).map(([k, v]) => [k, `<span class="v mono" style="font-size:13px">${esc(v)}</span>`]))) + `<div class="btn-row" style="margin-top:12px">${copyBtn(Object.entries(id).map(([k, v]) => k + ": " + v).join("\n"), "Copy all")}</div>`;
+    iconsRefresh();
+  };
+  $("#fi-gen").onclick = () => { haptic(); play("success"); gen(); };
+  gen();
+}
+
+/* ---- Countdown ---- */
+let _cdTimer = null;
+function rCountdown(c) {
+  const def = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 16);
+  c.innerHTML = `<div class="card"><div class="field"><label>Target date & time</label><input type="datetime-local" id="cd-in" value="${def}"></div>
+    <button class="btn" id="cd-go"><i data-lucide="timer"></i> Start countdown</button>
+    <div id="cd-out" style="margin-top:18px"></div></div>`;
+  iconsRefresh();
+  const tick = target => {
+    const out = $("#cd-out"); if (!out) { clearInterval(_cdTimer); return; }
+    let s = Math.floor((target - Date.now()) / 1000);
+    const past = s < 0; s = Math.abs(s);
+    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    out.innerHTML = `<div class="big-out" style="font-size:30px">${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}</div><p class="muted center">${past ? "elapsed since" : "remaining until"} ${new Date(target).toLocaleString()}</p>`;
+  };
+  $("#cd-go").onclick = () => {
+    const target = new Date($("#cd-in").value).getTime(); if (isNaN(target)) return;
+    play("click"); haptic(); if (_cdTimer) clearInterval(_cdTimer); tick(target); _cdTimer = setInterval(() => tick(target), 1000);
+  };
+}
+
+/* ---- Calculators (BMI / Loan / Tip) ---- */
+function rCalc(c) {
+  form(`<div class="seg" id="ca-seg"><button data-m="bmi" class="active">BMI</button><button data-m="loan">Loan</button><button data-m="tip">Tip</button></div><div id="ca-fields"></div>`, "Calculate", doCalc, "percent");
+  const seg = $("#ca-seg"), fields = $("#ca-fields");
+  const render = m => {
+    fields.innerHTML = m === "bmi"
+      ? `<div class="btn-row"><div class="field" style="flex:1"><label>Weight (kg)</label><input type="number" class="mono" id="ca-w" value="70"></div><div class="field" style="flex:1"><label>Height (cm)</label><input type="number" class="mono" id="ca-h" value="175"></div></div>`
+      : m === "loan"
+      ? `<div class="field"><label>Amount</label><input type="number" class="mono" id="ca-amt" value="10000"></div><div class="btn-row"><div class="field" style="flex:1"><label>Rate % / yr</label><input type="number" class="mono" id="ca-rate" value="6.5"></div><div class="field" style="flex:1"><label>Years</label><input type="number" class="mono" id="ca-yrs" value="5"></div></div>`
+      : `<div class="field"><label>Bill amount</label><input type="number" class="mono" id="ca-bill" value="50"></div><div class="btn-row"><div class="field" style="flex:1"><label>Tip %</label><input type="number" class="mono" id="ca-pct" value="15"></div><div class="field" style="flex:1"><label>Split</label><input type="number" class="mono" id="ca-ppl" value="1"></div></div>`;
+  };
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { seg.querySelector(".active").classList.remove("active"); b.classList.add("active"); play("click"); render(b.dataset.m); }));
+  render("bmi");
+  function doCalc() {
+    const m = seg.querySelector(".active").dataset.m;
+    if (m === "bmi") {
+      const w = +$("#ca-w").value, h = +$("#ca-h").value / 100; if (!w || !h) return;
+      const bmi = w / (h * h); const cat = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese";
+      resultCard(`<div class="big-out">${bmi.toFixed(1)}</div><p class="center"><span class="pill ${bmi < 18.5 || bmi >= 30 ? "warn" : bmi < 25 ? "ok" : "warn"}">${cat}</span></p>`);
+    } else if (m === "loan") {
+      const p = +$("#ca-amt").value, r = +$("#ca-rate").value / 100 / 12, n = +$("#ca-yrs").value * 12; if (!p || !n) return;
+      const pay = r ? p * r / (1 - Math.pow(1 + r, -n)) : p / n; const total = pay * n;
+      resultCard(rowsHTML({ "Monthly payment": `<b>${pay.toFixed(2)}</b>`, "Total repaid": total.toFixed(2), "Total interest": (total - p).toFixed(2) }));
+    } else {
+      const bill = +$("#ca-bill").value, pct = +$("#ca-pct").value, ppl = Math.max(1, +$("#ca-ppl").value); if (!bill) return;
+      const tip = bill * pct / 100, total = bill + tip;
+      resultCard(rowsHTML({ Tip: tip.toFixed(2), Total: `<b>${total.toFixed(2)}</b>`, [`Per person (${ppl})`]: (total / ppl).toFixed(2) }));
+    }
+    play("success");
+  }
+}
+
 /* =========================================================================
    SETTINGS
    ========================================================================= */
 function renderSettings() {
-  show("settings"); $("#view-title").textContent = "Settings";
+  show("settings"); $("#view-title").textContent = T("settings");
   const v = $("#settings-view");
   v.innerHTML = `<div style="margin:6px 0 18px"></div>
     <div class="group">
-      <div class="switch-row"><span>Sound effects</span><input type="checkbox" class="sw" id="setsound" ${soundOn ? "checked" : ""}></div>
+      <div class="switch-row"><span>${T("sound")}</span><input type="checkbox" class="sw" id="setsound" ${soundOn ? "checked" : ""}></div>
+      <div class="list-row" id="setlang"><span>${T("language")}</span><b style="color:var(--accent);font-family:var(--mono)">${lang === "ro" ? "Română" : "English"}</b></div>
     </div>
     <div class="group">
-      <div class="list-row" id="setclearfav"><span>Clear favorites</span><i data-lucide="star-off"></i></div>
-      <div class="list-row" id="setclearrec"><span>Clear recents</span><i data-lucide="history"></i></div>
+      <div class="list-row" id="setclearfav"><span>${T("clearFav")}</span><i data-lucide="star-off"></i></div>
+      <div class="list-row" id="setclearrec"><span>${T("clearRec")}</span><i data-lucide="history"></i></div>
     </div>
-    <div class="group"><div class="list-row" id="setclose"><span style="color:var(--err)">Close app</span><i data-lucide="log-out"></i></div></div>
-    <p class="foot">Toolkit v4 ${USER ? "· " + esc(USER.first_name) : ""}<br>self-hosted · ${TOOLS.length} tools</p>`;
+    <div class="group"><div class="list-row" id="setclose"><span style="color:var(--err)">${T("close")}</span><i data-lucide="log-out"></i></div></div>
+    <p class="foot">Toolkit v5 ${USER ? "· " + esc(USER.first_name) : ""}<br>self-hosted · ${TOOLS.length} tools</p>`;
   $("#setsound").onchange = e => { soundOn = e.target.checked; store.set("tk_sound", soundOn); if (soundOn) play("click"); };
-  $("#setclearfav").onclick = () => { favorites = []; store.set("tk_favs", []); toast("Favorites cleared"); haptic(); };
-  $("#setclearrec").onclick = () => { recents = []; store.set("tk_recents", []); toast("Recents cleared"); haptic(); };
+  $("#setlang").onclick = () => { lang = lang === "en" ? "ro" : "en"; store.set("tk_lang", lang); play("click"); haptic(); applyLang(); renderSettings(); };
+  $("#setclearfav").onclick = () => { favorites = []; store.set("tk_favs", []); toast(T("clearFav")); haptic(); };
+  $("#setclearrec").onclick = () => { recents = []; store.set("tk_recents", []); toast(T("clearRec")); haptic(); };
   $("#setclose").onclick = () => { try { tg?.close(); } catch (_) {} };
   iconsRefresh();
 }
+function applyLang() { const s = $("#search"); if (s) s.placeholder = T("search"); }
 
 /* ---------- boot ---------- */
 function applyTheme() { document.body.classList.toggle("dark", tg?.colorScheme === "dark"); }
 applyTheme(); tg?.onEvent?.("themeChanged", applyTheme);
+applyLang();
 renderHome();
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }
