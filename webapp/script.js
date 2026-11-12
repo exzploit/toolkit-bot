@@ -60,6 +60,9 @@ const TOOLS = [
   { id: "decision", cat: "tools", icon: "dices", name: "Decision", sub: "Coin flip / dice roll", kw: "random coin dice", render: rDecision },
   { id: "pwcheck", cat: "tools", icon: "shield", name: "Password Strength", sub: "Entropy & weakness check", kw: "security strong audit", render: rPwCheck },
   { id: "currency", cat: "tools", icon: "banknote", name: "Currency", sub: "Live exchange rates", kw: "money convert forex usd eur", render: rCurrency },
+  { id: "passphrase", cat: "tools", icon: "lock-keyhole", name: "Passphrase", sub: "Memorable word-based password", kw: "diceware words secure", render: rPassphrase },
+  { id: "units", cat: "tools", icon: "ruler", name: "Unit Convert", sub: "Length, mass, temp, data, speed", kw: "metric imperial measure", render: rUnits },
+  { id: "datecalc", cat: "tools", icon: "calendar-days", name: "Date Calc", sub: "Days between / add days", kw: "age duration difference", render: rDateCalc },
   { id: "tts", cat: "tools", icon: "mic", name: "Text to Speech", sub: "Voice message to your chat", kw: "voice speak audio", render: rTTS },
 
   // --- DEV ---
@@ -73,12 +76,16 @@ const TOOLS = [
   { id: "diff", cat: "dev", icon: "git-compare", name: "Text Diff", sub: "Compare two blocks of text", kw: "compare changes", render: rDiff },
   { id: "baseconv", cat: "dev", icon: "calculator", name: "Base Convert", sub: "bin ⇄ oct ⇄ dec ⇄ hex", kw: "radix binary hexadecimal number", render: rBaseConv },
   { id: "cron", cat: "dev", icon: "calendar-clock", name: "Cron Explainer", sub: "Cron expression → English", kw: "schedule crontab", render: rCron },
+  { id: "regex", cat: "dev", icon: "regex", name: "Regex Tester", sub: "Live matches & groups", kw: "regular expression pattern", render: rRegex },
+  { id: "binascii", cat: "dev", icon: "file-digit", name: "Text ⇄ Binary", sub: "ASCII to binary / hex", kw: "ascii bits encode", render: rBinAscii },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
   { id: "morse", cat: "text", icon: "radio", name: "Morse", sub: "Text ⇄ Morse code", kw: "dot dash", render: rMorse },
   { id: "caseconv", cat: "text", icon: "case-sensitive", name: "Case Convert", sub: "UPPER / lower / Title / camel", kw: "uppercase snake kebab", render: rCase },
   { id: "counter", cat: "text", icon: "pilcrow", name: "Word Count", sub: "Chars, words, lines", kw: "length statistics", render: rCounter },
+  { id: "lorem", cat: "text", icon: "text-quote", name: "Lorem Ipsum", sub: "Placeholder text generator", kw: "dummy filler", render: rLorem },
+  { id: "cipher", cat: "text", icon: "replace", name: "Caesar / ROT13", sub: "Shift-cipher encode/decode", kw: "rot13 encrypt", render: rCipher },
 
   // --- NETWORK ---
   { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4/IPv6 CIDR breakdown", kw: "cidr netmask ip", render: rSubnet },
@@ -799,6 +806,152 @@ function rExifView(c) {
       notify();
     } catch (err) { out.innerHTML = `<p class="status err">❌ Could not read: ${esc(err.message || "error")}</p>`; }
   };
+}
+
+/* =========================================================================
+   MORE TOOLS (v5.1)
+   ========================================================================= */
+
+/* ---- Passphrase generator ---- */
+const WORDS = "able acid acre army atom aunt baby band bank barn bath bean bear beat bell belt bird blue boat bone book boot brave bread brick brief broom brush cabin cable cake camp cane card cave chef city clay clean clear cliff cloud coal coast coin cold cool coral corn crab crane crisp crown cube curl dark dawn deep deer desk diet dire dish dock door dove draw dream drum dusk dust eagle earth east echo edge fair farm fern fire fish flag flame fox frost gate gear gift glow goat gold grape grass green grove hawk hill hint hive holly honey ice iron ivory jade jazz jelly jewel jolly judge keen kind king kite lake lamp leaf lemon lime lion lotus lunar maple march marsh mint mist moon moss navy neon nest noble north oak oasis ocean olive onyx opal orbit otter owl palm peak pearl pine pond pony quartz quick quiet rain reef ridge river robin rock rose ruby sage salt sand sea seed shade shell silk slate snow solar spark spire star stone storm swan tide tiger toad torch trail tulip vine violet wave whale wheat willow wind wolf wood zinc".split(" ");
+function rPassphrase(c) {
+  c.innerHTML = `<div class="card">
+    <div class="big-out" id="pp" style="font-size:18px">· · · ·</div>
+    <p class="muted center" id="pp-meta"></p>
+    <div class="field" style="margin-top:14px"><div class="slider-row"><input type="range" id="pp-n" min="3" max="8" value="4"><b id="pp-nv">4</b></div></div>
+    <div class="switch-row"><span>Capitalize words</span><input type="checkbox" class="sw" id="pp-cap" checked></div>
+    <div class="switch-row"><span>Add a number</span><input type="checkbox" class="sw" id="pp-num" checked></div>
+    <div class="field" style="margin-top:12px"><label>Separator</label><select id="pp-sep"><option value="-">dash (-)</option><option value=".">dot (.)</option><option value="_">underscore (_)</option><option value=" ">space</option></select></div>
+    <div class="btn-row" style="margin-top:14px"><button class="btn" id="pp-gen"><i data-lucide="refresh-cw"></i> Generate</button><button class="btn ghost" id="pp-copy" style="flex:0 0 52px"><i data-lucide="copy"></i></button></div></div>`;
+  const gen = () => {
+    const n = +$("#pp-n").value, sep = $("#pp-sep").value, cap = $("#pp-cap").checked;
+    const picks = Array.from({ length: n }, () => { const w = WORDS[crypto.getRandomValues(new Uint32Array(1))[0] % WORDS.length]; return cap ? w[0].toUpperCase() + w.slice(1) : w; });
+    let pass = picks.join(sep);
+    if ($("#pp-num").checked) pass += sep + (crypto.getRandomValues(new Uint32Array(1))[0] % 90 + 10);
+    $("#pp").textContent = pass;
+    $("#pp-meta").textContent = `${n} words · ~${Math.round(n * Math.log2(WORDS.length))}+ bits · easy to remember`;
+  };
+  $("#pp-n").addEventListener("input", e => { $("#pp-nv").textContent = e.target.value; gen(); });
+  ["pp-cap", "pp-num", "pp-sep"].forEach(id => $("#" + id).addEventListener("change", gen));
+  $("#pp-gen").addEventListener("click", () => { haptic(); play("success"); gen(); });
+  $("#pp-copy").addEventListener("click", () => copy($("#pp").textContent));
+  gen();
+}
+
+/* ---- Unit converter ---- */
+const UNITS = {
+  Length: { m: 1, km: 1000, cm: .01, mm: .001, mi: 1609.344, yd: .9144, ft: .3048, in: .0254 },
+  Mass: { g: 1, kg: 1000, mg: .001, lb: 453.592, oz: 28.3495, ton: 1e6 },
+  Data: { B: 1, KB: 1024, MB: 1048576, GB: 1073741824, TB: 1099511627776, bit: .125 },
+  Speed: { "m/s": 1, "km/h": .277778, mph: .44704, knot: .514444, "ft/s": .3048 },
+  Temperature: { "°C": "C", "°F": "F", K: "K" },
+};
+function rUnits(c) {
+  form(`<div class="field"><label>Category</label><select id="u-cat">${Object.keys(UNITS).map(k => `<option>${k}</option>`).join("")}</select></div>
+    <div class="field"><label>Amount</label><input type="number" class="mono" id="u-amt" value="1"></div>
+    <div class="btn-row"><div class="field" style="flex:1"><label>From</label><select id="u-from"></select></div><div class="field" style="flex:1"><label>To</label><select id="u-to"></select></div></div>`, "Convert", doU, "ruler");
+  const fill = () => { const cat = $("#u-cat").value, ks = Object.keys(UNITS[cat]); const o = ks.map(k => `<option>${k}</option>`).join(""); $("#u-from").innerHTML = o; $("#u-to").innerHTML = o; $("#u-to").selectedIndex = Math.min(1, ks.length - 1); doU(); };
+  $("#u-cat").addEventListener("change", fill);
+  function doU() {
+    const cat = $("#u-cat").value, amt = parseFloat($("#u-amt").value), from = $("#u-from").value, to = $("#u-to").value;
+    if (!isFinite(amt)) return;
+    let res;
+    if (cat === "Temperature") { let c0 = from === "°C" ? amt : from === "°F" ? (amt - 32) * 5 / 9 : amt - 273.15; res = to === "°C" ? c0 : to === "°F" ? c0 * 9 / 5 + 32 : c0 + 273.15; }
+    else res = amt * UNITS[cat][from] / UNITS[cat][to];
+    resultCard(`<div class="big-out">${(+res.toPrecision(8)).toLocaleString(undefined, { maximumFractionDigits: 8 })}</div><p class="muted center">${amt} ${esc(from)} = ${(+res.toPrecision(8))} ${esc(to)}</p>`); play("success");
+  }
+  fill();
+}
+
+/* ---- Date calculator ---- */
+function rDateCalc(c) {
+  const today = new Date().toISOString().slice(0, 10);
+  form(`<div class="seg" id="dc-seg"><button data-m="between" class="active">Between dates</button><button data-m="add">Add days</button></div><div id="dc-fields"></div>`, "Calculate", doDC, "calendar-days");
+  const seg = $("#dc-seg"); const fields = $("#dc-fields");
+  const render = m => { fields.innerHTML = m === "between"
+    ? `<div class="field"><label>Start</label><input type="date" id="dc-a" value="${today}"></div><div class="field"><label>End</label><input type="date" id="dc-b" value="${today}"></div>`
+    : `<div class="field"><label>Date</label><input type="date" id="dc-a" value="${today}"></div><div class="field"><label>Days to add (negative to subtract)</label><input type="number" class="mono" id="dc-n" value="30"></div>`; };
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { seg.querySelector(".active").classList.remove("active"); b.classList.add("active"); play("click"); render(b.dataset.m); }));
+  render("between");
+  function doDC() {
+    const m = seg.querySelector(".active").dataset.m;
+    if (m === "between") {
+      const a = new Date($("#dc-a").value), b = new Date($("#dc-b").value);
+      if (isNaN(a) || isNaN(b)) return setStatus("❌ Pick both dates", "err");
+      const days = Math.round((b - a) / 864e5);
+      resultCard(rowsHTML({ Days: Math.abs(days).toLocaleString(), Weeks: (Math.abs(days) / 7).toFixed(1), Months: (Math.abs(days) / 30.44).toFixed(1), Years: (Math.abs(days) / 365.25).toFixed(2) }));
+    } else {
+      const a = new Date($("#dc-a").value); const n = parseInt($("#dc-n").value) || 0;
+      if (isNaN(a)) return setStatus("❌ Pick a date", "err");
+      a.setDate(a.getDate() + n);
+      resultCard(`<div class="big-out" style="font-size:18px">${a.toISOString().slice(0, 10)}</div><p class="muted center">${a.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>`);
+    }
+    play("success");
+  }
+}
+
+/* ---- Regex tester ---- */
+function rRegex(c) {
+  c.innerHTML = `<div class="card">
+    <div class="field"><label>Pattern</label><input type="text" class="mono" id="rx-p" placeholder="\\\\b\\\\w+@\\\\w+\\\\.\\\\w+"></div>
+    <div class="field"><label>Flags</label><input type="text" class="mono" id="rx-f" value="g" placeholder="gi"></div>
+    <div class="field"><label>Test text</label><textarea id="rx-t" placeholder="Text to search…"></textarea></div>
+    <div id="rx-out"></div></div>`;
+  const upd = () => {
+    const p = $("#rx-p").value, f = $("#rx-f").value, t = $("#rx-t").value, out = $("#rx-out");
+    if (!p) { out.innerHTML = `<p class="muted">Enter a pattern</p>`; return; }
+    let re; try { re = new RegExp(p, f.includes("g") ? f : f + "g"); } catch (e) { out.innerHTML = `<p class="status err">❌ ${esc(e.message)}</p>`; return; }
+    const matches = [...t.matchAll(re)];
+    const hl = esc(t).replace(/\n/g, "<br>");
+    let marked = hl, count = matches.length;
+    try { marked = esc(t).replace(new RegExp(p, f.includes("g") ? f : f + "g"), m => `<mark style="background:${"var(--accent)"};color:#052e2b;border-radius:3px">${esc(m)}</mark>`).replace(/\n/g, "<br>"); } catch (_) {}
+    out.innerHTML = `<div style="margin-bottom:8px"><span class="pill ${count ? "ok" : "warn"}">${count} match${count === 1 ? "" : "es"}</span></div><div class="out-area">${marked || "<span class='muted'>no text</span>"}</div>` +
+      (matches.length && matches[0].length > 1 ? `<label style="margin-top:12px">Groups (first match)</label>${rowsHTML(Object.fromEntries(matches[0].slice(1).map((g, i) => [`$${i + 1}`, `<span class="v mono">${esc(g ?? "")}</span>`])))}` : "");
+  };
+  ["rx-p", "rx-f", "rx-t"].forEach(id => $("#" + id).addEventListener("input", upd)); upd();
+}
+
+/* ---- Text ⇄ binary/hex ---- */
+function rBinAscii(c) {
+  form(`<div class="seg" id="ba-seg"><button data-m="enc" class="active">Text → Binary</button><button data-m="dec">Binary → Text</button></div>
+    <div class="field"><label>Format</label><select id="ba-fmt"><option value="bin">Binary</option><option value="hex">Hex</option></select></div>
+    <div class="field"><textarea id="ba-in" class="mono" placeholder="Input…"></textarea></div>`, "Convert", () => {
+    const m = $("#ba-seg .active").dataset.m, fmt = $("#ba-fmt").value, v = $("#ba-in").value;
+    let out;
+    try {
+      if (m === "enc") out = [...v].map(ch => { const code = ch.codePointAt(0); return fmt === "bin" ? code.toString(2).padStart(8, "0") : code.toString(16).padStart(2, "0"); }).join(" ");
+      else { const parts = v.trim().split(/\s+/); out = parts.map(p => String.fromCodePoint(parseInt(p, fmt === "bin" ? 2 : 16))).join(""); }
+    } catch (_) { setStatus("❌ Invalid input", "err"); return; }
+    resultCard(`<div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>`); play("success");
+  }, "file-digit");
+  segWire("ba-seg");
+}
+
+/* ---- Lorem ipsum ---- */
+const LOREM = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum".split(" ");
+function rLorem(c) {
+  form(`<div class="field"><label>Type</label><select id="lo-t"><option value="para">Paragraphs</option><option value="sent">Sentences</option><option value="word">Words</option></select></div>
+    <div class="field"><div class="slider-row"><input type="range" id="lo-n" min="1" max="10" value="3"><b id="lo-nv">3</b></div></div>`, "Generate", () => {
+    const n = +$("#lo-n").value, t = $("#lo-t").value;
+    const rnd = x => LOREM[Math.floor(Math.random() * LOREM.length)];
+    const sentence = () => { const len = 8 + Math.floor(Math.random() * 10); let s = Array.from({ length: len }, rnd).join(" "); return s[0].toUpperCase() + s.slice(1) + "."; };
+    const para = () => Array.from({ length: 4 + Math.floor(Math.random() * 3) }, sentence).join(" ");
+    let out = t === "para" ? Array.from({ length: n }, para).join("\n\n") : t === "sent" ? Array.from({ length: n }, sentence).join(" ") : Array.from({ length: n }, rnd).join(" ");
+    resultCard(`<div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>`); play("success");
+  }, "text-quote");
+  $("#lo-n").addEventListener("input", e => $("#lo-nv").textContent = e.target.value);
+}
+
+/* ---- Caesar / ROT13 ---- */
+function rCipher(c) {
+  form(`<div class="field"><textarea id="ci-in" placeholder="Text…"></textarea></div>
+    <div class="field"><label>Shift <b id="ci-sv" style="color:var(--accent)">13</b> (13 = ROT13)</label><div class="slider-row"><input type="range" id="ci-s" min="0" max="25" value="13"></div></div>`, "Apply", () => {
+    const s = (+$("#ci-s").value) % 26, v = $("#ci-in").value;
+    const shift = (str, k) => str.replace(/[a-z]/gi, ch => { const base = ch <= "Z" ? 65 : 97; return String.fromCharCode((ch.charCodeAt(0) - base + k + 26) % 26 + base); });
+    const enc = shift(v, s), dec = shift(v, -s);
+    resultCard(`<label>Encoded (+${s})</label><div class="out-area">${esc(enc)}</div><div class="btn-row" style="margin:10px 0">${copyBtn(enc, "Copy encoded")}</div><label>Decoded (−${s})</label><div class="out-area">${esc(dec)}</div>`); play("success");
+  }, "replace");
+  $("#ci-s").addEventListener("input", e => $("#ci-sv").textContent = e.target.value);
 }
 
 /* =========================================================================
