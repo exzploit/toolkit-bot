@@ -31,10 +31,10 @@ const catName = k => T(k);
 // Romanian name/sub per tool id: [name, sub]
 const RO = {
   password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
-  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"],
-  text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"],
+  text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"], linetools:["Unelte Linii","Sortează, elimină dubluri…"], findreplace:["Caută & Înlocuiește","Înlocuire cu regex"], textanalysis:["Analiză Text","Lizibilitate & cuvinte cheie"], textclean:["Curăță Text","Diacritice, ghilimele, spații"], ciphers:["Cifruri Clasice","Atbash & Vigenère"],
   subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
-  download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"],
+  download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"], stego:["Steganografie","Ascunde un mesaj în imagine"],
 };
 const tname = t => (lang === "ro" && RO[t.id]) ? RO[t.id][0] : t.name;
 const tsub = t => (lang === "ro" && RO[t.id]) ? RO[t.id][1] : t.sub;
@@ -110,6 +110,9 @@ const TOOLS = [
   { id: "csvjson", cat: "dev", icon: "table", name: "CSV ⇄ JSON", sub: "Convert tabular data", kw: "spreadsheet convert", render: rCsvJson },
   { id: "validator", cat: "dev", icon: "badge-check", name: "Validator", sub: "IBAN & card (Luhn)", kw: "checksum credit card", render: rValidator },
   { id: "markdown", cat: "dev", icon: "file-text", name: "Markdown", sub: "Live preview", kw: "md render preview", render: rMarkdown },
+  { id: "hashid", cat: "dev", icon: "search-check", name: "Hash Identifier", sub: "What kind of hash is this?", kw: "detect type md5 sha", render: rHashId },
+  { id: "escapes", cat: "dev", icon: "ampersand", name: "Escapes", sub: "HTML / Unicode / Punycode", kw: "entities encode escape", render: rEscapes },
+  { id: "basex", cat: "dev", icon: "boxes", name: "Base32 / Base58", sub: "Encode / decode", kw: "base32 base58 bitcoin", render: rBaseX },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
@@ -118,6 +121,11 @@ const TOOLS = [
   { id: "counter", cat: "text", icon: "pilcrow", name: "Word Count", sub: "Chars, words, lines", kw: "length statistics", render: rCounter },
   { id: "lorem", cat: "text", icon: "text-quote", name: "Lorem Ipsum", sub: "Placeholder text generator", kw: "dummy filler", render: rLorem },
   { id: "cipher", cat: "text", icon: "replace", name: "Caesar / ROT13", sub: "Shift-cipher encode/decode", kw: "rot13 encrypt", render: rCipher },
+  { id: "linetools", cat: "text", icon: "list-ordered", name: "Line Tools", sub: "Sort, dedupe, reverse…", kw: "lines unique blank", render: rLineTools },
+  { id: "findreplace", cat: "text", icon: "replace-all", name: "Find & Replace", sub: "Regex-powered replace", kw: "substitute regex", render: rFindReplace },
+  { id: "textanalysis", cat: "text", icon: "scan-text", name: "Text Analysis", sub: "Readability & keywords", kw: "flesch density stats", render: rTextAnalysis },
+  { id: "textclean", cat: "text", icon: "eraser", name: "Text Cleaner", sub: "Accents, smart quotes, spaces", kw: "diacritics normalize", render: rTextClean },
+  { id: "ciphers", cat: "text", icon: "square-asterisk", name: "Classic Ciphers", sub: "Atbash & Vigenère", kw: "vigenere atbash encrypt", render: rCiphers },
 
   // --- NETWORK ---
   { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4/IPv6 CIDR breakdown", kw: "cidr netmask ip", render: rSubnet },
@@ -138,6 +146,7 @@ const TOOLS = [
   { id: "download", cat: "media", icon: "download", name: "Downloader", sub: "YouTube / Instagram / TikTok", kw: "video yt ig", render: rDownload },
   { id: "exif", cat: "media", icon: "image-off", name: "EXIF Stripper", sub: "Remove photo metadata", kw: "gps privacy image", render: rExif },
   { id: "exifview", cat: "media", icon: "scan-eye", name: "EXIF Viewer", sub: "See a photo's hidden metadata", kw: "gps camera inspect", render: rExifView },
+  { id: "stego", cat: "media", icon: "image-plus", name: "Steganography", sub: "Hide a message in an image", kw: "secret hidden lsb", render: rStego },
 ];
 const byId = id => TOOLS.find(t => t.id === id);
 const CATS = { tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media" };
@@ -1241,6 +1250,221 @@ function rMarkdown(c) {
   c.innerHTML = `<div class="card"><div class="field"><label>Markdown</label><textarea id="md-in" class="mono" style="min-height:140px" placeholder="# Hello\n**bold** and *italic*\n- a list\n[link](https://x.com)"></textarea></div><label>Preview</label><div id="md-out" class="out-area" style="font-family:var(--sans)"></div></div>`;
   const upd = () => { $("#md-out").innerHTML = mdToHtml($("#md-in").value) || "<span class='muted'>…</span>"; };
   $("#md-in").addEventListener("input", upd); upd();
+}
+
+/* =========================================================================
+   MORE TOOLS (v6) — hash id, text pack, encoding & ciphers, steganography
+   ========================================================================= */
+
+/* ---- Hash identifier ---- */
+function identifyHash(h) {
+  h = h.trim();
+  if (/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(h)) return ["bcrypt"];
+  if (/^\$argon2(id|i|d)\$/.test(h)) return ["Argon2"];
+  if (/^\$6\$/.test(h)) return ["sha512crypt ($6$)"];
+  if (/^\$5\$/.test(h)) return ["sha256crypt ($5$)"];
+  if (/^\$1\$/.test(h)) return ["md5crypt ($1$)"];
+  if (/^[0-9a-f]+$/i.test(h)) {
+    const map = { 32: ["MD5", "NTLM", "MD4"], 40: ["SHA-1", "RIPEMD-160"], 56: ["SHA-224", "SHA3-224"], 64: ["SHA-256", "SHA3-256", "BLAKE2s"], 96: ["SHA-384", "SHA3-384"], 128: ["SHA-512", "SHA3-512", "BLAKE2b", "Whirlpool"], 16: ["CRC-64", "MySQL<4.1"] };
+    return map[h.length] || null;
+  }
+  if (/^[A-Za-z0-9+/]+={0,2}$/.test(h) && h.length % 4 === 0) return ["Base64 (encoded, not a raw hash)"];
+  return null;
+}
+function rHashId(c) {
+  form(`<div class="field"><label>Hash</label><input type="text" class="mono" id="hi-in" placeholder="paste a hash"></div>`, "Identify", () => {
+    const r = identifyHash($("#hi-in").value); if (!r) { setStatus("❌ Unrecognized format", "err"); play("error"); return; }
+    resultCard(`<label>Likely type${r.length > 1 ? "s" : ""}</label><div>${r.map(x => `<span class="pill info" style="margin:3px 3px 0 0">${esc(x)}</span>`).join("")}</div>`); play("success");
+  }, "search-check");
+}
+
+/* ---- Base32 / Base58 ---- */
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+function b32encode(bytes) { let bits = 0, val = 0, out = ""; for (const b of bytes) { val = (val << 8) | b; bits += 8; while (bits >= 5) { out += B32[(val >>> (bits - 5)) & 31]; bits -= 5; } } if (bits > 0) out += B32[(val << (5 - bits)) & 31]; while (out.length % 8) out += "="; return out; }
+function b32decode(str) { str = str.replace(/=+$/, "").toUpperCase(); let bits = 0, val = 0; const out = []; for (const ch of str) { const i = B32.indexOf(ch); if (i < 0) throw new Error("bad"); val = (val << 5) | i; bits += 5; if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; } } return new Uint8Array(out); }
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function b58encode(bytes) { let zeros = 0; while (zeros < bytes.length && bytes[zeros] === 0) zeros++; const digits = [0]; for (let i = zeros; i < bytes.length; i++) { let carry = bytes[i]; for (let j = 0; j < digits.length; j++) { carry += digits[j] << 8; digits[j] = carry % 58; carry = (carry / 58) | 0; } while (carry) { digits.push(carry % 58); carry = (carry / 58) | 0; } } let out = "1".repeat(zeros); for (let i = digits.length - 1; i >= 0; i--) out += B58[digits[i]]; return out; }
+function b58decode(str) { let zeros = 0; while (zeros < str.length && str[zeros] === "1") zeros++; const bytes = [0]; for (let i = zeros; i < str.length; i++) { let carry = B58.indexOf(str[i]); if (carry < 0) throw new Error("bad"); for (let j = 0; j < bytes.length; j++) { carry += bytes[j] * 58; bytes[j] = carry & 255; carry >>= 8; } while (carry) { bytes.push(carry & 255); carry >>= 8; } } const out = new Uint8Array(zeros + bytes.length); for (let i = 0; i < bytes.length; i++) out[zeros + bytes.length - 1 - i] = bytes[i]; return out; }
+function rBaseX(c) {
+  form(`<div class="field"><label>Base</label><select id="bx-b"><option value="32">Base32</option><option value="58">Base58</option></select></div>
+    <div class="seg" id="bx-seg"><button data-m="enc" class="active">Encode</button><button data-m="dec">Decode</button></div>
+    <div class="field"><textarea id="bx-in" class="mono" placeholder="Input…"></textarea></div>`, "Convert", () => {
+    const base = $("#bx-b").value, m = $("#bx-seg .active").dataset.m, v = $("#bx-in").value;
+    let out; try { if (m === "enc") { const by = new TextEncoder().encode(v); out = base === "32" ? b32encode(by) : b58encode(by); } else { out = new TextDecoder().decode(base === "32" ? b32decode(v.trim()) : b58decode(v.trim())); } }
+    catch (_) { setStatus("❌ Invalid input", "err"); play("error"); return; }
+    resultCard(`<div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>`); play("success");
+  }, "boxes");
+  segWire("bx-seg");
+}
+
+/* ---- Escapes: HTML / Unicode / Punycode ---- */
+const puny = (() => {
+  const base = 36, tMin = 1, tMax = 26, skew = 38, damp = 700, iBias = 72, iN = 128, maxInt = 2147483647;
+  const adapt = (d, n, f) => { d = f ? Math.floor(d / damp) : d >> 1; d += Math.floor(d / n); let k = 0; for (; d > ((base - tMin) * tMax) >> 1; k += base) d = Math.floor(d / (base - tMin)); return Math.floor(k + (base - tMin + 1) * d / (d + skew)); };
+  const d2c = d => d + 22 + 75 * (d < 26);
+  const c2d = c => c - 48 < 10 ? c - 22 : c - 65 < 26 ? c - 65 : c - 97;
+  function decode(input) {
+    const out = []; let n = iN, i = 0, bias = iBias; let b = input.lastIndexOf("-");
+    for (let j = 0; j < (b < 0 ? 0 : b); j++) out.push(input.charCodeAt(j));
+    for (let idx = b < 0 ? 0 : b + 1; idx < input.length;) {
+      const oldi = i; for (let w = 1, k = base; ; k += base) { const digit = c2d(input.charCodeAt(idx++)); i += digit * w; const t = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias; if (digit < t) break; w *= (base - t); }
+      const len = out.length + 1; bias = adapt(i - oldi, len, oldi === 0); n += Math.floor(i / len); i %= len; out.splice(i++, 0, n);
+    }
+    return String.fromCodePoint(...out);
+  }
+  function encode(str) {
+    const input = [...str].map(c => c.codePointAt(0)); const out = []; let n = iN, delta = 0, bias = iBias;
+    for (const c of input) if (c < 0x80) out.push(c); let h = out.length; const basic = h; if (basic) out.push(45);
+    while (h < input.length) {
+      let m = maxInt; for (const c of input) if (c >= n && c < m) m = c;
+      delta += (m - n) * (h + 1); n = m;
+      for (const c of input) { if (c < n) delta++; if (c === n) { let q = delta; for (let k = base; ; k += base) { const t = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias; if (q < t) break; out.push(d2c(t + (q - t) % (base - t))); q = Math.floor((q - t) / (base - t)); } out.push(d2c(q)); bias = adapt(delta, h + 1, h === basic); delta = 0; h++; } }
+      delta++; n++;
+    }
+    return String.fromCharCode(...out);
+  }
+  const toASCII = s => s.split(".").map(l => /[^\x00-\x7f]/.test(l) ? "xn--" + encode(l) : l).join(".");
+  const toUnicode = s => s.split(".").map(l => l.toLowerCase().startsWith("xn--") ? decode(l.slice(4)) : l).join(".");
+  return { toASCII, toUnicode };
+})();
+function rEscapes(c) {
+  form(`<div class="field"><label>Type</label><select id="es-t"><option value="html">HTML entities</option><option value="uni">Unicode \\u</option><option value="puny">Punycode (domain)</option></select></div>
+    <div class="seg" id="es-seg"><button data-m="enc" class="active">Encode</button><button data-m="dec">Decode</button></div>
+    <div class="field"><textarea id="es-in" class="mono" placeholder="Input…"></textarea></div>`, "Convert", () => {
+    const t = $("#es-t").value, m = $("#es-seg .active").dataset.m, v = $("#es-in").value; let out;
+    try {
+      if (t === "html") out = m === "enc" ? v.replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch])) : (() => { const ta = document.createElement("textarea"); ta.innerHTML = v; return ta.value; })();
+      else if (t === "uni") out = m === "enc" ? [...v].map(c => { const cp = c.codePointAt(0); return cp > 0xffff ? "\\u{" + cp.toString(16) + "}" : "\\u" + cp.toString(16).padStart(4, "0"); }).join("") : v.replace(/\\u\{([0-9a-f]+)\}|\\u([0-9a-f]{4})/gi, (_, a, b) => String.fromCodePoint(parseInt(a || b, 16)));
+      else out = m === "enc" ? puny.toASCII(v.trim()) : puny.toUnicode(v.trim());
+    } catch (e) { setStatus("❌ " + esc(e.message || "error"), "err"); play("error"); return; }
+    resultCard(`<div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>`); play("success");
+  }, "ampersand");
+  segWire("es-seg");
+}
+
+/* ---- Line tools ---- */
+function rLineTools(c) {
+  c.innerHTML = `<div class="card"><div class="field"><textarea id="lt-in" class="mono" style="min-height:120px" placeholder="One item per line…"></textarea></div>
+    <div class="seg" id="lt-ops" style="flex-wrap:wrap">
+      <button data-op="sort">Sort ↑</button><button data-op="sortd">Sort ↓</button><button data-op="uniq">Unique</button><button data-op="noblank">No blanks</button><button data-op="rev">Reverse</button><button data-op="trim">Trim</button><button data-op="shuf">Shuffle</button></div>
+    <div id="lt-out" class="result"></div></div>`;
+  const ops = {
+    sort: a => [...a].sort((x, y) => x.localeCompare(y)), sortd: a => [...a].sort((x, y) => y.localeCompare(x)),
+    uniq: a => [...new Set(a)], noblank: a => a.filter(l => l.trim()), rev: a => [...a].reverse(),
+    trim: a => a.map(l => l.trim()), shuf: a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; },
+  };
+  $("#lt-ops").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    play("click"); haptic(); const lines = $("#lt-in").value.split(/\n/); const out = ops[b.dataset.op](lines).join("\n");
+    $("#lt-out").innerHTML = `<div class="card"><div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div></div>`; iconsRefresh();
+  }));
+}
+
+/* ---- Find & replace ---- */
+function rFindReplace(c) {
+  form(`<div class="field"><label>Text</label><textarea id="fr-t" placeholder="Text…"></textarea></div>
+    <div class="btn-row"><div class="field" style="flex:1"><label>Find (regex)</label><input class="mono" id="fr-f"></div><div class="field" style="flex:1"><label>Replace</label><input class="mono" id="fr-r"></div></div>
+    <div class="field"><label>Flags</label><input class="mono" id="fr-fl" value="g"></div>`, "Replace", () => {
+    let re; try { re = new RegExp($("#fr-f").value, $("#fr-fl").value); } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); return; }
+    const out = $("#fr-t").value.replace(re, $("#fr-r").value);
+    resultCard(`<div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>`); play("success");
+  }, "replace-all");
+}
+
+/* ---- Text analysis ---- */
+function countSyll(w) { w = w.toLowerCase().replace(/[^a-z]/g, ""); if (!w) return 0; const m = w.match(/[aeiouy]+/g); let n = m ? m.length : 1; if (w.endsWith("e")) n--; return Math.max(1, n); }
+function rTextAnalysis(c) {
+  c.innerHTML = `<div class="card"><div class="field"><textarea id="ta-in" style="min-height:120px" placeholder="Paste text…"></textarea></div><div id="ta-out"></div></div>`;
+  const stop = new Set("the a an and or but of to in on for with is are was were be as at by it this that from your you we our".split(" "));
+  const upd = () => {
+    const t = $("#ta-in").value.trim(); if (!t) { $("#ta-out").innerHTML = `<p class="muted">Enter text to analyze</p>`; return; }
+    const words = t.split(/\s+/).filter(Boolean), wc = words.length;
+    const sentences = (t.match(/[.!?]+/g) || []).length || 1;
+    const syll = words.reduce((s, w) => s + countSyll(w), 0);
+    const flesch = 206.835 - 1.015 * (wc / sentences) - 84.6 * (syll / wc);
+    const grade = 0.39 * (wc / sentences) + 11.8 * (syll / wc) - 15.59;
+    const freq = {}; for (const w of words.map(w => w.toLowerCase().replace(/[^a-z0-9']/g, "")).filter(w => w && !stop.has(w))) freq[w] = (freq[w] || 0) + 1;
+    const top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    $("#ta-out").innerHTML = rowsHTML({ Words: wc, Characters: t.length, Sentences: sentences, "Reading time": Math.max(1, Math.round(wc / 200)) + " min", "Flesch ease": flesch.toFixed(0), "Grade level": Math.max(0, grade).toFixed(0) })
+      + (top.length ? `<label style="margin-top:12px">Top keywords</label>${rowsHTML(Object.fromEntries(top.map(([k, v]) => [k, v + "×"])))}` : "");
+  };
+  $("#ta-in").addEventListener("input", upd); upd();
+}
+
+/* ---- Text cleaner ---- */
+function rTextClean(c) {
+  form(`<div class="field"><textarea id="tc-in" placeholder="Text…"></textarea></div>
+    <div class="switch-row"><span>Remove accents</span><input type="checkbox" class="sw" id="tc-acc" checked></div>
+    <div class="switch-row"><span>Straighten quotes & dashes</span><input type="checkbox" class="sw" id="tc-q" checked></div>
+    <div class="switch-row"><span>Collapse spaces</span><input type="checkbox" class="sw" id="tc-sp" checked></div>`, "Clean", () => {
+    let s = $("#tc-in").value;
+    if ($("#tc-acc").checked) s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if ($("#tc-q").checked) s = s.replace(/[\u2018\u2019\u201B]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, "-").replace(/\u2026/g, "...");
+    if ($("#tc-sp").checked) s = s.replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").trim();
+    resultCard(`<div class="out-area">${esc(s)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(s)}</div>`); play("success");
+  }, "eraser");
+}
+
+/* ---- Classic ciphers: Atbash & Vigenère ---- */
+function atbash(s) { return s.replace(/[a-z]/gi, ch => { const b = ch <= "Z" ? 65 : 97; return String.fromCharCode(b + 25 - (ch.charCodeAt(0) - b)); }); }
+function vigenere(s, key, dec) { key = (key || "").replace(/[^a-z]/gi, "").toLowerCase(); if (!key) return s; let ki = 0; return s.replace(/[a-z]/gi, ch => { const b = ch <= "Z" ? 65 : 97; let k = key.charCodeAt(ki % key.length) - 97; if (dec) k = (26 - k) % 26; ki++; return String.fromCharCode((ch.charCodeAt(0) - b + k) % 26 + b); }); }
+function rCiphers(c) {
+  form(`<div class="seg" id="cp-seg"><button data-m="atbash" class="active">Atbash</button><button data-m="vig">Vigenère</button></div>
+    <div class="field hidden" id="cp-key"><label>Key</label><input type="text" id="cp-k" placeholder="SECRET"></div>
+    <div class="field"><textarea id="cp-in" placeholder="Text…"></textarea></div>
+    <div class="seg" id="cp-dir"><button data-m="enc" class="active">Encode</button><button data-m="dec">Decode</button></div>`, "Apply", () => {
+    const mode = $("#cp-seg .active").dataset.m, dir = $("#cp-dir .active").dataset.m, v = $("#cp-in").value;
+    const out = mode === "atbash" ? atbash(v) : vigenere(v, $("#cp-k").value, dir === "dec");
+    resultCard(`<div class="out-area">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>`); play("success");
+  }, "square-asterisk");
+  segWire("cp-seg"); segWire("cp-dir");
+  $("#cp-seg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => $("#cp-key").classList.toggle("hidden", $("#cp-seg .active").dataset.m !== "vig")));
+}
+
+/* ---- Steganography (LSB in PNG) ---- */
+function loadImgFile(file) { return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = () => rej(new Error("Could not read image")); img.src = URL.createObjectURL(file); }); }
+async function stegoCanvas(file) { const img = await loadImgFile(file); const cv = document.createElement("canvas"); cv.width = img.naturalWidth; cv.height = img.naturalHeight; const ctx = cv.getContext("2d"); ctx.drawImage(img, 0, 0); return { cv, ctx }; }
+async function stegoHide(file, msg) {
+  const { cv, ctx } = await stegoCanvas(file); const id = ctx.getImageData(0, 0, cv.width, cv.height), d = id.data;
+  const bytes = new TextEncoder().encode(msg), len = bytes.length;
+  const all = Uint8Array.from([(len >>> 24) & 255, (len >>> 16) & 255, (len >>> 8) & 255, len & 255, ...bytes]);
+  const totalBits = all.length * 8, cap = Math.floor(d.length / 4) * 3;
+  if (totalBits > cap) throw new Error(`Message too big (max ~${Math.floor(cap / 8)} bytes for this image)`);
+  let bi = 0; for (let i = 0; i < d.length && bi < totalBits; i++) { if (i % 4 === 3) continue; d[i] = (d[i] & 0xFE) | ((all[bi >> 3] >> (7 - (bi & 7))) & 1); bi++; }
+  ctx.putImageData(id, 0, 0); return cv.toDataURL("image/png");
+}
+async function stegoReveal(file) {
+  const { cv, ctx } = await stegoCanvas(file); const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+  const bits = []; for (let i = 0; i < d.length; i++) { if (i % 4 === 3) continue; bits.push(d[i] & 1); }
+  const rb = off => { let b = 0; for (let k = 0; k < 8; k++) b = (b << 1) | bits[off + k]; return b; };
+  const len = (rb(0) << 24) | (rb(8) << 16) | (rb(16) << 8) | rb(24);
+  if (len <= 0 || len > bits.length / 8 - 4) throw new Error("No hidden message found");
+  const out = new Uint8Array(len); for (let i = 0; i < len; i++) out[i] = rb(32 + i * 8);
+  return new TextDecoder().decode(out);
+}
+function rStego(c) {
+  c.innerHTML = `<div class="card"><div class="seg" id="sg-seg"><button data-m="hide" class="active">Hide</button><button data-m="reveal">Reveal</button></div><div id="sg-body"></div></div>`;
+  const seg = $("#sg-seg");
+  const render = m => {
+    const body = $("#sg-body");
+    body.innerHTML = `<div class="upload" id="sg-drop"><i data-lucide="${m === "hide" ? "image-plus" : "scan-eye"}"></i><div id="sg-name">${m === "hide" ? "Choose a cover image" : "Choose a stego image"}</div></div><input type="file" id="sg-file" accept="image/*" hidden>`
+      + (m === "hide" ? `<div class="field" style="margin-top:12px"><textarea id="sg-msg" placeholder="Secret message…"></textarea></div><button class="btn" id="sg-go"><i data-lucide="lock"></i> Hide & download PNG</button><p class="muted" style="margin-top:10px">⚠️ Send the result as a <b>File</b>, not a photo — Telegram re-compresses photos and would destroy the hidden data.</p>` : "")
+      + `<div id="sg-out" style="margin-top:12px"></div>`;
+    let file = null;
+    $("#sg-drop").onclick = () => $("#sg-file").click();
+    $("#sg-file").onchange = async e => {
+      file = e.target.files[0]; if (!file) return; $("#sg-name").textContent = file.name; $("#sg-drop").classList.add("active"); play("success");
+      if (m === "reveal") { const out = $("#sg-out"); out.innerHTML = spin() + " Reading…"; try { const msg = await stegoReveal(file); out.innerHTML = `<label>Hidden message</label><div class="out-area">${esc(msg)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(msg)}</div>`; iconsRefresh(); notify(); } catch (err) { out.innerHTML = `<p class="status err">❌ ${esc(err.message)}</p>`; } }
+    };
+    if (m === "hide") $("#sg-go").onclick = async () => {
+      if (!file) return toast("Pick an image first", "err"); const msg = $("#sg-msg").value; if (!msg) return toast("Enter a message", "err");
+      play("click"); haptic(); const out = $("#sg-out"); out.innerHTML = spin() + " Encoding…";
+      try { const url = await stegoHide(file, msg); const a = document.createElement("a"); a.href = url; a.download = "stego.png"; a.click(); out.innerHTML = `<p class="status ok">✅ Saved stego.png</p>`; play("success"); notify(); }
+      catch (err) { out.innerHTML = `<p class="status err">❌ ${esc(err.message)}</p>`; play("error"); }
+    };
+    iconsRefresh();
+  };
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { seg.querySelector(".active").classList.remove("active"); b.classList.add("active"); play("click"); render(b.dataset.m); }));
+  render("hide");
 }
 
 /* =========================================================================

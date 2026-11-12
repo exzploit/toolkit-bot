@@ -1,6 +1,6 @@
 /* Toolkit service worker — cache the app shell for instant, offline-capable loads.
    Never caches /api/* or /telegram/* (those must always hit the network). */
-const CACHE = "toolkit-v5.5";
+const CACHE = "toolkit-v6";
 const SHELL = [
   "./",
   "index.html",
