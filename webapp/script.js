@@ -31,7 +31,7 @@ const catName = k => T(k);
 // Romanian name/sub per tool id: [name, sub]
 const RO = {
   password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
-  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"], pwned:["Parolă Compromisă","E parola în scurgeri de date?"], hmac:["HMAC","Hash cu cheie (SHA-1/256/384/512)"], bcrypt:["Bcrypt","Hash și verificare parole"], jwtsign:["Semnare JWT","Creează și semnează un token"],
   text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"], linetools:["Unelte Linii","Sortează, elimină dubluri…"], findreplace:["Caută & Înlocuiește","Înlocuire cu regex"], textanalysis:["Analiză Text","Lizibilitate & cuvinte cheie"], textclean:["Curăță Text","Diacritice, ghilimele, spații"], ciphers:["Cifruri Clasice","Atbash & Vigenère"], aidetect:["Detector AI","Verifică text/fișiere pentru AI"],
   subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
   download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"], stego:["Steganografie","Ascunde un mesaj în imagine"],
@@ -83,6 +83,7 @@ const TOOLS = [
   { id: "pwcheck", cat: "tools", icon: "shield", name: "Password Strength", sub: "Entropy & weakness check", kw: "security strong audit", render: rPwCheck },
   { id: "currency", cat: "tools", icon: "banknote", name: "Currency", sub: "Live exchange rates", kw: "money convert forex usd eur", render: rCurrency },
   { id: "passphrase", cat: "tools", icon: "lock-keyhole", name: "Passphrase", sub: "Memorable word-based password", kw: "diceware words secure", render: rPassphrase },
+  { id: "pwned", cat: "tools", icon: "shield-x", name: "Pwned Password", sub: "Is a password in known breaches?", kw: "hibp leak breach compromised check", render: rPwned },
   { id: "units", cat: "tools", icon: "ruler", name: "Unit Convert", sub: "Length, mass, temp, data, speed", kw: "metric imperial measure", render: rUnits },
   { id: "datecalc", cat: "tools", icon: "calendar-days", name: "Date Calc", sub: "Days between / add days", kw: "age duration difference", render: rDateCalc },
   { id: "countdown", cat: "tools", icon: "timer", name: "Countdown", sub: "Live countdown to a date", kw: "timer event", render: rCountdown },
@@ -113,6 +114,9 @@ const TOOLS = [
   { id: "hashid", cat: "dev", icon: "search-check", name: "Hash Identifier", sub: "What kind of hash is this?", kw: "detect type md5 sha", render: rHashId },
   { id: "escapes", cat: "dev", icon: "ampersand", name: "Escapes", sub: "HTML / Unicode / Punycode", kw: "entities encode escape", render: rEscapes },
   { id: "basex", cat: "dev", icon: "boxes", name: "Base32 / Base58", sub: "Encode / decode", kw: "base32 base58 bitcoin", render: rBaseX },
+  { id: "hmac", cat: "dev", icon: "key-square", name: "HMAC", sub: "Keyed hash (SHA-1/256/384/512)", kw: "signature mac authenticate", render: rHmac },
+  { id: "bcrypt", cat: "dev", icon: "lock-keyhole", name: "Bcrypt", sub: "Hash & verify passwords", kw: "password hash verify salt", render: rBcrypt },
+  { id: "jwtsign", cat: "dev", icon: "stamp", name: "JWT Signer", sub: "Create & sign a token (HS256+)", kw: "jwt token hs256 create sign", render: rJwtSign },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
@@ -1497,6 +1501,118 @@ function rAiDetect(c) {
       play("success"); notify();
     } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); }
   };
+}
+
+/* =========================================================================
+   SECURITY PACK (v6.2) — pwned password, HMAC, bcrypt, JWT signer
+   All client-side: secrets never leave the device.
+   ========================================================================= */
+const toHex = bytes => [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, "0")).join("");
+const b64 = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+const b64u = bytes => b64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+async function hmacBytes(algo, key, msg) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), { name: "HMAC", hash: algo }, false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(msg)));
+}
+function safeEqual(a, b) { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; }
+
+/* ---- Pwned password (HIBP k-anonymity, fully in-browser) ---- */
+function rPwned(c) {
+  form(`<div class="field"><label>Password to check</label><input type="password" id="pn-in" autocomplete="off" placeholder="Enter a password"></div>
+    <p class="muted">Private by design: the password is hashed in your browser and only the first 5 characters of that hash are sent (k-anonymity). The password itself never leaves your device.</p>`, "Check", async () => {
+    const pw = $("#pn-in").value; if (!pw) { setStatus("Enter a password", "err"); return; }
+    await serverRun("Checking breach database…", async () => {
+      const h = (await sha("SHA-1", pw)).toUpperCase(), prefix = h.slice(0, 5), suffix = h.slice(5);
+      let res;
+      try { res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`); }
+      catch (_) { setStatus("❌ Could not reach the breach database", "err"); play("error"); return; }
+      if (!res.ok) { setStatus(`❌ Breach database returned ${res.status}`, "err"); play("error"); return; }
+      let count = 0;
+      for (const line of (await res.text()).split("\n")) { const [s, n] = line.trim().split(":"); if (s === suffix) { count = parseInt(n, 10) || 0; break; } }
+      setStatus("");
+      if (count > 0) {
+        resultCard(`<p class="status err">🚨 Found in ${count.toLocaleString()} known breaches</p><p class="muted center">Don't use this password anywhere. Anyone can look it up.</p>`);
+        play("error"); notify("warning");
+      } else {
+        resultCard(`<p class="status ok">✅ Not found in known breaches</p><p class="muted center">That's a good sign, not a guarantee — a weak password can still be guessed. Use a long, unique one.</p>`);
+        play("success"); notify();
+      }
+    });
+  }, "shield-x");
+}
+
+/* ---- HMAC ---- */
+function rHmac(c) {
+  form(`<div class="field"><label>Algorithm</label><select id="hm-a"><option>SHA-256</option><option>SHA-1</option><option>SHA-384</option><option>SHA-512</option></select></div>
+    <div class="field"><label>Secret key</label><input type="text" class="mono" id="hm-k" placeholder="secret"></div>
+    <div class="field"><label>Message</label><textarea id="hm-m" class="mono" placeholder="Message…"></textarea></div>
+    <div class="field"><label>Verify against (optional)</label><input type="text" class="mono" id="hm-v" placeholder="expected hex or base64"></div>`, "Compute", async () => {
+    const key = $("#hm-k").value; if (!key) { setStatus("Enter a secret key", "err"); return; }
+    const mac = await hmacBytes($("#hm-a").value, key, $("#hm-m").value), hx = toHex(mac), b = b64(mac);
+    const exp = $("#hm-v").value.trim();
+    let verdict = "";
+    if (exp) { const ok = safeEqual(exp.toLowerCase(), hx) || safeEqual(exp, b); verdict = `<p class="center" style="margin-top:12px">${ok ? '<span class="pill ok">✓ Matches</span>' : '<span class="pill err">✗ Does not match</span>'}</p>`; }
+    setStatus("");
+    resultCard(rowsHTML({ Hex: `<span class="v mono" style="font-size:12px">${hx}</span>`, Base64: `<span class="v mono" style="font-size:12px">${b}</span>` }) + verdict + `<div class="btn-row" style="margin-top:12px">${copyBtn(hx, "Copy hex")}</div>`);
+    play("success");
+  }, "key-square");
+}
+
+/* ---- Bcrypt (bcryptjs, in-browser) ---- */
+function rBcrypt(c) {
+  const BC = window.dcodeIO?.bcrypt || window.bcrypt;
+  const bcHash = (pw, cost) => new Promise((res, rej) => BC.hash(pw, cost, (e, h) => e ? rej(e) : res(h)));
+  const bcCompare = (pw, hash) => new Promise((res, rej) => BC.compare(pw, hash, (e, ok) => e ? rej(e) : res(ok)));
+  form(`<div class="seg" id="bc-seg"><button data-m="hash" class="active">Hash</button><button data-m="verify">Verify</button></div>
+    <div class="field"><label>Password</label><input type="password" id="bc-pw" autocomplete="off"></div>
+    <div id="bc-extra"></div>`, "Run", async () => {
+    if (!BC) { setStatus("❌ bcrypt library failed to load (check your connection)", "err"); return; }
+    const m = $("#bc-seg .active").dataset.m, pw = $("#bc-pw").value;
+    if (!pw) { setStatus("Enter a password", "err"); return; }
+    const tooLong = new TextEncoder().encode(pw).length > 72;
+    try {
+      if (m === "hash") {
+        const cost = +$("#bc-cost").value;
+        setStatus(spin() + " Hashing (cost " + cost + ")…");
+        const h = await bcHash(pw, cost); setStatus("");
+        resultCard(`<div class="out-area">${esc(h)}</div>${tooLong ? `<p class="muted" style="margin-top:8px">⚠️ bcrypt only uses the first 72 bytes of a password.</p>` : ""}<div class="btn-row" style="margin-top:12px">${copyBtn(h)}</div>`);
+        play("success");
+      } else {
+        const hash = $("#bc-h").value.trim();
+        if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(hash)) { setStatus("❌ That doesn't look like a bcrypt hash", "err"); return; }
+        setStatus(spin() + " Verifying…");
+        const ok = await bcCompare(pw, hash); setStatus("");
+        resultCard(`<p class="center">${ok ? '<span class="pill ok">✓ Password matches</span>' : '<span class="pill err">✗ Does not match</span>'}</p>`);
+        play(ok ? "success" : "error");
+      }
+    } catch (e) { setStatus("❌ " + esc(e.message || "Failed"), "err"); play("error"); }
+  }, "lock-keyhole");
+  const extra = m => { $("#bc-extra").innerHTML = m === "hash"
+    ? `<div class="field"><label>Cost factor <b id="bc-cv" style="color:var(--accent)">10</b> <span class="muted">(higher = slower & stronger)</span></label><div class="slider-row"><input type="range" id="bc-cost" min="4" max="12" value="10"></div></div>`
+    : `<div class="field"><label>Bcrypt hash</label><input type="text" class="mono" id="bc-h" placeholder="$2b$10$…"></div>`;
+    if (m === "hash") $("#bc-cost").addEventListener("input", e => $("#bc-cv").textContent = e.target.value); };
+  $("#bc-seg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { $("#bc-seg .active").classList.remove("active"); b.classList.add("active"); play("click"); haptic(); extra(b.dataset.m); }));
+  extra("hash");
+}
+
+/* ---- JWT signer (HS256/384/512) ---- */
+function rJwtSign(c) {
+  const now = Math.floor(Date.now() / 1000);
+  form(`<div class="field"><label>Algorithm</label><select id="js-a"><option value="HS256">HS256</option><option value="HS384">HS384</option><option value="HS512">HS512</option></select></div>
+    <div class="field"><label>Payload (JSON)</label><textarea id="js-p" class="mono" style="min-height:120px">${esc(JSON.stringify({ sub: "1234567890", name: "John Doe", iat: now }, null, 2))}</textarea></div>
+    <div class="field"><label>Expires in (minutes, optional)</label><input type="number" class="mono" id="js-e" placeholder="e.g. 60"></div>
+    <div class="field"><label>Secret</label><input type="text" class="mono" id="js-s" placeholder="your-256-bit-secret"></div>`, "Sign", async () => {
+    const secret = $("#js-s").value; if (!secret) { setStatus("Enter a secret", "err"); return; }
+    let payload; try { payload = JSON.parse($("#js-p").value); if (payload === null || typeof payload !== "object" || Array.isArray(payload)) throw new Error("Payload must be a JSON object"); } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); return; }
+    const mins = parseFloat($("#js-e").value); if (isFinite(mins) && mins > 0) payload.exp = Math.floor(Date.now() / 1000 + mins * 60);
+    const alg = $("#js-a").value, enc = o => b64u(new TextEncoder().encode(JSON.stringify(o)));
+    const data = enc({ alg, typ: "JWT" }) + "." + enc(payload);
+    const sig = await hmacBytes("SHA-" + alg.slice(2), secret, data);
+    const token = data + "." + b64u(sig);
+    setStatus("");
+    resultCard(`<div class="out-area" style="word-break:break-all">${esc(token)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(token, "Copy token")}</div><p class="muted" style="margin-top:10px">Signed in your browser — the secret never leaves your device. HS* only (RS/ES need a private key).</p>`);
+    play("success");
+  }, "stamp");
 }
 
 /* =========================================================================
