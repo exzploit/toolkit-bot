@@ -39,6 +39,10 @@ text-to-speech.
 URL inspector, phone metadata, username existence check, Google dork builder,
 breach check (HIBP), public Telegram profile.
 
+**Network extras:** IPv6 expand/compress/subnet, MAC vendor lookup (offline IEEE
+table; refresh with `deploy/update-oui.sh`), Wake-on-LAN packet builder, transfer-time
+calculator, ASN/BGP lookup (live data from RIPEstat), port lookup.
+
 **Media:** video downloader (yt-dlp), EXIF/metadata stripper.
 
 ## Architecture

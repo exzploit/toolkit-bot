@@ -248,6 +248,14 @@ async def h_dns(request):
     return _ok(await network.dns_query(b.get("domain", ""), b.get("type", "A")))
 
 
+async def h_asn(request):
+    user = _auth(request)
+    b = await _json_body(request)
+    if not _cooldown_ok(user.id, "asn", 3):
+        return _ok({"success": False, "error": "Please wait a few seconds between lookups."})
+    return _ok(await network.asn_lookup(b.get("query", "")))
+
+
 async def h_phone(request):
     _auth(request)
     b = await _json_body(request)
@@ -461,6 +469,7 @@ def build_api_routes() -> list:
         web.post("/api/ssl", h_ssl),
         web.post("/api/dns", h_dns),
         web.post("/api/subdomains", h_subdomains),
+        web.post("/api/asn", h_asn),
         web.post("/api/me", h_me),
         web.post("/api/usage", h_usage),
         web.post("/api/admin", h_admin),

@@ -441,3 +441,121 @@ async def inspect_url(url: str) -> dict:
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+# --------------------------------------------------------------------------- #
+# ASN / BGP lookup (RIPEstat public data API — a fixed host; user input is only
+# ever sent as a validated query-string value, never as a URL)
+# --------------------------------------------------------------------------- #
+_RIPE = "https://stat.ripe.net/data/{}/data.json"
+_ASN_CACHE: dict[str, tuple[float, dict]] = {}
+_ASN_CACHE_TTL = 300
+_ASN_BODY_CAP = 4 * 1024 * 1024
+_ASN_RE = re.compile(r"^(?:AS)?(\d{1,10})$", re.I)
+
+
+def parse_asn_query(raw: str) -> tuple[str, str] | None:
+    """Classify input as ('asn', '13335') / ('ip', '1.1.1.1') / ('prefix', '1.1.1.0/24'), or None."""
+    q = (raw or "").strip()
+    if not q or len(q) > 64:
+        return None
+    m = _ASN_RE.match(q)
+    if m:
+        n = int(m.group(1))
+        return ("asn", str(n)) if 0 < n < 2**32 else None
+    try:
+        if "/" in q:
+            net = ipaddress.ip_network(q, strict=False)
+            return ("prefix", str(net))
+        return ("ip", str(ipaddress.ip_address(q)))
+    except ValueError:
+        return None
+
+
+async def _ripe(session, name: str, resource: str) -> dict | None:
+    """One RIPEstat call. Returns the 'data' object, or None on any failure."""
+    try:
+        async with session.get(_RIPE.format(name), params={"resource": resource},
+                               timeout=aiohttp.ClientTimeout(total=15)) as resp:
+            if resp.status != 200:
+                return None
+            body, truncated = await _read_capped(resp, _ASN_BODY_CAP)
+        if truncated:
+            return {"_truncated": True}
+        import json as _json
+        d = _json.loads(body)
+        return d.get("data") if d.get("status") == "ok" else None
+    except Exception:
+        return None
+
+
+def _pfx_sort_key(p: str):
+    net = ipaddress.ip_network(p, strict=False)
+    return (net.version, int(net.network_address), net.prefixlen)
+
+
+async def asn_lookup(raw: str) -> dict:
+    parsed = parse_asn_query(raw)
+    if not parsed:
+        return {"success": False, "error": "Enter an AS number (AS13335), an IP address, or a prefix (1.1.1.0/24)"}
+    kind, value = parsed
+    if kind in ("ip", "prefix"):
+        net = ipaddress.ip_network(value, strict=False)
+        if not net.is_global:
+            return {"success": True, "kind": kind, "query": value, "via": {"input": value, "prefix": None, "asns": []}, "asn": None,
+                    "note": "That's a private, reserved or documentation address, so it isn't announced on the public internet."}
+    key = f"{kind}:{value}"
+    hit = _ASN_CACHE.get(key)
+    if hit and time.monotonic() - hit[0] < _ASN_CACHE_TTL:
+        return hit[1]
+
+    async with aiohttp.ClientSession(headers={"User-Agent": _UA}, trust_env=True) as session:
+        via = None
+        asn = value if kind == "asn" else None
+        if kind in ("ip", "prefix"):
+            if kind == "ip":
+                ni = await _ripe(session, "network-info", value)
+                if ni is None:
+                    return {"success": False, "error": "RIPEstat didn't answer. Try again shortly."}
+                asns = [str(a) for a in ni.get("asns", [])]
+                via = {"input": value, "prefix": ni.get("prefix"), "asns": asns}
+            else:
+                po = await _ripe(session, "prefix-overview", value)
+                if po is None:
+                    return {"success": False, "error": "RIPEstat didn't answer. Try again shortly."}
+                asns = [str(a["asn"]) for a in po.get("asns", [])]
+                via = {"input": value, "prefix": value, "asns": asns, "announced": bool(po.get("announced"))}
+            if not asns:
+                return {"success": True, "kind": kind, "query": value, "via": via, "asn": None,
+                        "note": "This is not announced in BGP right now (or is not publicly routed)."}
+            asn = asns[0]
+        ov, pf, nb = await asyncio.gather(
+            _ripe(session, "as-overview", asn),
+            _ripe(session, "announced-prefixes", asn),
+            _ripe(session, "asn-neighbours", asn),
+        )
+    if ov is None and pf is None and nb is None:
+        return {"success": False, "error": "RIPEstat didn't answer. Try again shortly."}
+
+    out: dict = {"success": True, "kind": kind, "query": value, "via": via, "asn": int(asn),
+                 "holder": (ov or {}).get("holder") or None,
+                 "announced": (ov or {}).get("announced"),
+                 "registry": ((ov or {}).get("block") or {}).get("desc")}
+    if pf and not pf.get("_truncated"):
+        pfx = {p["prefix"] for p in pf.get("prefixes", []) if isinstance(p, dict) and "prefix" in p}
+        v4 = sorted((p for p in pfx if ":" not in p), key=_pfx_sort_key)
+        v6 = sorted((p for p in pfx if ":" in p), key=_pfx_sort_key)
+        out["prefixes"] = {"v4": len(v4), "v6": len(v6), "sample": (v4[:20] + v6[:10])}
+    elif pf:
+        out["prefixes"] = {"v4": None, "v6": None, "sample": [], "too_many": True}
+    if nb and not nb.get("_truncated"):
+        c = nb.get("neighbour_counts") or {}
+        nbs = [n for n in nb.get("neighbours", []) if isinstance(n, dict) and "asn" in n]
+        ups = sorted((n for n in nbs if n.get("type") == "left"), key=lambda n: -(n.get("power") or 0))[:8]
+        downs = sorted((n for n in nbs if n.get("type") == "right"), key=lambda n: -(n.get("power") or 0))[:8]
+        out["neighbours"] = {"upstream": c.get("left"), "downstream": c.get("right"), "unique": c.get("unique"),
+                             "top_upstream": [n["asn"] for n in ups], "top_downstream": [n["asn"] for n in downs]}
+    if len(_ASN_CACHE) >= 64:
+        _ASN_CACHE.pop(min(_ASN_CACHE, key=lambda k: _ASN_CACHE[k][0]))
+    _ASN_CACHE[key] = (time.monotonic(), out)
+    return out

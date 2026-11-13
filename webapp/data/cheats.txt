@@ -319,46 +319,6 @@ PATCH :: Change part of a resource
 DELETE :: Remove a resource
 HEAD :: Like GET but headers only
 OPTIONS :: Ask what a resource allows (also used for CORS preflight)
-## Success and redirects
-200 OK :: The request worked
-201 Created :: A new resource was created
-204 No Content :: Worked, nothing to return
-301 Moved Permanently :: Permanent redirect (clients may change method to GET)
-302 Found :: Temporary redirect
-304 Not Modified :: Your cached copy is still good
-307 Temporary Redirect :: Temporary, keeps the method
-308 Permanent Redirect :: Permanent, keeps the method
-## Client errors
-400 Bad Request :: Malformed request
-401 Unauthorized :: Not authenticated (log in first)
-403 Forbidden :: Authenticated but not allowed
-404 Not Found :: Nothing at this address
-405 Method Not Allowed :: Wrong method for this address
-409 Conflict :: Clashes with current state (e.g. duplicate)
-410 Gone :: Permanently removed
-413 Payload Too Large :: Body exceeds the server's limit
-415 Unsupported Media Type :: Server cannot read this Content-Type
-418 I'm a teapot :: A joke status from RFC 2324
-422 Unprocessable Content :: Understood but failed validation
-429 Too Many Requests :: Rate limited
-## Server errors
-500 Internal Server Error :: The server crashed handling it
-502 Bad Gateway :: A proxy got a bad answer from the app behind it
-503 Service Unavailable :: Overloaded or down for maintenance
-504 Gateway Timeout :: A proxy gave up waiting for the app
-## Headers
-Content-Type: application/json :: Format of the body you send
-Accept: application/json :: Format you want back
-Authorization: Bearer <token> :: Send an access token
-Cache-Control: no-store :: Never cache this response
-Cache-Control: max-age=3600 :: Cache for one hour
-ETag / If-None-Match :: Conditional requests (get a 304 if unchanged)
-Location :: Where a redirect or new resource lives
-Set-Cookie / Cookie :: Server sets a cookie / browser sends it back
-Origin :: Where a cross-site request came from
-Access-Control-Allow-Origin :: Which sites may read the response (CORS)
-Strict-Transport-Security :: Tell browsers to use HTTPS only
-Content-Security-Policy :: Restrict what a page may load or run
 ## curl
 curl -i <url> :: Show response headers and body
 curl -L <url> :: Follow redirects
@@ -366,3 +326,174 @@ curl -X POST -H "Content-Type: application/json" -d '{"a":1}' <url> :: POST JSON
 curl -u user:pass <url> :: Basic authentication
 curl -o file <url> :: Save the response to a file
 curl -sS -o /dev/null -w "%{http_code}" <url> :: Print only the status code
+
+@@status HTTP Status
+## 1xx Informational
+100 Continue :: Headers received; the client may send the body
+101 Switching Protocols :: Server agrees to switch (e.g. to WebSocket)
+102 Processing :: WebDAV: still working on it
+103 Early Hints :: Preload hints sent before the final response
+## 2xx Success
+200 OK :: The request worked
+201 Created :: A new resource was created (see Location header)
+202 Accepted :: Queued; processing is not finished yet
+203 Non-Authoritative Information :: A proxy changed the response
+204 No Content :: Worked, nothing to return
+205 Reset Content :: Worked; client should reset its form/view
+206 Partial Content :: A byte range was returned (Range requests, resumable downloads)
+207 Multi-Status :: WebDAV: several results in one body
+208 Already Reported :: WebDAV: members already listed earlier
+226 IM Used :: Delta encoding applied
+## 3xx Redirection
+300 Multiple Choices :: Several representations; the client must pick
+301 Moved Permanently :: Permanent redirect (clients may change POST to GET)
+302 Found :: Temporary redirect (clients may change POST to GET)
+303 See Other :: Fetch the result with GET at another URL (after POST)
+304 Not Modified :: Your cached copy is still good
+305 Use Proxy :: Deprecated; do not use
+307 Temporary Redirect :: Temporary, keeps the method and body
+308 Permanent Redirect :: Permanent, keeps the method and body
+## 4xx Client errors
+400 Bad Request :: Malformed request (syntax, framing, bad JSON)
+401 Unauthorized :: Not authenticated; send valid credentials (despite the name)
+402 Payment Required :: Reserved; some APIs use it for billing limits
+403 Forbidden :: Authenticated but not allowed
+404 Not Found :: Nothing at this address (or hidden on purpose)
+405 Method Not Allowed :: Wrong method for this address; see the Allow header
+406 Not Acceptable :: Cannot produce anything matching your Accept headers
+407 Proxy Authentication Required :: Authenticate with the proxy first
+408 Request Timeout :: The server gave up waiting for the request
+409 Conflict :: Clashes with current state (duplicate, edit conflict)
+410 Gone :: Permanently removed, and it will not return
+411 Length Required :: A Content-Length header is required
+412 Precondition Failed :: An If-Match / If-Unmodified-Since condition failed
+413 Content Too Large :: Body exceeds the server's limit (formerly Payload Too Large)
+414 URI Too Long :: The URL is longer than the server accepts
+415 Unsupported Media Type :: Server cannot read this Content-Type
+416 Range Not Satisfiable :: The requested byte range is outside the resource
+417 Expectation Failed :: The Expect header could not be met
+418 I'm a teapot :: A joke status from RFC 2324
+421 Misdirected Request :: Sent to a server that cannot answer for this host
+422 Unprocessable Content :: Understood but failed validation
+423 Locked :: WebDAV: the resource is locked
+424 Failed Dependency :: WebDAV: an earlier step failed
+425 Too Early :: Refusing to risk replay of early data
+426 Upgrade Required :: Switch protocol (see the Upgrade header)
+428 Precondition Required :: Send a conditional request to avoid lost updates
+429 Too Many Requests :: Rate limited; check Retry-After
+431 Request Header Fields Too Large :: Headers (or cookies) are too big
+451 Unavailable For Legal Reasons :: Blocked by legal demand
+## 5xx Server errors
+500 Internal Server Error :: The server crashed handling it
+501 Not Implemented :: The server does not support this method or feature
+502 Bad Gateway :: A proxy got a bad answer from the app behind it
+503 Service Unavailable :: Overloaded or down for maintenance; may send Retry-After
+504 Gateway Timeout :: A proxy gave up waiting for the app
+505 HTTP Version Not Supported :: The HTTP version is not supported
+506 Variant Also Negotiates :: Misconfigured content negotiation
+507 Insufficient Storage :: WebDAV: the server is out of space
+508 Loop Detected :: WebDAV: infinite loop found
+510 Not Extended :: Further extensions are required
+511 Network Authentication Required :: Log in to the network first (captive portal)
+## Unofficial (nginx, Cloudflare, others)
+444 No Response (nginx) :: Connection closed without a reply
+494 Request Header Too Large (nginx) :: Headers were too big
+495 SSL Certificate Error (nginx) :: The client certificate was invalid
+496 SSL Certificate Required (nginx) :: A client certificate is required
+497 HTTP Request Sent to HTTPS Port (nginx) :: Plain HTTP sent to a TLS port
+499 Client Closed Request (nginx) :: The client hung up before the answer
+520 Web Server Returned an Unknown Error (Cloudflare) :: The origin sent an empty or odd reply
+521 Web Server Is Down (Cloudflare) :: The origin refused the connection
+522 Connection Timed Out (Cloudflare) :: Cloudflare could not connect in time
+523 Origin Is Unreachable (Cloudflare) :: Cloudflare cannot route to the origin
+524 A Timeout Occurred (Cloudflare) :: Connected, but the origin answered too slowly
+525 SSL Handshake Failed (Cloudflare) :: TLS to the origin failed
+526 Invalid SSL Certificate (Cloudflare) :: The origin certificate is not valid
+## Quick rules
+Which of 401 vs 403? :: 401 = who are you? (no or bad credentials); 403 = I know who you are, and no
+Which of 301 vs 308? :: Same idea, but 308 never changes POST into GET
+Which of 502 vs 504? :: 502 = bad reply from upstream; 504 = no reply in time
+Retry safely? :: 408, 429, 502, 503, 504 are usually safe to retry with backoff (idempotent methods only)
+
+@@headers HTTP Headers
+## Request
+Host :: Which site the request is for (required in HTTP/1.1)
+User-Agent :: What client is making the request
+Accept :: Content types the client can handle
+Accept-Language :: Preferred languages, e.g. en-GB, ro;q=0.8
+Accept-Encoding :: Compression the client supports (gzip, br, zstd)
+Authorization: Bearer <token> :: Send an access token
+Authorization: Basic <base64> :: Send user:password, only ever over HTTPS !
+Cookie :: Cookies the browser sends back
+Origin :: Where a cross-site request came from
+Referer :: The page that linked here (yes, spelled wrong forever)
+Range: bytes=0-1023 :: Ask for part of a file
+Content-Type: application/json :: Format of the body you send
+Content-Length :: Size of the body in bytes
+Expect: 100-continue :: Ask permission before sending a large body
+## Response
+Content-Type :: Format of the body (add ; charset=utf-8 for text)
+Content-Encoding: gzip :: How the body is compressed
+Content-Disposition: attachment; filename="a.pdf" :: Download instead of display
+Location :: Where a redirect or new resource lives
+Set-Cookie :: Set a cookie (see Cookies below)
+Retry-After :: When to try again (seconds or a date) after 429/503
+Allow :: Methods the resource supports (sent with 405)
+Server :: Software name; consider hiding the version
+Vary :: Which request headers change the response (affects caches)
+Link :: Related resources: preload, next/prev pages
+## Caching
+Cache-Control: no-store :: Never keep a copy
+Cache-Control: no-cache :: May store, but revalidate before reuse
+Cache-Control: max-age=3600 :: Fresh for one hour
+Cache-Control: public, max-age=31536000, immutable :: Fingerprinted static files: cache for a year
+Cache-Control: private :: Only the user's own browser may cache it
+Cache-Control: s-maxage=600 :: Lifetime for shared caches (CDNs) only
+ETag :: A version fingerprint of the resource
+If-None-Match :: Send the ETag back; get a 304 if unchanged
+Last-Modified / If-Modified-Since :: The date-based version of ETag
+Age :: Seconds the response has sat in a cache
+Expires :: Old absolute expiry date; Cache-Control wins
+## Security
+Strict-Transport-Security: max-age=31536000; includeSubDomains :: Browsers use HTTPS only for a year
+Content-Security-Policy: default-src 'self' :: Allow only same-origin resources; blocks most XSS
+X-Content-Type-Options: nosniff :: Stop browsers guessing a content type
+X-Frame-Options: DENY :: Forbid framing (clickjacking); CSP frame-ancestors is the modern form
+Referrer-Policy: strict-origin-when-cross-origin :: Limit what the Referer header leaks
+Permissions-Policy: camera=(), microphone=() :: Turn off browser features for the page
+Cross-Origin-Opener-Policy: same-origin :: Isolate the window from cross-origin popups
+Cross-Origin-Embedder-Policy: require-corp :: Needed with COOP for cross-origin isolation
+Cross-Origin-Resource-Policy: same-site :: Control who may embed this resource
+X-XSS-Protection :: Obsolete; modern browsers ignore it, and older ones could be abused. Prefer CSP !
+## CORS
+Access-Control-Allow-Origin: https://app.example.com :: Which site may read the response
+Access-Control-Allow-Origin: * :: Any site may read it (not allowed together with credentials) !
+Access-Control-Allow-Methods :: Methods permitted in a preflight answer
+Access-Control-Allow-Headers :: Request headers permitted in a preflight answer
+Access-Control-Allow-Credentials: true :: Allow cookies; never combine with a wildcard origin !
+Access-Control-Max-Age: 600 :: How long a preflight result may be cached
+Access-Control-Expose-Headers :: Response headers scripts may read
+## Cookies (Set-Cookie attributes)
+Secure :: Send only over HTTPS
+HttpOnly :: Hide the cookie from JavaScript
+SameSite=Lax :: Not sent on cross-site subrequests; sensible default
+SameSite=Strict :: Never sent cross-site, even on link clicks
+SameSite=None; Secure :: Allow cross-site use (needs Secure)
+Max-Age=3600 :: Lifetime in seconds (Expires takes a date instead)
+Path=/ ; Domain=example.com :: Scope of the cookie
+__Host- prefix :: Forces Secure, Path=/ and no Domain: the safest cookie name
+## Proxies and CDNs
+X-Forwarded-For :: Original client IP, as appended by each proxy (can be forged) !
+X-Forwarded-Proto :: Whether the client used http or https
+Forwarded :: The standard version of X-Forwarded-*
+Via :: Proxies the request passed through
+X-Real-IP :: Client IP as set by nginx-style proxies
+CF-Connecting-IP :: Client IP as set by Cloudflare
+## Other useful ones
+Upgrade: websocket :: Ask to switch protocol
+Sec-WebSocket-Key :: WebSocket handshake token
+Content-Range :: Which part of the file this reply holds
+Accept-Ranges: bytes :: The server supports range requests
+Digest / Content-Digest :: Checksum of the body
+Alt-Svc :: Advertise HTTP/3 or another endpoint
+Server-Timing :: Timing metrics shown in browser dev tools

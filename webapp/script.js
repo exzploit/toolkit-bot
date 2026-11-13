@@ -33,9 +33,9 @@ const catName = k => T(k);
 // Romanian name/sub per tool id: [name, sub]
 const RO = {
   password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
-  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"], pwned:["Parolă Compromisă","E parola în scurgeri de date?"], hmac:["HMAC","Hash cu cheie (SHA-1/256/384/512)"], bcrypt:["Bcrypt","Hash și verificare parole"], jwtsign:["Semnare JWT","Creează și semnează un token"], textcrypt:["Criptare Text","Criptează / decriptează text (AES-256)"], subdomains:["Căutare Subdomenii","Pasiv, din jurnale de certificate"], cheats:["Pe scurt","Git, bash, vim, regex, SQL, HTTP"], asciiuni:["ASCII / Unicode","Tabel și inspector de caractere"], bitwise:["Calc. Biți","AND, OR, XOR, deplasări"], ports:["Căutare Porturi","Ce rulează pe portul 5432?"], wordfreq:["Frecvență Cuvinte","Cele mai folosite cuvinte"], mdpdf:["Markdown în PDF","Convertește Markdown în PDF"], docscrub:["Curăță Metadate Doc.","PDF și DOCX fără date ascunse"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"], pwned:["Parolă Compromisă","E parola în scurgeri de date?"], hmac:["HMAC","Hash cu cheie (SHA-1/256/384/512)"], bcrypt:["Bcrypt","Hash și verificare parole"], jwtsign:["Semnare JWT","Creează și semnează un token"], textcrypt:["Criptare Text","Criptează / decriptează text (AES-256)"], subdomains:["Căutare Subdomenii","Pasiv, din jurnale de certificate"], cheats:["Pe scurt","Git, bash, vim, regex, SQL, HTTP"], asciiuni:["ASCII / Unicode","Tabel și inspector de caractere"], bitwise:["Calc. Biți","AND, OR, XOR, deplasări"], ports:["Căutare Porturi","Ce rulează pe portul 5432?"], ipv6:["Unelte IPv6","Extinde, comprimă, subrețele"], mac:["Producător MAC","Cine a făcut placa de rețea?"], wol:["Wake-on-LAN","Creează pachetul magic"], bandwidth:["Timp de Transfer","Dimensiune ⇄ viteză ⇄ timp"], asn:["ASN / BGP","Cine deține această rețea?"], wordfreq:["Frecvență Cuvinte","Cele mai folosite cuvinte"], mdpdf:["Markdown în PDF","Convertește Markdown în PDF"], docscrub:["Curăță Metadate Doc.","PDF și DOCX fără date ascunse"],
   text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"], linetools:["Unelte Linii","Sortează, elimină dubluri…"], findreplace:["Caută & Înlocuiește","Înlocuire cu regex"], textanalysis:["Analiză Text","Lizibilitate & cuvinte cheie"], textclean:["Curăță Text","Diacritice, ghilimele, spații"], ciphers:["Cifruri Clasice","Atbash & Vigenère"], aidetect:["Detector AI","Verifică text/fișiere pentru AI"],
-  subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
+  subnet:["Calc. Subnet","Detalii CIDR IPv4 (IPv6: vezi Unelte IPv6)"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
   download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"], stego:["Steganografie","Ascunde un mesaj în imagine"],
 };
 const tname = t => (lang === "ro" && RO[t.id]) ? RO[t.id][0] : t.name;
@@ -155,7 +155,7 @@ const TOOLS = [
   { id: "mdpdf", cat: "text", icon: "file-down", name: "Markdown → PDF", sub: "Turn Markdown into a PDF", kw: "convert document export md pdf", render: rMdPdf },
 
   // --- NETWORK ---
-  { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4/IPv6 CIDR breakdown", kw: "cidr netmask ip", render: rSubnet },
+  { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4 CIDR breakdown (IPv6: see IPv6 Tools)", kw: "cidr netmask ip", render: rSubnet },
   { id: "speedtest", cat: "network", icon: "gauge", name: "Speed Test", sub: "Your connection speed", kw: "bandwidth download ping", render: rSpeedtest },
   { id: "portscan", cat: "network", icon: "scan-search", name: "Port Probe", sub: "Common open ports on a host", kw: "scan tcp", render: rPortscan },
   { id: "domain", cat: "network", icon: "globe", name: "Domain Info", sub: "DNS + WHOIS/RDAP", kw: "dns whois mx", render: rDomain },
@@ -165,6 +165,11 @@ const TOOLS = [
   { id: "dns", cat: "network", icon: "list-tree", name: "DNS Lookup", sub: "Any record type", kw: "resolve a mx txt cname", render: rDns },
   { id: "subdomains", cat: "network", icon: "binoculars", name: "Subdomain Finder", sub: "Passive, via certificate logs", kw: "recon enumerate crt.sh certificate transparency osint", render: rSubdomains },
   { id: "ports", cat: "network", icon: "plug", name: "Port Lookup", sub: "What runs on port 5432?", kw: "service tcp udp number well-known", render: rPorts },
+  { id: "ipv6", cat: "network", icon: "binary", name: "IPv6 Tools", sub: "Expand, compress, subnet, from MAC", kw: "address shorten ipv6 prefix slaac eui-64 link-local ula", render: rIPv6 },
+  { id: "mac", cat: "network", icon: "cpu", name: "MAC Vendor", sub: "Who made this network card?", kw: "oui manufacturer lookup ethernet address randomized", render: rMac },
+  { id: "wol", cat: "network", icon: "power", name: "Wake-on-LAN", sub: "Build a magic packet", kw: "wake lan magic packet power on", render: rWol },
+  { id: "bandwidth", cat: "network", icon: "timer", name: "Transfer Time", sub: "File size ⇄ speed ⇄ time", kw: "bandwidth download upload mbps calculator speed duration", render: rBandwidth },
+  { id: "asn", cat: "network", icon: "route", name: "ASN / BGP", sub: "Who owns this network?", kw: "autonomous system bgp prefix peers upstream ripe routing", render: rAsn },
   { id: "phone", cat: "network", icon: "phone", name: "Phone Lookup", sub: "Carrier, region, timezone", kw: "number osint", render: rPhone },
   { id: "username", cat: "network", icon: "users", name: "Username Check", sub: "Across public platforms", kw: "social osint", render: rUsername },
   { id: "dork", cat: "network", icon: "search", name: "Dork Builder", sub: "Google recon queries", kw: "osint google", render: rDork },
@@ -1758,7 +1763,7 @@ async function rCheats(c) {
   let cur = store.get("tk_cheat_topic", "git"); if (!topics.some(t => t.id === cur)) cur = topics[0].id;
   c.innerHTML = `<div class="seg" id="ch-seg" style="flex-wrap:wrap">${topics.map(t => `<button data-t="${t.id}" class="${t.id === cur ? "active" : ""}">${esc(t.name)}</button>`).join("")}</div>
     <div class="field"><input type="text" id="ch-q" placeholder="Filter this sheet…" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-    <p class="muted" style="margin:-4px 2px 4px">Tap a line to copy it.  ⚠️ marks commands that destroy data.</p><div id="ch-out"></div>`;
+    <p class="muted" style="margin:-4px 2px 4px">Tap a line to copy it.  ⚠️ marks destructive or risky entries.</p><div id="ch-out"></div>`;
   const render = () => {
     const t = topics.find(x => x.id === cur), q = $("#ch-q").value.trim().toLowerCase();
     let html = "";
@@ -1775,6 +1780,275 @@ async function rCheats(c) {
   }));
   $("#ch-q").addEventListener("input", render);
   render();
+}
+
+/* ---- IPv6 tools ---- */
+function parseV6(input) {
+  let s = String(input || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  const z = s.indexOf("%"); if (z >= 0) s = s.slice(0, z);                     // zone id (fe80::1%eth0)
+  if (!s || /[^0-9a-f:.]/.test(s) || s.includes(":::")) return null;
+  const m4 = s.match(/^(.*:)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);                    // embedded IPv4 (::ffff:1.2.3.4)
+  if (m4) {
+    const o = m4.slice(2).map(Number);
+    if (o.some((n, i) => n > 255 || String(n) !== m4[i + 2])) return null;
+    s = m4[1] + (o[0] << 8 | o[1]).toString(16) + ":" + (o[2] << 8 | o[3]).toString(16);
+  } else if (s.includes(".")) return null;
+  const parts = s.split("::"); if (parts.length > 2) return null;
+  const grp = t => t === "" ? [] : t.split(":");
+  let head = grp(parts[0]), back = parts.length === 2 ? grp(parts[1]) : [];
+  if ([...head, ...back].some(g => !/^[0-9a-f]{1,4}$/.test(g))) return null;
+  let groups;
+  if (parts.length === 2) { const fill = 8 - head.length - back.length; if (fill < 1) return null; groups = [...head, ...Array(fill).fill("0"), ...back]; }
+  else { if (head.length !== 8) return null; groups = head; }
+  return groups.reduce((acc, g) => (acc << 16n) | BigInt(parseInt(g, 16)), 0n);
+}
+const v6groups = n => Array.from({ length: 8 }, (_, i) => Number((n >> BigInt((7 - i) * 16)) & 0xffffn));
+const v6full = n => v6groups(n).map(g => g.toString(16).padStart(4, "0")).join(":");
+function v6short(n) {                                                           // RFC 5952
+  const g = v6groups(n); let best = -1, bl = 0;
+  for (let i = 0; i < 8;) { if (g[i] !== 0) { i++; continue; } let j = i; while (j < 8 && g[j] === 0) j++; if (j - i > bl) { best = i; bl = j - i; } i = j; }
+  const h = x => x.map(v => v.toString(16)).join(":");
+  if (bl < 2) return h(g);
+  return h(g.slice(0, best)) + "::" + h(g.slice(best + bl));
+}
+const v6mask = p => p === 0 ? 0n : ((1n << BigInt(p)) - 1n) << BigInt(128 - p);
+const V6ALL = (1n << 128n) - 1n;
+function v6type(n) {
+  const inP = (base, p) => (n & v6mask(p)) === parseV6(base);
+  if (n === 0n) return "Unspecified address (::)";
+  if (n === 1n) return "Loopback (::1)";
+  if (inP("::ffff:0:0", 96)) return "IPv4-mapped (" + v4str(Number(n & 0xffffffffn)) + ")";
+  if (inP("64:ff9b::", 96)) return "NAT64 translation (" + v4str(Number(n & 0xffffffffn)) + ")";
+  if (inP("100::", 64)) return "Discard-only (RFC 6666)";
+  if (inP("2001:db8::", 32) || inP("3fff::", 20)) return "Documentation range";
+  if (inP("2001::", 32)) return "Teredo tunnelling";
+  if (inP("2002::", 16)) return "6to4 tunnel (embeds " + v4str(Number((n >> 80n) & 0xffffffffn)) + ")";
+  if (inP("fc00::", 7)) return "Unique local address (private, like 10.0.0.0/8)";
+  if (inP("fe80::", 10)) return "Link-local (only valid on one network segment)";
+  if (inP("ff00::", 8)) { const sc = Number((n >> 112n) & 0xfn), flags = Number((n >> 116n) & 0xfn);
+    const name = { 1: "interface-local", 2: "link-local", 3: "realm-local", 4: "admin-local", 5: "site-local", 8: "organisation-local", 14: "global" }[sc] || "scope " + sc;
+    return "Multicast, " + name + " scope" + ((flags & 1) ? " (temporary)" : ""); }
+  if (inP("2000::", 3)) return "Global unicast (publicly routable)";
+  return "Reserved / unassigned by IANA";
+}
+const v4str = x => [(x >>> 24) & 255, (x >>> 16) & 255, (x >>> 8) & 255, x & 255].join(".");
+const v6arpa = n => v6full(n).replace(/:/g, "").split("").reverse().join(".") + ".ip6.arpa";
+const fmtBig = b => b.toLocaleString("en-US");
+const bigPow2 = k => (1n << BigInt(k));
+function macBytes(s) {                                                          // → 6 bytes or null
+  const h = String(s || "").trim().replace(/[\s:.\-]/g, "");
+  if (!/^[0-9a-fA-F]{12}$/.test(h)) return null;
+  return Array.from({ length: 6 }, (_, i) => parseInt(h.slice(i * 2, i * 2 + 2), 16));
+}
+const macFmt = (b, sep, up) => { const r = b.map(x => x.toString(16).padStart(2, "0")).join(sep); return up ? r.toUpperCase() : r; };
+const hx = x => x.toString(16).padStart(2, "0");
+function eui64(b) { const x = b.slice(); x[0] ^= 2; return [x[0], x[1], x[2], 0xff, 0xfe, x[3], x[4], x[5]]; }
+function rIPv6(c) {
+  c.innerHTML = `<div class="card"><div class="field"><label>IPv6 address, address/prefix, or a MAC</label>
+    <input type="text" class="mono" id="v6-in" placeholder="2001:db8::1   ·   2001:db8:abcd::/48   ·   aa:bb:cc:dd:ee:ff" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <button class="btn" id="v6-go"><i data-lucide="play"></i> Analyse</button><div id="tool-status"></div><div id="tool-result" class="result"></div></div>`;
+  $("#v6-go").onclick = () => {
+    play("click"); haptic(); $("#tool-result").innerHTML = ""; const raw = $("#v6-in").value.trim();
+    if (!raw) { setStatus("❌ Enter an IPv6 address", "err"); return; }
+    const mb = macBytes(raw);
+    if (mb) {                                                                  // MAC → EUI-64 / link-local
+      const e = eui64(mb), iid = [0, 2, 4, 6].map(i => ((e[i] << 8) | e[i + 1]).toString(16)).join(":");
+      const ll = parseV6("fe80::" + iid);
+      setStatus(""); resultCard(`<label>Derived from MAC ${esc(macFmt(mb, ":", true))}</label>` + rowsHTML({
+        "EUI-64 interface ID": `<span class="v mono">${esc(iid)}</span>`, "Link-local address": `<span class="v mono">${esc(v6short(ll))}</span>`,
+        "Solicited-node multicast": `<span class="v mono">${esc(v6short(parseV6("ff02::1:ff" + hx(mb[3]) + ":" + hx(mb[4]) + hx(mb[5]))))}</span>`,
+      }) + `<p class="muted" style="margin-top:10px">EUI-64 flips the "universal/local" bit and inserts ff:fe in the middle. Modern OSes often use random privacy addresses instead.</p>`); play("success"); return;
+    }
+    let addr = raw, pre = null;
+    const sl = raw.indexOf("/"); if (sl >= 0) { addr = raw.slice(0, sl); const p = raw.slice(sl + 1); if (!/^\d{1,3}$/.test(p) || +p > 128) { setStatus("❌ Prefix must be 0–128", "err"); play("error"); return; } pre = +p; }
+    const n = parseV6(addr); if (n === null) { setStatus("❌ That isn't a valid IPv6 address", "err"); play("error"); return; }
+    setStatus("");
+    const rows = { "Expanded": `<span class="v mono" style="word-break:break-all;font-size:11px">${v6full(n)}</span>`, "Compressed": `<span class="v mono">${esc(v6short(n))}</span>`, "Type": `<span class="v">${esc(v6type(n))}</span>`,
+      "No leading-zero form": `<span class="v mono" style="word-break:break-all">${v6groups(n).map(g => g.toString(16)).join(":")}</span>`, "Reverse DNS": `<span class="v mono" style="word-break:break-all;font-size:11px">${esc(v6arpa(n))}</span>` };
+    const iidHi = Number((n >> 24n) & 0xffffn);
+    if (iidHi === 0xfffe) { const lo = Number((n >> 56n) & 0xffn) ^ 2; rows["Looks like EUI-64"] = `<span class="v mono">${[lo, Number((n >> 48n) & 0xffn), Number((n >> 40n) & 0xffn), Number((n >> 16n) & 0xffn), Number((n >> 8n) & 0xffn), Number(n & 0xffn)].map(x => x.toString(16).padStart(2, "0")).join(":")}</span>`; }
+    let html = `<div class="rows">${Object.entries(rows).map(([k, v]) => `<div class="row"><span class="k">${k}</span>${v}</div>`).join("")}</div>`;
+    let splitHTML = "";
+    if (pre !== null) {
+      const mask = v6mask(pre), net = n & mask, last = net | (V6ALL ^ mask), total = bigPow2(128 - pre);
+      html += `<div class="sec-title" style="margin-top:16px">Prefix /${pre}</div>` + rowsHTML({
+        "Network": `<span class="v mono">${esc(v6short(net))}/${pre}</span>`, "First address": `<span class="v mono">${esc(v6short(net))}</span>`, "Last address": `<span class="v mono" style="font-size:11px;word-break:break-all">${esc(v6short(last))}</span>`,
+        "Addresses": `<span class="v">${fmtBig(total)} <span class="muted">(2^${128 - pre})</span></span>`,
+        ...(pre <= 64 ? { "/64 subnets inside": `<span class="v">${fmtBig(bigPow2(64 - pre))}</span>` } : {}),
+      }) + `<p class="muted" style="margin-top:8px">IPv6 has no broadcast or "network" address to give up; the whole range is usable, and one /64 is the normal size for a LAN.</p>`;
+      if (pre < 128) splitHTML = `<div class="field" style="margin-top:14px"><label>Split into subnets of size /</label><div class="btn-row"><input type="number" class="mono" id="v6-sp" min="${pre + 1}" max="128" value="${pre < 64 ? 64 : Math.min(128, pre + 4)}" style="flex:1"><button class="btn ghost sm" id="v6-split">Show</button></div></div><div id="v6-sout"></div>`;
+    }
+    resultCard(html + splitHTML);
+    if (splitHTML) $("#v6-split").onclick = () => {
+      const t = +$("#v6-sp").value; if (!(t > pre && t <= 128)) { $("#v6-sout").innerHTML = `<p class="status err">Pick a size between /${pre + 1} and /128</p>`; return; }
+      const net = n & v6mask(pre), step = bigPow2(128 - t), count = bigPow2(t - pre), show = count > 16n ? 16 : Number(count);
+      let list = ""; for (let i = 0; i < show; i++) list += `<div class="row"><span class="k mono">${i + 1}</span><span class="v mono">${esc(v6short(net + step * BigInt(i)))}/${t}</span></div>`;
+      $("#v6-sout").innerHTML = `<p class="muted" style="margin:8px 0">${fmtBig(count)} subnets of /${t}${count > 16n ? "; showing the first 16" : ""}</p><div class="rows">${list}</div>`;
+    };
+    play("success");
+  };
+  $("#v6-in").addEventListener("keydown", e => { if (e.key === "Enter") $("#v6-go").click(); });
+  iconsRefresh();
+}
+
+/* ---- MAC vendor lookup (offline OUI table) ---- */
+let _oui = null;
+async function ouiTable() {
+  if (_oui) return _oui;
+  const txt = await loadText("data/oui.txt"), map = new Map(), rows = [];
+  for (const l of txt.split("\n")) { if (!l || l[0] === "#") continue; const k = l.indexOf("|"); if (k < 6) continue; const p = l.slice(0, k), v = l.slice(k + 1); map.set(p, v); rows.push([p, v]); }
+  return (_oui = { map, rows });
+}
+function ouiFind(map, hex) { for (const n of [9, 7, 6]) { const v = map.get(hex.slice(0, n)); if (v) return { prefix: hex.slice(0, n), vendor: v, bits: n * 4 }; } return null; }
+async function rMac(c) {
+  c.innerHTML = `<div class="card"><div class="field"><label>MAC address(es), or a vendor name</label>
+    <textarea id="mc-in" rows="3" class="mono" placeholder="3C:5A:B4:12:34:56&#10;apple&#10;one per line (up to 50)" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea></div>
+    <button class="btn" id="mc-go"><i data-lucide="search"></i> Look up</button><div id="tool-status"></div><div id="tool-result" class="result"></div>
+    <p class="muted" style="margin-top:12px">Looks the prefix up in a built-in copy of the public IEEE registry. Nothing is sent anywhere.</p></div>`;
+  iconsRefresh();
+  $("#mc-go").onclick = async () => {
+    play("click"); haptic(); $("#tool-result").innerHTML = ""; const raw = $("#mc-in").value.trim(); if (!raw) { setStatus("❌ Enter a MAC address or vendor name", "err"); return; }
+    setStatus(spin() + " Loading vendor table…");
+    let T; try { T = await ouiTable(); } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); return; }
+    setStatus("");
+    const lines = raw.split(/\n+/).map(s => s.trim()).filter(Boolean).slice(0, 50);
+    const isMacish = s => /^[0-9a-f:.\-\s]+$/i.test(s) && s.replace(/[^0-9a-f]/gi, "").length >= 6;
+    if (lines.length === 1 && !isMacish(lines[0])) {                           // vendor search
+      const q = lines[0].toLowerCase(); if (q.length < 2) { setStatus("❌ Type at least 2 letters", "err"); return; }
+      const hits = T.rows.filter(([, v]) => v.toLowerCase().includes(q)); const shown = hits.slice(0, 40);
+      resultCard(hits.length ? `<p class="muted" style="margin-bottom:8px">${hits.length.toLocaleString()} prefix${hits.length === 1 ? "" : "es"} registered to names containing “${esc(lines[0])}”${hits.length > 40 ? " — showing 40, narrow the search" : ""}</p><div class="rows">${shown.map(([p, v]) => `<div class="row"><span class="k mono">${esc(p.replace(/(..)(?=.)/g, "$1:"))}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>` : `<p class="muted center">No vendor matches</p>`, { actions: false }); play(hits.length ? "success" : "error"); return;
+    }
+    let out = "";
+    for (const ln of lines) {
+      const hex = ln.replace(/[^0-9a-f]/gi, "").toUpperCase(), full = macBytes(ln);
+      if (/[^0-9a-f:.\-\s]/i.test(ln) || hex.length < 6 || hex.length > 12) { out += `<div class="row"><span class="k mono">${esc(ln.slice(0, 24))}</span><span class="v err">Not a MAC address</span></div>`; continue; }
+      const b0 = parseInt(hex.slice(0, 2), 16), local = !!(b0 & 2), multi = !!(b0 & 1);
+      const flags = [local ? "locally administered" : "globally unique", multi ? "multicast/group" : "unicast"].join(" · ");
+      let vendor, note = "";
+      if (multi) { vendor = "Group address"; note = "Group address: never a real device's own MAC."; }
+      else if (local) { vendor = "Locally administered address"; note = "The second-lowest bit of the first byte is set, so this is a locally assigned (often randomised “private”) address. So there is no vendor to look up. iOS, Android and Windows use these on purpose, for privacy."; }
+      else { const f = ouiFind(T.map, hex); vendor = f ? (f.vendor === "Private" ? "Private registration (name withheld by the owner)" : f.vendor) : "Not in the registry"; if (f && f.bits > 24) note = `Matched a ${f.bits}-bit block, a sub-allocation of a shared prefix.`;
+        if (f && f.bits === 24 && f.vendor === "IEEE Registration Authority") { vendor = "Shared block (vendor not identifiable)"; note = "IEEE splits this prefix into small blocks for different companies, and this address isn't in any published one."; } }
+      const disp = full ? macFmt(full, ":", true) : hex.slice(0, 6).replace(/(..)(?=.)/g, "$1:") + " (prefix)";
+      out += `<div class="row" style="align-items:flex-start"><span class="k mono" style="min-width:0">${esc(disp)}</span><span class="v" style="text-align:right;flex:1"><b>${esc(vendor)}</b><div class="muted" style="font-weight:400;font-size:12px">${esc(flags)}</div>${note ? `<div class="muted" style="font-weight:400;font-size:12px">${esc(note)}</div>` : ""}</span></div>`;
+      if (full && lines.length === 1) out += `<div class="row"><span class="k">Formats</span><span class="v mono" style="font-size:12px;text-align:right">${macFmt(full, ":", true)}<br>${macFmt(full, "-", true)}<br>${macFmt(full, "", false).replace(/(....)(?=.)/g, "$1.")}<br>${macFmt(full, "", true)}</span></div>`;
+    }
+    resultCard(`<div class="rows">${out}</div>`, { actions: false }); play("success");
+  };
+}
+
+/* ---- Wake-on-LAN packet builder ---- */
+function rWol(c) {
+  c.innerHTML = `<div class="card"><div class="field"><label>MAC address of the machine to wake</label><input type="text" class="mono" id="wl-mac" placeholder="aa:bb:cc:dd:ee:ff" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="btn-row"><div class="field" style="flex:2"><label>Broadcast address</label><input type="text" class="mono" id="wl-ip" value="255.255.255.255" autocomplete="off"></div><div class="field" style="flex:1"><label>UDP port</label><input type="number" class="mono" id="wl-port" value="9" min="1" max="65535"></div></div>
+    <button class="btn" id="wl-go"><i data-lucide="zap"></i> Build packet</button><div id="tool-status"></div><div id="tool-result" class="result"></div>
+    <p class="muted" style="margin-top:12px">Telegram and browsers can't send UDP broadcasts, so this builds the “magic packet” and the commands to send it from a device on the same network as the target. It also needs Wake-on-LAN enabled in the target's BIOS/UEFI and network adapter.</p></div>`;
+  iconsRefresh();
+  $("#wl-go").onclick = () => {
+    play("click"); haptic(); $("#tool-result").innerHTML = ""; const mb = macBytes($("#wl-mac").value), ip = $("#wl-ip").value.trim(), port = +$("#wl-port").value;
+    if (!mb) { setStatus("❌ Enter a 12-digit MAC address", "err"); play("error"); return; }
+    const ipOk = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.test(ip) && ip.split(".").every(x => +x <= 255);
+    if (!ipOk) { setStatus("❌ Broadcast address must be an IPv4 address like 192.168.1.255", "err"); play("error"); return; }
+    if (!(port >= 1 && port <= 65535)) { setStatus("❌ Port must be 1–65535", "err"); play("error"); return; }
+    setStatus("");
+    const hex = macFmt(mb, "", true), packet = new Uint8Array(102).fill(0xff); for (let i = 0; i < 16; i++) packet.set(mb, 6 + i * 6);
+    const ph = Array.from(packet, x => x.toString(16).padStart(2, "0")).join("");
+    const mac = macFmt(mb, ":", false), cmds = [
+      ["Linux (wakeonlan)", `wakeonlan -i ${ip} -p ${port} ${mac}`], ["Linux (etherwake)", `sudo etherwake -b ${mac}`], ["macOS (brew install wakeonlan)", `wakeonlan -i ${ip} -p ${port} ${mac}`],
+      ["Python 3", `python3 -c "import socket;s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1);s.sendto(b'\\xff'*6+bytes.fromhex('${hex}')*16,('${ip}',${port}))"`],
+      ["PowerShell", `\$m='${mac}'.Split(':') | % { [byte]('0x' + \$_) }; \$p = [byte[]](,0xFF * 6) + \$m * 16; \$u = New-Object Net.Sockets.UdpClient; \$u.Connect('${ip}', ${port}); [void]\$u.Send(\$p, \$p.Length)`],
+    ];
+    resultCard(`<label>Magic packet (102 bytes: 6 × FF, then the MAC 16 times)</label><div class="out-area mono" style="word-break:break-all;font-size:11px">${ph}</div>
+      <div class="btn-row" style="margin:10px 0 4px">${copyBtn(ph, "Copy hex")}<button class="btn ghost sm" id="wl-bin"><i data-lucide="download"></i> Save .bin</button></div>`
+      + cmds.map(([t, cmd]) => `<div class="sec-title" style="margin-top:14px">${esc(t)}</div><div class="out-area mono" style="font-size:11px;word-break:break-all">${esc(cmd)}</div><div style="margin-top:6px">${copyBtn(cmd)}</div>`).join("")
+      + `<p class="muted" style="margin-top:14px">Waking a machine from outside your network needs a router that forwards UDP ${port} to the broadcast address, which many don't allow. An always-on box inside the network (a Raspberry Pi, your router) is the more reliable relay.</p>`, { actions: false });
+    $("#wl-bin").onclick = () => saveBlob(new Blob([packet]), `magic-packet-${hex.toLowerCase()}.bin`);
+    play("success");
+  };
+}
+
+/* ---- Bandwidth & transfer-time calculator ---- */
+const BD_SIZE = { B: 1, KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12, KiB: 1024, MiB: 1024 ** 2, GiB: 1024 ** 3, TiB: 1024 ** 4 };
+const BD_RATE = { "Kbit/s": 1e3 / 8, "Mbit/s": 1e6 / 8, "Gbit/s": 1e9 / 8, "KB/s": 1e3, "MB/s": 1e6, "GB/s": 1e9, "MiB/s": 1024 ** 2 };   // → bytes per second
+function fmtDuration(sec) {
+  if (sec !== sec || sec < 0) return "—";
+  if (sec < 1) return sec < 0.001 ? "under 1 ms" : Math.round(sec * 1000) + " ms";
+  if (sec > 100 * 365.25 * 86400) return "over 100 years";
+  let s = Math.round(sec); const y = Math.floor(s / 31557600); s -= y * 31557600; const d = Math.floor(s / 86400); s -= d * 86400;
+  const hh = Math.floor(s / 3600); s -= hh * 3600; const m = Math.floor(s / 60); s -= m * 60;
+  const parts = [[y, "y"], [d, "d"], [hh, "h"], [m, "min"], [s, "s"]].filter(([v]) => v > 0).slice(0, 3);
+  return parts.map(([v, u]) => v + " " + u).join(" ") || "0 s";
+}
+function fmtSizeBytes(b, bin) {
+  const u = bin ? [["TiB", 1024 ** 4], ["GiB", 1024 ** 3], ["MiB", 1024 ** 2], ["KiB", 1024], ["B", 1]] : [["TB", 1e12], ["GB", 1e9], ["MB", 1e6], ["KB", 1e3], ["B", 1]];
+  for (const [n, f] of u) if (b >= f) return (b / f).toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + n;
+  return b.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " B";
+}
+function fmtRate(bps) { const bits = bps * 8; return bits >= 1e9 ? (bits / 1e9).toLocaleString("en-US", { maximumFractionDigits: 2 }) + " Gbit/s" : bits >= 1e6 ? (bits / 1e6).toLocaleString("en-US", { maximumFractionDigits: 2 }) + " Mbit/s" : (bits / 1e3).toLocaleString("en-US", { maximumFractionDigits: 2 }) + " Kbit/s"; }
+function rBandwidth(c) {
+  const opt = (o, sel) => Object.keys(o).map(k => `<option${k === sel ? " selected" : ""}>${k}</option>`).join("");
+  c.innerHTML = `<div class="card"><div class="seg" id="bd-seg"><button data-m="time" class="active">How long?</button><button data-m="speed">What speed?</button><button data-m="size">How much?</button></div>
+    <div class="btn-row" id="bd-f-size"><div class="field" style="flex:2"><label>File size</label><input type="number" class="mono" id="bd-size" value="10" min="0" step="any" inputmode="decimal"></div><div class="field" style="flex:1"><label>&nbsp;</label><select id="bd-su">${opt(BD_SIZE, "GB")}</select></div></div>
+    <div class="btn-row" id="bd-f-rate"><div class="field" style="flex:2"><label>Speed</label><input type="number" class="mono" id="bd-rate" value="100" min="0" step="any" inputmode="decimal"></div><div class="field" style="flex:1"><label>&nbsp;</label><select id="bd-ru">${opt(BD_RATE, "Mbit/s")}</select></div></div>
+    <div class="btn-row" id="bd-f-time" style="display:none"><div class="field" style="flex:1"><label>Hours</label><input type="number" class="mono" id="bd-h" value="0" min="0" inputmode="numeric"></div><div class="field" style="flex:1"><label>Minutes</label><input type="number" class="mono" id="bd-m" value="10" min="0" inputmode="numeric"></div><div class="field" style="flex:1"><label>Seconds</label><input type="number" class="mono" id="bd-s" value="0" min="0" inputmode="numeric"></div></div>
+    <div class="field"><label>Protocol overhead: <b id="bd-ov-l">5</b>%</label><input type="range" id="bd-ov" min="0" max="30" value="5" style="width:100%"></div>
+    <div id="bd-out"></div><p class="muted" style="margin-top:10px">ISP speeds are in <b>bits</b> per second, file sizes in <b>bytes</b> (8 bits). Real transfers lose 3–10% to TCP/TLS overhead, and Wi-Fi, distance and the server's own limits can cost far more, so treat this as a best case.</p></div>`;
+  let mode = "time";
+  const num = id => Math.min(1e15, Math.max(0, parseFloat($(id).value) || 0));
+  const calc = () => {
+    $("#bd-ov-l").textContent = $("#bd-ov").value;
+    const eff = 1 - (+$("#bd-ov").value) / 100, out = $("#bd-out");
+    $("#bd-f-size").style.display = mode === "size" ? "none" : ""; $("#bd-f-rate").style.display = mode === "speed" ? "none" : ""; $("#bd-f-time").style.display = mode === "time" ? "none" : "";
+    const bytes = num("#bd-size") * BD_SIZE[$("#bd-su").value], bps = num("#bd-rate") * BD_RATE[$("#bd-ru").value] * eff, secs = num("#bd-h") * 3600 + num("#bd-m") * 60 + num("#bd-s");
+    let rows = {}, err = "";
+    if (mode === "time") {
+      if (!bps) err = "Enter a speed above zero"; else if (!bytes) err = "Enter a file size above zero"; else {
+        rows = { "Transfer time": `<span class="v" style="font-size:20px;color:var(--accent);font-weight:700">${esc(fmtDuration(bytes / bps))}</span>`, "Effective speed": `<span class="v">${esc(fmtRate(bps))} <span class="muted">(${esc(fmtSizeBytes(bps, false))}/s)</span></span>` };
+        const sizes = [["1 GB", 1e9], ["10 GB", 1e10], ["100 GB", 1e11], ["1 TB", 1e12]];
+        out.innerHTML = rowsHTML(rows) + `<div class="sec-title" style="margin-top:16px">At this speed</div>` + rowsHTML(Object.fromEntries(sizes.map(([n, b]) => [n, `<span class="v">${esc(fmtDuration(b / bps))}</span>`])));
+        return;
+      }
+    } else if (mode === "speed") {
+      if (!secs) err = "Enter a time above zero"; else if (!bytes) err = "Enter a file size above zero"; else {
+        const need = bytes / secs / eff;
+        rows = { "Speed needed": `<span class="v" style="font-size:20px;color:var(--accent);font-weight:700">${esc(fmtRate(need))}</span>`, "In bytes": `<span class="v">${esc(fmtSizeBytes(need, false))}/s</span>`, "Overhead allowance": `<span class="v">${$("#bd-ov").value}%</span>` };
+      }
+    } else {
+      if (!secs) err = "Enter a time above zero"; else if (!bps) err = "Enter a speed above zero"; else {
+        const b = bps * secs; rows = { "Data moved": `<span class="v" style="font-size:20px;color:var(--accent);font-weight:700">${esc(fmtSizeBytes(b, false))}</span>`, "In binary units": `<span class="v">${esc(fmtSizeBytes(b, true))}</span>`, "Over": `<span class="v">${esc(fmtDuration(secs))}</span>` };
+      }
+    }
+    out.innerHTML = err ? `<p class="status err">${err}</p>` : rowsHTML(rows);
+  };
+  $("#bd-seg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { $("#bd-seg .active").classList.remove("active"); b.classList.add("active"); mode = b.dataset.m; play("click"); haptic(); calc(); }));
+  c.querySelectorAll("input,select").forEach(e => e.addEventListener("input", calc)); calc();
+}
+
+/* ---- ASN / BGP lookup ---- */
+function rAsn(c) {
+  form(`<div class="field"><label>AS number, IP address or prefix</label><input type="text" class="mono" id="as-in" placeholder="AS13335   ·   1.1.1.1   ·   2606:4700::/32" autocomplete="off" autocapitalize="off" spellcheck="false"></div>`, "Look up", async () => {
+    await serverRun("Asking RIPEstat…", async () => {
+      $("#tool-result").innerHTML = "";
+      const d = await api("asn", { query: $("#as-in").value });
+      if (!d.success) { setStatus("❌ " + esc(d.error), "err"); play("error"); return; }
+      setStatus("");
+      const link = n => `<a href="#" class="as-go mono" data-as="${+n}">AS${+n}</a>`;
+      let html = "";
+      if (d.via) html += rowsHTML({ "You asked about": `<span class="v mono">${esc(d.via.input)}</span>`, "Announced as": `<span class="v mono">${esc(d.via.prefix || "—")}</span>`, "Origin AS": `<span class="v">${d.via.asns.length ? d.via.asns.map(link).join(", ") : "none"}</span>` }) + `<div style="height:12px"></div>`;
+      if (d.asn === null) { resultCard(html + `<p class="muted">${esc(d.note || "No origin AS found.")}</p>`, { actions: false }); play("success"); return; }
+      const r = { "AS number": `<span class="v mono">AS${d.asn}</span>`, "Holder": `<span class="v">${esc(d.holder || "unknown")}</span>`, "Visible in BGP": `<span class="v">${d.announced === false ? "no (not announcing now)" : d.announced ? "yes" : "unknown"}</span>`, "Registry": `<span class="v">${esc(d.registry || "—")}</span>` };
+      if (d.prefixes) { r["Announced prefixes"] = d.prefixes.too_many ? `<span class="v">too many to list</span>` : `<span class="v">${d.prefixes.v4.toLocaleString()} IPv4 · ${d.prefixes.v6.toLocaleString()} IPv6</span>`; }
+      if (d.neighbours) { r["Upstreams / downstreams"] = `<span class="v">${(d.neighbours.upstream ?? "?").toLocaleString()} / ${(d.neighbours.downstream ?? "?").toLocaleString()}</span>`; }
+      html += rowsHTML(r);
+      if (d.neighbours && d.neighbours.top_upstream.length) html += `<div class="sec-title" style="margin-top:14px">Main upstream providers</div><p class="mono" style="line-height:1.9">${d.neighbours.top_upstream.map(link).join(" · ")}</p>`;
+      if (d.neighbours && d.neighbours.top_downstream.length) html += `<div class="sec-title" style="margin-top:10px">Main downstream customers</div><p class="mono" style="line-height:1.9">${d.neighbours.top_downstream.map(link).join(" · ")}</p>`;
+      if (d.prefixes && d.prefixes.sample.length) html += `<div class="sec-title" style="margin-top:14px">Sample prefixes (lowest addresses first)</div><div class="out-area mono" style="font-size:12px">${d.prefixes.sample.map(esc).join("\n")}</div>`;
+      html += `<p class="muted" style="margin-top:12px">Live routing data from RIPEstat (RIPE NCC). “Upstream” means networks this AS buys or receives transit from; “downstream” means networks that route through it.</p>`;
+      resultCard(html); play("success");
+      $("#tool-result").querySelectorAll(".as-go").forEach(a => a.addEventListener("click", e => { e.preventDefault(); $("#as-in").value = "AS" + a.dataset.as; $("#run-btn").click(); window.scrollTo({ top: 0, behavior: "smooth" }); }));
+    });
+  }, "route");
+  $("#as-in").addEventListener("keydown", e => { if (e.key === "Enter") $("#run-btn").click(); });
 }
 
 /* ---- Port & service lookup ---- */
