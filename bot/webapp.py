@@ -10,6 +10,8 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import os
+import re
 import time
 
 from aiohttp import web
@@ -41,6 +43,70 @@ async def _json_body(request: web.Request) -> dict:
 
 def _ok(data: dict) -> web.Response:
     return web.json_response(data)
+
+
+# --------------------------------------------------------------------------- #
+# Safe multipart uploads
+#
+# aiohttp's client_max_size does NOT apply to streamed multipart parts, so a
+# naive ``await part.read()`` buffers whatever the client sends — and doing so
+# before authenticating lets anyone on the internet exhaust memory. Uploads
+# therefore go through _read_upload: initData must be the first field and is
+# verified before any file byte is read, and every part is size-capped.
+# --------------------------------------------------------------------------- #
+class UploadError(Exception):
+    """A rejected upload; the message is safe to show to the user."""
+
+
+def _fmt_size(n: int) -> str:
+    return f"{n // (1024 * 1024)} MB" if n >= 1024 * 1024 else f"{max(1, n // 1024)} KB"
+
+
+async def _read_part(part, cap: int) -> bytes:
+    """Read one multipart part without ever buffering more than ``cap`` bytes."""
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await part.read_chunk(65536)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > cap:
+            raise UploadError(f"That's too large (limit {_fmt_size(cap)})")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+async def _read_upload(request: web.Request, *, file_cap: int, text_cap: int = 0, text_fields: tuple = ()):
+    """Return ``(user, text_fields, filename, file_bytes)``."""
+    if not request.content_type.startswith("multipart/"):
+        raise UploadError("Expected a file upload")
+    user: TelegramUser | None = None
+    fields: dict[str, str] = {}
+    filename, data = "", b""
+    try:
+        reader = await request.multipart()
+        async for part in reader:
+            if part.name == "initData":
+                user = _auth(request, (await _read_part(part, 8192)).decode("utf-8", "replace").strip())
+                continue
+            if user is None:  # nothing but initData may precede authentication
+                raise web.HTTPUnauthorized(text="Unauthorized: initData must be the first field")
+            if part.name == "file":
+                filename = part.filename or "file"
+                data = await _read_part(part, file_cap)
+            elif part.name in text_fields:
+                fields[part.name] = (await _read_part(part, text_cap)).decode("utf-8", "replace")
+            else:
+                await part.release()  # unknown field: drain without buffering
+    except (UploadError, web.HTTPException):
+        raise
+    except Exception as e:  # missing boundary, truncated body, bad framing...
+        log.info("malformed upload rejected: %s", e.__class__.__name__)
+        raise UploadError("Malformed upload")
+    if user is None:
+        raise web.HTTPUnauthorized(text="Unauthorized: missing initData")
+    return user, fields, filename, data
 
 
 # --------------------------------------------------------------------------- #
@@ -208,20 +274,12 @@ def _bar(score):
 async def h_aidetect(request):
     cfg: Config = request.app["config"]
     bot = request.app["bot"]
-    reader = await request.multipart()
-    init_data = ""
-    text = ""
-    file_bytes = b""
-    filename = ""
-    async for part in reader:
-        if part.name == "initData":
-            init_data = (await part.text()).strip()
-        elif part.name == "text":
-            text = await part.text()
-        elif part.name == "file":
-            filename = part.filename or "file"
-            file_bytes = await part.read(decode=False)
-    user = _auth(request, init_data)
+    try:
+        user, fields, filename, file_bytes = await _read_upload(
+            request, file_cap=10 * 1024 * 1024, text_cap=200_000, text_fields=("text",))
+    except UploadError as e:
+        return _ok({"success": False, "error": str(e)})
+    text = fields.get("text", "")
 
     if file_bytes:
         try:
@@ -253,19 +311,49 @@ async def h_aidetect(request):
     return _ok(res)
 
 
+_DOC_EXTS = {".pdf", ".docx", ".md", ".txt", ".csv", ".png"}
+_DOC_MAX = 25 * 1024 * 1024
+
+
+def _safe_filename(name: str, default: str = "document") -> str:
+    name = os.path.basename((name or "").replace("\\", "/"))
+    name = re.sub(r"[^\w.\- ()]+", "_", name, flags=re.UNICODE).strip(" .")[:80]
+    return name or default
+
+
+async def h_senddoc(request):
+    """Deliver a file the browser generated (PDF, cleaned DOCX, …) to the user's chat.
+
+    Telegram WebViews often can't download blobs, so this is the reliable path.
+    """
+    bot = request.app["bot"]
+    try:
+        user, fields, filename, data = await _read_upload(
+            request, file_cap=_DOC_MAX, text_cap=300, text_fields=("caption",))
+    except UploadError as e:
+        return _ok({"success": False, "error": str(e)})
+    if not data:
+        return _ok({"success": False, "error": "No file received"})
+    name = _safe_filename(filename)
+    if os.path.splitext(name)[1].lower() not in _DOC_EXTS:
+        return _ok({"success": False, "error": "That file type can't be sent"})
+    if not _cooldown_ok(user.id, "senddoc", 2):
+        return _ok({"success": False, "error": "Please wait a moment between sends."})
+    try:
+        await bot.send_document(chat_id=user.id, document=io.BytesIO(data), filename=name,
+                                caption=(fields.get("caption") or None))
+        return _ok({"success": True})
+    except Exception as e:
+        log.warning("senddoc delivery failed: %s", e)
+        return _ok({"success": False, "error": "Could not deliver to chat. Have you started the bot?"})
+
+
 async def h_exif(request):
     bot = request.app["bot"]
-    reader = await request.multipart()
-    init_data = ""
-    file_bytes = b""
-    filename = "image"
-    async for part in reader:
-        if part.name == "initData":
-            init_data = (await part.text()).strip()
-        elif part.name == "file":
-            filename = part.filename or "image"
-            file_bytes = await part.read(decode=False)
-    user = _auth(request, init_data)
+    try:
+        user, _, filename, file_bytes = await _read_upload(request, file_cap=20 * 1024 * 1024)
+    except UploadError as e:
+        return _ok({"success": False, "error": str(e)})
     if not file_bytes:
         return _ok({"success": False, "error": "No file received"})
     try:
@@ -325,5 +413,6 @@ def build_api_routes() -> list:
         web.post("/api/share", h_share),
         web.post("/api/tts", h_tts),
         web.post("/api/exif", h_exif),
+        web.post("/api/senddoc", h_senddoc),
         web.post("/api/aidetect", h_aidetect),
     ]
