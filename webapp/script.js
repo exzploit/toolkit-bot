@@ -31,7 +31,7 @@ const catName = k => T(k);
 // Romanian name/sub per tool id: [name, sub]
 const RO = {
   password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
-  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"], pwned:["Parolă Compromisă","E parola în scurgeri de date?"], hmac:["HMAC","Hash cu cheie (SHA-1/256/384/512)"], bcrypt:["Bcrypt","Hash și verificare parole"], jwtsign:["Semnare JWT","Creează și semnează un token"], textcrypt:["Criptare Text","Criptează / decriptează text (AES-256)"], subdomains:["Căutare Subdomenii","Pasiv, din jurnale de certificate"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"], pwned:["Parolă Compromisă","E parola în scurgeri de date?"], hmac:["HMAC","Hash cu cheie (SHA-1/256/384/512)"], bcrypt:["Bcrypt","Hash și verificare parole"], jwtsign:["Semnare JWT","Creează și semnează un token"], textcrypt:["Criptare Text","Criptează / decriptează text (AES-256)"], subdomains:["Căutare Subdomenii","Pasiv, din jurnale de certificate"], cheats:["Pe scurt","Git, bash, vim, regex, SQL, HTTP"], asciiuni:["ASCII / Unicode","Tabel și inspector de caractere"], bitwise:["Calc. Biți","AND, OR, XOR, deplasări"], ports:["Căutare Porturi","Ce rulează pe portul 5432?"], wordfreq:["Frecvență Cuvinte","Cele mai folosite cuvinte"], mdpdf:["Markdown în PDF","Convertește Markdown în PDF"], docscrub:["Curăță Metadate Doc.","PDF și DOCX fără date ascunse"],
   text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"], linetools:["Unelte Linii","Sortează, elimină dubluri…"], findreplace:["Caută & Înlocuiește","Înlocuire cu regex"], textanalysis:["Analiză Text","Lizibilitate & cuvinte cheie"], textclean:["Curăță Text","Diacritice, ghilimele, spații"], ciphers:["Cifruri Clasice","Atbash & Vigenère"], aidetect:["Detector AI","Verifică text/fișiere pentru AI"],
   subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
   download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"], stego:["Steganografie","Ascunde un mesaj în imagine"],
@@ -53,7 +53,21 @@ function toast(msg, kind = "") {
 /* ---------- dom helpers ---------- */
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-function copy(txt) { try { navigator.clipboard.writeText(txt); } catch (_) {} play("success"); notify(); toast("Copied", "ok"); }
+async function copyToClipboard(txt) {
+  try { await navigator.clipboard.writeText(txt); return true; } catch (_) {}
+  try {  // fallback for WebViews that deny the async Clipboard API
+    const ta = document.createElement("textarea"); ta.value = txt; ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0"; document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, txt.length);
+    const ok = document.execCommand("copy"); ta.remove(); return ok;
+  } catch (_) { return false; }
+}
+function copy(txt) {
+  copyToClipboard(txt).then(ok => {
+    if (ok) { play("success"); notify(); toast("Copied", "ok"); }
+    else { play("error"); notify("error"); toast("Couldn't copy — select the text and copy it manually", "err"); }
+  });
+}
 function body() { return $("#detail-body"); }
 function setStatus(html, cls = "") { const s = $("#tool-status"); if (s) { s.className = "status " + cls; s.innerHTML = html; } }
 const spin = () => `<span class="spinner"></span>`;
@@ -118,6 +132,9 @@ const TOOLS = [
   { id: "hmac", cat: "dev", icon: "key-square", name: "HMAC", sub: "Keyed hash (SHA-1/256/384/512)", kw: "signature mac authenticate", render: rHmac },
   { id: "bcrypt", cat: "dev", icon: "lock-keyhole", name: "Bcrypt", sub: "Hash & verify passwords", kw: "password hash verify salt", render: rBcrypt },
   { id: "jwtsign", cat: "dev", icon: "stamp", name: "JWT Signer", sub: "Create & sign a token (HS256+)", kw: "jwt token hs256 create sign", render: rJwtSign },
+  { id: "cheats", cat: "dev", icon: "book-open", name: "Cheat Sheets", sub: "Git, bash, vim, regex, SQL, HTTP", kw: "reference commands syntax help cheatsheet", render: rCheats },
+  { id: "asciiuni", cat: "dev", icon: "languages", name: "ASCII / Unicode", sub: "Table & character inspector", kw: "codepoint utf8 utf-16 character hidden invisible zero-width", render: rAsciiUni },
+  { id: "bitwise", cat: "dev", icon: "cpu", name: "Bitwise Calc", sub: "AND, OR, XOR, shifts, rotate", kw: "binary hex shift mask not popcount", render: rBitwise },
 
   // --- TEXT ---
   { id: "text", cat: "text", icon: "type", name: "Text Styles", sub: "Fancy, Zalgo, flip, leet", kw: "font unicode", render: rText },
@@ -132,6 +149,7 @@ const TOOLS = [
   { id: "textclean", cat: "text", icon: "eraser", name: "Text Cleaner", sub: "Accents, smart quotes, spaces", kw: "diacritics normalize", render: rTextClean },
   { id: "ciphers", cat: "text", icon: "square-asterisk", name: "Classic Ciphers", sub: "Atbash & Vigenère", kw: "vigenere atbash encrypt", render: rCiphers },
   { id: "aidetect", cat: "text", icon: "bot", name: "AI Detector", sub: "Check text/files for AI authorship", kw: "chatgpt gpt detect plagiarism", render: rAiDetect },
+  { id: "wordfreq", cat: "text", icon: "bar-chart-horizontal", name: "Word Frequency", sub: "Most-used words & phrases", kw: "count frequency top keywords ngram", render: rWordFreq },
 
   // --- NETWORK ---
   { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4/IPv6 CIDR breakdown", kw: "cidr netmask ip", render: rSubnet },
@@ -143,6 +161,7 @@ const TOOLS = [
   { id: "ssl", cat: "network", icon: "lock", name: "SSL Checker", sub: "Cert expiry & issuer", kw: "https certificate tls", render: rSSL },
   { id: "dns", cat: "network", icon: "list-tree", name: "DNS Lookup", sub: "Any record type", kw: "resolve a mx txt cname", render: rDns },
   { id: "subdomains", cat: "network", icon: "binoculars", name: "Subdomain Finder", sub: "Passive, via certificate logs", kw: "recon enumerate crt.sh certificate transparency osint", render: rSubdomains },
+  { id: "ports", cat: "network", icon: "plug", name: "Port Lookup", sub: "What runs on port 5432?", kw: "service tcp udp number well-known", render: rPorts },
   { id: "phone", cat: "network", icon: "phone", name: "Phone Lookup", sub: "Carrier, region, timezone", kw: "number osint", render: rPhone },
   { id: "username", cat: "network", icon: "users", name: "Username Check", sub: "Across public platforms", kw: "social osint", render: rUsername },
   { id: "dork", cat: "network", icon: "search", name: "Dork Builder", sub: "Google recon queries", kw: "osint google", render: rDork },
@@ -1688,6 +1707,235 @@ function rSubdomains(c) {
       play("success"); notify();
     });
   }, "binoculars");
+}
+
+/* =========================================================================
+   REFERENCE PACK (v7) — cheat sheets, ports, ASCII/Unicode, bitwise, word frequency
+   ========================================================================= */
+const _scripts = {}, _texts = {};
+function loadScript(src) {
+  if (_scripts[src]) return _scripts[src];
+  _scripts[src] = new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = src; s.onload = res;
+    s.onerror = () => { delete _scripts[src]; rej(new Error("Could not load " + src.split("/").pop() + " — check your connection")); };
+    document.head.appendChild(s);
+  });
+  return _scripts[src];
+}
+async function loadText(path) {
+  if (_texts[path]) return _texts[path];
+  const r = await fetch(path); if (!r.ok) throw new Error("Could not load " + path);
+  return (_texts[path] = await r.text());
+}
+
+/* ---- Cheat sheets ---- */
+function parseCheats(txt) {
+  const topics = []; let topic = null, sec = null;
+  for (const raw of txt.split("\n")) {
+    const line = raw.replace(/\s+$/, "");
+    if (!line || /^#\s/.test(line)) continue;
+    let m;
+    if ((m = line.match(/^@@(\w+)\s+(.+)$/))) { topic = { id: m[1], name: m[2], sections: [] }; topics.push(topic); sec = null; continue; }
+    if (!topic) continue;
+    if ((m = line.match(/^##\s+(.+)$/))) { sec = { title: m[1], items: [] }; topic.sections.push(sec); continue; }
+    const k = line.lastIndexOf(" :: "); if (k < 0 || !sec) continue;
+    let desc = line.slice(k + 4), warn = false;
+    if (desc.endsWith(" !")) { warn = true; desc = desc.slice(0, -2); }
+    sec.items.push({ cmd: line.slice(0, k), desc, warn });
+  }
+  return topics;
+}
+async function rCheats(c) {
+  c.innerHTML = `<div class="card muted">${spin()} Loading…</div>`;
+  let topics;
+  try { topics = parseCheats(await loadText("data/cheats.txt")); }
+  catch (e) { c.innerHTML = `<div class="card"><p class="status err">❌ ${esc(e.message)}</p></div>`; return; }
+  let cur = store.get("tk_cheat_topic", "git"); if (!topics.some(t => t.id === cur)) cur = topics[0].id;
+  c.innerHTML = `<div class="seg" id="ch-seg" style="flex-wrap:wrap">${topics.map(t => `<button data-t="${t.id}" class="${t.id === cur ? "active" : ""}">${esc(t.name)}</button>`).join("")}</div>
+    <div class="field"><input type="text" id="ch-q" placeholder="Filter this sheet…" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <p class="muted" style="margin:-4px 2px 4px">Tap a line to copy it.  ⚠️ marks commands that destroy data.</p><div id="ch-out"></div>`;
+  const render = () => {
+    const t = topics.find(x => x.id === cur), q = $("#ch-q").value.trim().toLowerCase();
+    let html = "";
+    for (const s of t.sections) {
+      const items = q ? s.items.filter(it => (it.cmd + " " + it.desc).toLowerCase().includes(q)) : s.items;
+      if (!items.length) continue;
+      html += `<div class="sec-title" style="margin-top:16px">${esc(s.title)}</div><div class="card" style="padding:4px 14px">`
+        + items.map(it => `<div class="cs-row" data-copy="${esc(it.cmd)}"><code>${esc(it.cmd)}</code><span>${it.warn ? "⚠️ " : ""}${esc(it.desc)}</span></div>`).join("") + `</div>`;
+    }
+    $("#ch-out").innerHTML = html || `<div class="empty"><div>No matches in ${esc(t.name)}</div></div>`;
+  };
+  $("#ch-seg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    $("#ch-seg .active").classList.remove("active"); b.classList.add("active"); cur = b.dataset.t; store.set("tk_cheat_topic", cur); play("click"); haptic(); render();
+  }));
+  $("#ch-q").addEventListener("input", render);
+  render();
+}
+
+/* ---- Port & service lookup ---- */
+function parsePorts(txt) {
+  return txt.split("\n").filter(l => l.trim() && !/^#\s/.test(l)).map(l => {
+    const f = l.split("|").map(x => x.trim());
+    return { port: parseInt(f[0], 10), proto: f[1], service: f[2], desc: f[3], note: f[4] || "" };
+  }).filter(p => p.port >= 0 && p.service);
+}
+const portRange = n => n <= 1023 ? "the well-known (system) range" : n <= 49151 ? "the registered range" : "the dynamic / private range";
+async function rPorts(c) {
+  c.innerHTML = `<div class="card muted">${spin()} Loading…</div>`;
+  let ports;
+  try { ports = parsePorts(await loadText("data/ports.txt")); }
+  catch (e) { c.innerHTML = `<div class="card"><p class="status err">❌ ${esc(e.message)}</p></div>`; return; }
+  c.innerHTML = `<div class="card"><div class="field"><label>Port number, or a service name</label><input type="text" class="mono" id="pt-q" placeholder="5432   or   postgres   or   vpn" autocomplete="off" autocapitalize="off" spellcheck="false"></div><div id="pt-out"></div></div>`;
+  const row = p => `<div class="row" style="align-items:flex-start"><span class="k mono" style="min-width:86px;color:var(--accent);font-weight:700">${p.port}<span class="muted" style="font-weight:400">/${esc(p.proto)}</span></span>
+    <span class="v" style="text-align:left;flex:1">${esc(p.service)}<div class="muted" style="font-weight:400">${esc(p.desc)}</div>${p.note ? `<div style="font-weight:400;color:var(--warn);font-size:12px">⚠️ ${esc(p.note)}</div>` : ""}</span></div>`;
+  const render = () => {
+    const q = $("#pt-q").value.trim().toLowerCase(), out = $("#pt-out");
+    const num = q.match(/^(?:port\s*)?(\d{1,5})(?:\s*\/\s*(?:tcp|udp))?$/);
+    let list, head = "";
+    if (num) {
+      const n = parseInt(num[1], 10);
+      if (n > 65535) { out.innerHTML = `<p class="status err">Ports only go up to 65535</p>`; return; }
+      list = ports.filter(p => p.port === n);
+      if (!list.length) head = `<p class="muted" style="margin-bottom:8px">Port ${n} isn't in this list. It's in ${portRange(n)}${n > 1023 ? ", where most ports are assigned dynamically or by the application" : ""}.</p>`;
+    } else if (q) {
+      const words = q.split(/\s+/);
+      list = ports.filter(p => { const hay = (p.service + " " + p.desc + " " + p.proto + " " + p.note).toLowerCase(); return words.every(w => hay.includes(w)); });
+    } else { list = ports.slice(0, 25); head = `<p class="muted" style="margin-bottom:8px">Showing the first 25 of ${ports.length} ports. Type to search.</p>`; }
+    out.innerHTML = head + (list.length ? `<div class="rows">${list.slice(0, 60).map(row).join("")}</div>` + (list.length > 60 ? `<p class="muted">+${list.length - 60} more — narrow your search.</p>` : "")
+      : (num ? "" : `<p class="muted">No match.</p>`))
+      + `<p class="muted" style="margin-top:12px">Ranges: 0–1023 well-known · 1024–49151 registered · 49152–65535 dynamic.</p>`;
+  };
+  $("#pt-q").addEventListener("input", render); render();
+}
+
+/* ---- ASCII table & Unicode inspector ---- */
+const ASCII_CTRL = ["Null","Start of heading","Start of text","End of text","End of transmission","Enquiry","Acknowledge","Bell","Backspace","Horizontal tab","Line feed (newline)","Vertical tab","Form feed","Carriage return","Shift out","Shift in","Data link escape","Device control 1 (XON)","Device control 2","Device control 3 (XOFF)","Device control 4","Negative acknowledge","Synchronous idle","End of transmission block","Cancel","End of medium","Substitute","Escape","File separator","Group separator","Record separator","Unit separator"];
+const ASCII_CTRL_ABBR = "NUL SOH STX ETX EOT ENQ ACK BEL BS HT LF VT FF CR SO SI DLE DC1 DC2 DC3 DC4 NAK SYN ETB CAN EM SUB ESC FS GS RS US".split(" ");
+const ASCII_PUNCT = { 32: "Space", 33: "Exclamation mark", 34: "Double quote", 35: "Number sign (hash)", 36: "Dollar sign", 37: "Percent sign", 38: "Ampersand", 39: "Apostrophe (single quote)", 40: "Left parenthesis", 41: "Right parenthesis", 42: "Asterisk", 43: "Plus sign", 44: "Comma", 45: "Hyphen-minus", 46: "Full stop (period)", 47: "Slash", 58: "Colon", 59: "Semicolon", 60: "Less-than sign", 61: "Equals sign", 62: "Greater-than sign", 63: "Question mark", 64: "At sign", 91: "Left square bracket", 92: "Backslash", 93: "Right square bracket", 94: "Caret", 95: "Underscore", 96: "Grave accent (backtick)", 123: "Left curly brace", 124: "Vertical bar (pipe)", 125: "Right curly brace", 126: "Tilde" };
+function asciiName(n) { if (n < 32) return ASCII_CTRL_ABBR[n] + " — " + ASCII_CTRL[n]; if (n === 127) return "DEL — Delete"; if (ASCII_PUNCT[n]) return ASCII_PUNCT[n]; if (n >= 48 && n <= 57) return "Digit " + String.fromCharCode(n); if (n >= 65 && n <= 90) return "Uppercase " + String.fromCharCode(n); return "Lowercase " + String.fromCharCode(n); }
+const INVISIBLE = { 0xA0: "No-break space", 0xAD: "Soft hyphen", 0x200B: "Zero-width space", 0x200C: "Zero-width non-joiner", 0x200D: "Zero-width joiner", 0x200E: "Left-to-right mark", 0x200F: "Right-to-left mark", 0x2028: "Line separator", 0x2029: "Paragraph separator", 0x202A: "LTR embedding", 0x202B: "RTL embedding", 0x202C: "Pop directional formatting", 0x202D: "LTR override", 0x202E: "RTL override", 0x2060: "Word joiner", 0x2066: "LTR isolate", 0x2067: "RTL isolate", 0x2068: "First strong isolate", 0x2069: "Pop directional isolate", 0x3000: "Ideographic space", 0xFEFF: "Zero-width no-break space (BOM)" };
+const HIDDEN_RISK = n => n === 0xAD || (n >= 0x200B && n <= 0x200F) || (n >= 0x202A && n <= 0x202E) || n === 0x2060 || (n >= 0x2066 && n <= 0x2069) || n === 0xFEFF;
+function uniTest(re) { try { return new RegExp(re, "u"); } catch (_) { return null; } }
+const UNI_RE = { C: uniTest("^\\p{C}$"), Z: uniTest("^\\p{Z}$"), M: uniTest("^\\p{M}$"), L: uniTest("^\\p{L}$"), N: uniTest("^\\p{N}$"), P: uniTest("^\\p{P}$"), S: uniTest("^\\p{S}$"), E: uniTest("^\\p{Extended_Pictographic}$") };
+function uniCategory(ch) {
+  const t = k => UNI_RE[k] && UNI_RE[k].test(ch);
+  return t("E") ? "Emoji / pictograph" : t("C") ? "Control / format" : t("Z") ? "Space / separator" : t("M") ? "Combining mark" : t("L") ? "Letter" : t("N") ? "Number" : t("P") ? "Punctuation" : t("S") ? "Symbol" : "Other";
+}
+function parseInspectInput(v) {
+  if (/^\s*(?:(?:U\+|0x)[0-9a-f]{1,6})(?:\s+(?:U\+|0x)[0-9a-f]{1,6})*\s*$/i.test(v))
+    return v.trim().split(/\s+/).map(t => parseInt(t.replace(/^U\+|^0x/i, ""), 16)).filter(n => n <= 0x10FFFF && !(n >= 0xD800 && n <= 0xDFFF));
+  return Array.from(v).map(ch => ch.codePointAt(0));
+}
+function rAsciiUni(c) {
+  c.innerHTML = `<div class="seg" id="au-seg"><button data-m="table" class="active">ASCII table</button><button data-m="inspect">Inspect text</button></div><div id="au-body"></div>`;
+  const body = $("#au-body");
+  const showTable = () => {
+    body.innerHTML = `<div class="card"><div class="field"><label>Filter by character, number (65 or 0x41) or name</label><input type="text" class="mono" id="au-q" placeholder="A   65   0x41   ampersand" autocomplete="off" autocapitalize="off" spellcheck="false"></div><div style="overflow-x:auto"><table class="mini"><thead><tr><th>Dec</th><th>Hex</th><th>Oct</th><th>Char</th><th>Name</th></tr></thead><tbody id="au-rows"></tbody></table></div><p class="muted" style="margin-top:10px">Tap a row to copy the character.</p></div>`;
+    const entries = Array.from({ length: 128 }, (_, n) => ({ n, ch: String.fromCharCode(n), name: asciiName(n) }));
+    const render = () => {
+      const q = $("#au-q").value.trim(), ql = q.toLowerCase();
+      const single = Array.from(q).length === 1;  // one character: match that character or number, not every name containing it
+      const list = entries.filter(e => !q || String(e.n) === q || ("0x" + e.n.toString(16)) === ql || e.ch === q || (!single && e.name.toLowerCase().includes(ql)));
+      $("#au-rows").innerHTML = list.map(e => {
+        const printable = e.n > 32 && e.n < 127, shown = e.n === 32 ? "␠" : printable ? esc(e.ch) : `<span class="muted">${esc(e.n === 127 ? "DEL" : ASCII_CTRL_ABBR[e.n])}</span>`;
+        return `<tr data-copy="${esc(printable || e.n === 32 ? e.ch : "\\x" + e.n.toString(16).toUpperCase().padStart(2, "0"))}"><td>${e.n}</td><td>0x${e.n.toString(16).toUpperCase().padStart(2, "0")}</td><td>${e.n.toString(8).padStart(3, "0")}</td><td style="color:var(--accent);font-weight:700">${shown}</td><td style="font-family:var(--sans)">${esc(e.name)}</td></tr>`;
+      }).join("") || `<tr><td colspan="5" class="muted">No match</td></tr>`;
+    };
+    $("#au-q").addEventListener("input", render); render();
+  };
+  const showInspect = () => {
+    body.innerHTML = `<div class="card"><div class="field"><label>Text, or code points like U+1F600</label><textarea id="au-in" class="mono" placeholder="héllo ☕ 😀   or   U+00E9 U+2615"></textarea></div><div id="au-out"></div></div>`;
+    const render = () => {
+      const v = $("#au-in").value, out = $("#au-out");
+      if (!v) { out.innerHTML = `<p class="muted">Paste text to see every character's code point, UTF-8 and UTF-16 encoding. Hidden characters are flagged.</p>`; return; }
+      const cps = parseInspectInput(v), shown = cps.slice(0, 300), enc = new TextEncoder();
+      const text = String.fromCodePoint(...cps);
+      let graphemes = null; try { graphemes = [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text)].length; } catch (_) {}
+      const hidden = cps.filter(HIDDEN_RISK).length;
+      const rows = shown.map(cp => {
+        const ch = String.fromCodePoint(cp), bytes = [...enc.encode(ch)].map(b => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
+        const u16 = cp > 0xFFFF ? [0xD800 + ((cp - 0x10000) >> 10), 0xDC00 + ((cp - 0x10000) & 0x3FF)].map(x => x.toString(16).toUpperCase()).join(" ") : cp.toString(16).toUpperCase().padStart(4, "0");
+        const special = INVISIBLE[cp] || (cp < 32 || cp === 127 ? asciiName(cp).split(" — ")[0] : null);
+        const glyph = special ? `<span class="pill ${HIDDEN_RISK(cp) ? "warn" : "info"}" style="font-size:10px">${esc(special)}</span>` : esc(ch);
+        return `<tr data-copy="U+${cp.toString(16).toUpperCase().padStart(4, "0")}"><td style="color:var(--accent);font-weight:700">${glyph}</td><td>U+${cp.toString(16).toUpperCase().padStart(4, "0")}</td><td>${bytes}</td><td>${u16}</td><td>&amp;#${cp};</td><td style="font-family:var(--sans)">${esc(INVISIBLE[cp] || uniCategory(ch))}</td></tr>`;
+      }).join("");
+      out.innerHTML = `<div style="margin-bottom:10px"><span class="pill info">${cps.length} code point${cps.length === 1 ? "" : "s"}</span> ${graphemes != null && graphemes !== cps.length ? `<span class="pill info">${graphemes} visible character${graphemes === 1 ? "" : "s"}</span> ` : ""}<span class="pill info">${enc.encode(text).length} UTF-8 bytes</span> <span class="pill info">${text.length} UTF-16 units</span> ${hidden ? `<span class="pill warn">⚠️ ${hidden} hidden / invisible</span>` : ""}</div>
+        <div style="overflow-x:auto"><table class="mini"><thead><tr><th>Char</th><th>Code point</th><th>UTF-8</th><th>UTF-16</th><th>HTML</th><th>Kind</th></tr></thead><tbody>${rows}</tbody></table></div>${cps.length > 300 ? `<p class="muted">Showing the first 300 of ${cps.length}.</p>` : ""}`;
+    };
+    $("#au-in").addEventListener("input", render); render();
+  };
+  const seg = $("#au-seg");
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { seg.querySelector(".active").classList.remove("active"); b.classList.add("active"); play("click"); haptic(); b.dataset.m === "table" ? showTable() : showInspect(); }));
+  showTable();
+}
+
+/* ---- Bitwise calculator (BigInt, so 64-bit stays exact) ---- */
+function parseBig(s) {
+  s = s.trim().replace(/[_\s]/g, ""); let neg = false;
+  if (s[0] === "-") { neg = true; s = s.slice(1); } else if (s[0] === "+") s = s.slice(1);
+  if (!/^(?:0x[0-9a-f]+|0b[01]+|0o[0-7]+|\d+)$/i.test(s)) throw new Error("Use decimal, 0x… hex, 0b… binary or 0o… octal");
+  const v = BigInt(s.toLowerCase()); return neg ? -v : v;
+}
+function rBitwise(c) {
+  form(`<div class="btn-row"><div class="field" style="flex:1"><label>A</label><input type="text" class="mono" id="bw-a" value="0xF0" autocapitalize="off" autocomplete="off"></div><div class="field" style="flex:1"><label>B</label><input type="text" class="mono" id="bw-b" value="0x3C" autocapitalize="off" autocomplete="off"></div></div>
+    <div class="btn-row"><div class="field" style="flex:1"><label>Width (bits)</label><select id="bw-w"><option>8</option><option>16</option><option selected>32</option><option>64</option></select></div><div class="field" style="flex:1"><label>Shift / rotate by</label><input type="number" class="mono" id="bw-n" value="1" min="0" max="64"></div></div>
+    <p class="muted">Decimal, 0x hex, 0b binary or 0o octal. Negative numbers use two's complement.</p>`, "Calculate", () => {
+    const w = parseInt($("#bw-w").value, 10), W = BigInt(w), mask = (1n << W) - 1n, n = Math.max(0, Math.min(64, parseInt($("#bw-n").value, 10) || 0)), N = BigInt(n);
+    let a, b;
+    try {
+      const fit = (v, label) => { if (v < -(1n << (W - 1n)) || v > mask) throw new Error(`${label} doesn't fit in ${w} bits`); return BigInt.asUintN(w, v); };
+      a = fit(parseBig($("#bw-a").value), "A"); b = fit(parseBig($("#bw-b").value), "B");
+    } catch (e) { setStatus("❌ " + esc(e.message), "err"); play("error"); return; }
+    setStatus("");
+    const fmt = v => { const u = BigInt.asUintN(w, v), s = BigInt.asIntN(w, v);
+      return `<div style="text-align:right"><b class="mono">0x${u.toString(16).toUpperCase().padStart(w / 4, "0")}</b><div class="muted mono">${u}${s < 0n ? " · signed " + s : ""}</div><div class="muted mono" style="word-break:break-all;font-size:11px">${u.toString(2).padStart(w, "0").replace(/(.{4})(?=.)/g, "$1 ")}</div></div>`; };
+    const rot = (v, k, left) => { k = BigInt(((k % w) + w) % w); if (k === 0n) return v; return left ? ((v << k) | (v >> (W - k))) & mask : ((v >> k) | (v << (W - k))) & mask; };
+    const ops = [["A", a], ["B", b], ["A & B", a & b], ["A | B", a | b], ["A ^ B", a ^ b], ["~A", ~a & mask], [`A << ${n}`, (a << N) & mask], [`A >> ${n} (logical)`, a >> N], [`A >> ${n} (arithmetic)`, BigInt.asUintN(w, BigInt.asIntN(w, a) >> N)], [`Rotate A left ${n}`, rot(a, n, true)], [`Rotate A right ${n}`, rot(a, n, false)]];
+    const pop = a.toString(2).replace(/0/g, "").length;
+    resultCard(`<div class="rows">${ops.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${fmt(v)}</span></div>`).join("")}<div class="row"><span class="k">Set bits in A</span><span class="v mono">${pop} of ${w}</span></div></div>`);
+    play("success");
+  }, "cpu");
+}
+
+/* ---- Word frequency ---- */
+const WF_STOP = new Set(("the a an and or but if of to in on at by for with from as is are was were be been being it its this that these those i you he she we they me him her us them my your his our their not no so than then there here have has had do does did will would can could should may might about into over up out what which who whom when where why how all any some just also very too more most such only own same don't didn't isn't it's i'm you're that's there's can't won't " +
+  "și si în in de la cu pe un o este sunt care că ca să sa se nu mai din pentru al ale ai era fi fost dar sau ce cum dacă daca după dupa însă insa lui ei el ea ne vă va le îl il mi ți ti își isi foarte prin până pana către catre între intre fără fara dintre acest această aceasta acesta acești aceste unei unui unor tot toate toți am are avea au voi noi eu tu ele mă ma te").split(/\s+/));
+const WF_RE = (() => { try { return new RegExp("[\\p{L}\\p{N}]+(?:['’\\-][\\p{L}\\p{N}]+)*", "gu"); } catch (_) { return /[A-Za-z0-9ăâîșțĂÂÎȘȚ]+(?:['’-][A-Za-z0-9]+)*/g; } })();
+function rWordFreq(c) {
+  c.innerHTML = `<div class="card">
+    <div class="field"><textarea id="wf-in" style="min-height:140px" placeholder="Paste text…"></textarea></div>
+    <div class="seg" id="wf-mode"><button data-n="1" class="active">Words</button><button data-n="2">Pairs</button><button data-n="3">Triples</button></div>
+    <div class="switch-row"><span>Ignore common words (EN + RO)</span><input type="checkbox" class="sw" id="wf-stop" checked></div>
+    <div class="btn-row" style="margin-top:12px">
+      <div class="field" style="flex:1"><label>Min length</label><select id="wf-min">${[1, 2, 3, 4, 5, 6].map(x => `<option${x === 2 ? " selected" : ""}>${x}</option>`).join("")}</select></div>
+      <div class="field" style="flex:1"><label>Show top</label><select id="wf-top">${[10, 25, 50, 100].map(x => `<option${x === 25 ? " selected" : ""}>${x}</option>`).join("")}</select></div>
+      <div class="field" style="flex:1"><label>Sort</label><select id="wf-sort"><option value="count">By count</option><option value="alpha">A–Z</option></select></div></div>
+    <div id="wf-out" style="margin-top:6px"></div></div>`;
+  let csv = "";
+  const render = () => {
+    const text = $("#wf-in").value, out = $("#wf-out"), n = parseInt($("#wf-mode .active").dataset.n, 10), ign = $("#wf-stop").checked, min = parseInt($("#wf-min").value, 10), top = parseInt($("#wf-top").value, 10);
+    const toks = (text.match(WF_RE) || []).map(w => w.toLocaleLowerCase());
+    if (!toks.length) { out.innerHTML = `<p class="muted">Paste some text to count its words.</p>`; csv = ""; return; }
+    const counts = new Map(); let counted = 0;
+    if (n === 1) { for (const w of toks) { if (w.length < min || (ign && WF_STOP.has(w))) continue; counts.set(w, (counts.get(w) || 0) + 1); counted++; } }
+    else for (let i = 0; i + n <= toks.length; i++) {
+      const g = toks.slice(i, i + n); if (g.some(w => w.length < min) || (ign && (WF_STOP.has(g[0]) || WF_STOP.has(g[n - 1])))) continue;
+      const k = g.join(" "); counts.set(k, (counts.get(k) || 0) + 1); counted++;
+    }
+    let rows = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
+    if ($("#wf-sort").value === "alpha") rows.sort((a, b) => a[0].localeCompare(b[0]));
+    if (!rows.length) { out.innerHTML = `<p class="muted">Nothing left after filtering — try turning off "ignore common words" or lowering the minimum length.</p>`; csv = ""; return; }
+    const max = Math.max(...rows.map(r => r[1]));
+    csv = "word,count,percent\n" + rows.map(([w, k]) => `"${w.replace(/"/g, '""')}",${k},${(k / counted * 100).toFixed(2)}`).join("\n");
+    const best = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+    out.innerHTML = `<div style="margin-bottom:10px"><span class="pill info">${toks.length} words</span> <span class="pill info">${new Set(toks).size} unique</span> <span class="pill ok">top: ${esc(best[0])} ×${best[1]}</span></div>
+      <div class="rows">${rows.map(([w, k]) => `<div class="row" style="flex-direction:column;align-items:stretch;gap:5px"><div style="display:flex;justify-content:space-between;gap:10px"><span class="v mono" style="text-align:left">${esc(w)}</span><span class="k mono">${k} · ${(k / counted * 100).toFixed(1)}%</span></div><div style="height:6px;border-radius:999px;background:var(--bg);overflow:hidden"><div style="height:100%;width:${Math.round(k / max * 100)}%;background:var(--accent)"></div></div></div>`).join("")}</div>
+      <div class="btn-row" style="margin-top:14px"><button class="btn ghost sm" id="wf-copy"><i data-lucide="copy"></i> Copy CSV</button><button class="btn ghost sm" id="wf-dl"><i data-lucide="download"></i> Download CSV</button></div>`;
+    $("#wf-copy").onclick = () => copy(csv); $("#wf-dl").onclick = () => downloadText(csv, "word-frequency.csv"); iconsRefresh();
+  };
+  ["wf-in", "wf-stop", "wf-min", "wf-top", "wf-sort"].forEach(id => $("#" + id).addEventListener(id === "wf-in" ? "input" : "change", render));
+  $("#wf-mode").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { $("#wf-mode .active").classList.remove("active"); b.classList.add("active"); play("click"); haptic(); render(); }));
+  render();
 }
 
 /* =========================================================================

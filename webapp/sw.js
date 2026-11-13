@@ -1,11 +1,13 @@
 /* Toolkit service worker — cache the app shell for instant, offline-capable loads.
    Never caches /api/* or /telegram/* (those must always hit the network). */
-const CACHE = "toolkit-v6.3";
+const CACHE = "toolkit-v7";
 const SHELL = [
   "./",
   "index.html",
   "style.css",
   "script.js",
+  "data/cheats.txt",
+  "data/ports.txt",
   "https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
   "https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js",

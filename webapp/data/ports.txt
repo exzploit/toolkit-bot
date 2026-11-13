@@ -1,0 +1,103 @@
+# port | protocol | service | description | optional security note
+20 | TCP | FTP data | File transfer, data channel | Plain text; prefer SFTP or FTPS
+21 | TCP | FTP | File transfer, control channel | Plain text; prefer SFTP or FTPS
+22 | TCP | SSH / SFTP | Secure shell and file transfer | Common brute-force target; use keys, not passwords
+23 | TCP | Telnet | Unencrypted remote terminal | Sends everything in clear text; use SSH instead
+25 | TCP | SMTP | Mail transfer between servers | Open relays get abused for spam
+53 | TCP/UDP | DNS | Domain name resolution | Open resolvers can be abused for amplification attacks
+67 | UDP | DHCP server | Hands out IP addresses |
+68 | UDP | DHCP client | Receives IP addresses |
+69 | UDP | TFTP | Trivial file transfer | No authentication
+80 | TCP | HTTP | Web traffic, unencrypted |
+88 | TCP/UDP | Kerberos | Network authentication |
+110 | TCP | POP3 | Download email | Clear text; use 995 instead
+111 | TCP/UDP | rpcbind | RPC port mapper (NFS and friends) | Should not be exposed to the internet
+119 | TCP | NNTP | Usenet news |
+123 | UDP | NTP | Network time | Old servers can be abused for amplification
+135 | TCP | MS RPC | Windows remote procedure calls | Block at the perimeter
+137 | UDP | NetBIOS name | Windows name service | Block at the perimeter
+138 | UDP | NetBIOS datagram | Windows datagram service | Block at the perimeter
+139 | TCP | NetBIOS session | Legacy Windows file sharing | Block at the perimeter
+143 | TCP | IMAP | Read email on the server | Clear text; use 993 instead
+161 | UDP | SNMP | Network device monitoring | v1/v2c community strings are weak passwords
+162 | UDP | SNMP trap | Device alerts to a manager |
+179 | TCP | BGP | Internet routing between networks |
+389 | TCP/UDP | LDAP | Directory service | Clear text; use LDAPS or StartTLS
+443 | TCP/UDP | HTTPS | Encrypted web traffic (UDP is HTTP/3 and QUIC) |
+445 | TCP | SMB | Windows file sharing | Target of major worms; never expose to the internet
+465 | TCP | SMTPS | Mail submission over implicit TLS |
+500 | UDP | IKE | IPsec VPN key exchange |
+514 | UDP | Syslog | Log forwarding | Unauthenticated and unencrypted
+515 | TCP | LPD | Line printer daemon |
+520 | UDP | RIP | Routing information protocol |
+546 | UDP | DHCPv6 client | IPv6 address assignment |
+547 | UDP | DHCPv6 server | IPv6 address assignment |
+587 | TCP | SMTP submission | Where mail clients send outgoing mail (STARTTLS) |
+631 | TCP/UDP | IPP / CUPS | Network printing | Keep it off the public internet
+636 | TCP | LDAPS | LDAP over TLS |
+873 | TCP | rsync | File synchronisation daemon |
+989 | TCP | FTPS data | FTP over TLS, data |
+990 | TCP | FTPS | FTP over TLS, control |
+993 | TCP | IMAPS | IMAP over TLS |
+995 | TCP | POP3S | POP3 over TLS |
+1080 | TCP | SOCKS | Proxy protocol | Open proxies get abused
+1194 | UDP | OpenVPN | VPN tunnel |
+1433 | TCP | SQL Server | Microsoft SQL Server database | Keep databases off the public internet
+1434 | UDP | SQL Browser | SQL Server instance discovery |
+1521 | TCP | Oracle DB | Oracle database listener | Keep databases off the public internet
+1701 | UDP | L2TP | Layer 2 tunnelling |
+1723 | TCP | PPTP | Legacy VPN | Cryptographically broken
+1812 | UDP | RADIUS auth | Network access authentication |
+1813 | UDP | RADIUS accounting | Network access accounting |
+1883 | TCP | MQTT | IoT messaging | Often deployed without authentication
+1900 | UDP | SSDP / UPnP | Device discovery | Can be abused for amplification
+2049 | TCP/UDP | NFS | Unix network file system | Never expose to the internet
+2181 | TCP | ZooKeeper | Cluster coordination |
+2222 | TCP | SSH (alternate) | A common alternative SSH port |
+2375 | TCP | Docker API | Unencrypted Docker daemon | Exposed = full control of the host
+2376 | TCP | Docker API (TLS) | Docker daemon over TLS |
+2379 | TCP | etcd client | Kubernetes/cluster key-value store | Holds cluster secrets
+2380 | TCP | etcd peer | etcd node-to-node |
+3000 | TCP | Dev server | Common for Node, Grafana and Rails dev servers |
+3128 | TCP | Squid | HTTP proxy cache |
+3306 | TCP | MySQL / MariaDB | Relational database | Keep databases off the public internet
+3389 | TCP | RDP | Windows remote desktop | Heavily attacked; put it behind a VPN
+3478 | UDP | STUN / TURN | WebRTC NAT traversal |
+3690 | TCP | Subversion | SVN server |
+4369 | TCP | EPMD | Erlang port mapper (RabbitMQ, CouchDB) |
+5000 | TCP | Dev server | Common for Flask and Docker registries |
+5060 | TCP/UDP | SIP | VoIP signalling |
+5061 | TCP | SIP over TLS | Encrypted VoIP signalling |
+5353 | UDP | mDNS | Local network name discovery (Bonjour) |
+5432 | TCP | PostgreSQL | Relational database | Keep databases off the public internet
+5601 | TCP | Kibana | Elasticsearch dashboards |
+5672 | TCP | AMQP | RabbitMQ messaging |
+5900 | TCP | VNC | Remote desktop | Weak authentication; tunnel it
+5938 | TCP/UDP | TeamViewer | Remote support |
+5984 | TCP | CouchDB | Document database | Keep databases off the public internet
+6379 | TCP | Redis | In-memory data store | No password by default; never expose it
+6443 | TCP | Kubernetes API | Cluster control plane |
+6667 | TCP | IRC | Internet relay chat |
+6881 | TCP/UDP | BitTorrent | Peer-to-peer file sharing |
+8000 | TCP | HTTP (alternate) | Common dev and app port |
+8008 | TCP | HTTP (alternate) | Alternate web port |
+8080 | TCP | HTTP (alternate) | Alternate web port and proxies |
+8081 | TCP | HTTP (alternate) | Alternate web port |
+8200 | TCP | HashiCorp Vault | Secrets manager API |
+8443 | TCP | HTTPS (alternate) | Alternate encrypted web port |
+8883 | TCP | MQTT over TLS | Encrypted IoT messaging |
+8888 | TCP | Jupyter | Notebook server | Notebooks can run code; always require a token
+9000 | TCP | Various | PHP-FPM, SonarQube, MinIO API |
+9042 | TCP | Cassandra | CQL native transport |
+9090 | TCP | Prometheus | Metrics server |
+9092 | TCP | Kafka | Message broker |
+9100 | TCP | Node exporter / JetDirect | Prometheus host metrics, or raw printer port |
+9200 | TCP | Elasticsearch | Search HTTP API | Often exposed with no auth; never expose it
+9300 | TCP | Elasticsearch transport | Node-to-node traffic |
+10250 | TCP | Kubelet | Kubernetes node agent API |
+11211 | TCP/UDP | Memcached | In-memory cache | Abused for huge amplification attacks; never expose it
+15672 | TCP | RabbitMQ management | Web admin UI |
+25565 | TCP | Minecraft | Game server |
+27017 | TCP | MongoDB | Document database | Long history of exposed databases; never expose it
+32400 | TCP | Plex | Media server |
+51820 | UDP | WireGuard | Modern VPN tunnel |

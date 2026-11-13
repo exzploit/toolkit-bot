@@ -1,0 +1,368 @@
+# Cheat sheets. Format:
+#   @@id Title           starts a topic
+#   ## Section           starts a section
+#   command :: meaning   one entry (add a trailing " !" to flag a destructive command)
+
+@@git Git
+## Setup
+git config --global user.name "Your Name" :: Set the name on your commits
+git config --global user.email "you@example.com" :: Set the email on your commits
+git config --global init.defaultBranch main :: Use "main" for new repositories
+git init :: Turn the current folder into a repository
+git clone <url> :: Copy a remote repository locally
+## Everyday
+git status :: Show changed, staged and untracked files
+git add <file> :: Stage a file
+git add -p :: Stage changes piece by piece (hunks)
+git commit -m "message" :: Commit the staged changes
+git commit --amend --no-edit :: Add staged changes to the last commit
+git diff :: Show unstaged changes
+git diff --staged :: Show staged changes
+git log --oneline --graph --decorate --all :: Compact history graph of every branch
+git show <commit> :: Show one commit
+## Branches
+git branch :: List local branches
+git branch -vv :: List branches with their upstream and last commit
+git switch -c <name> :: Create a branch and switch to it
+git switch <name> :: Switch to an existing branch
+git merge <name> :: Merge a branch into the current one
+git rebase <base> :: Replay your commits on top of another branch
+git rebase -i HEAD~3 :: Interactively edit, squash or reorder the last 3 commits
+git merge --abort :: Cancel a merge that hit conflicts
+git rebase --abort :: Cancel a rebase and go back to how it was
+git branch -d <name> :: Delete a branch that is already merged
+git branch -D <name> :: Force-delete a branch even if unmerged !
+## Remotes
+git remote -v :: List remotes
+git remote add origin <url> :: Add a remote called origin
+git fetch --prune :: Download updates and drop deleted remote branches
+git pull --rebase :: Fetch, then replay your commits on top
+git push -u origin <branch> :: Push a new branch and set its upstream
+git push --force-with-lease :: Force-push, but only if nobody else pushed meanwhile !
+## Undo
+git restore <file> :: Discard unstaged changes to a file !
+git restore --staged <file> :: Unstage a file (keeps the changes)
+git reset --soft HEAD~1 :: Undo the last commit, keep changes staged
+git reset --hard <commit> :: Move the branch and throw away all later changes !
+git revert <commit> :: Make a new commit that undoes an earlier one
+git reflog :: Every place HEAD has been; recover "lost" commits
+git clean -fd :: Delete untracked files and folders !
+git rm --cached <file> :: Stop tracking a file but keep it on disk
+## Stash
+git stash push -m "note" :: Shelve uncommitted work
+git stash list :: List stashes
+git stash pop :: Re-apply the newest stash and drop it
+git stash apply :: Re-apply the newest stash and keep it
+## Search and inspect
+git blame <file> :: Who last changed each line
+git log -S"text" :: Commits that added or removed this text
+git grep "text" :: Search tracked files
+git shortlog -sn :: Commits per author
+git bisect start :: Begin a binary search for the commit that broke things
+git bisect bad :: Mark the current commit as broken
+git bisect good <commit> :: Mark a known-good commit
+## Tags and extras
+git tag -a v1.0 -m "release" :: Create an annotated tag
+git push --tags :: Push all tags
+git cherry-pick <commit> :: Copy one commit onto the current branch
+git worktree add ../dir <branch> :: Check out a branch in a second folder
+git submodule update --init --recursive :: Fetch submodules
+
+@@bash Bash
+## Files and folders
+ls -lah :: List all files, human-readable sizes
+cd - :: Go back to the previous folder
+mkdir -p a/b/c :: Create nested folders
+cp -r src dst :: Copy a folder
+mv old new :: Move or rename
+rm -rf <dir> :: Delete a folder and everything in it, no undo !
+ln -s <target> <link> :: Create a symbolic link
+find . -name "*.log" -mtime +7 :: Files named *.log older than 7 days
+du -sh * :: Size of each item here
+df -h :: Free disk space
+tar -czf out.tgz <dir> :: Create a compressed archive
+tar -xzf out.tgz :: Extract an archive
+zip -r out.zip <dir> :: Zip a folder
+## Reading and text
+cat <file> :: Print a file
+less +F <file> :: Page a file and follow new lines (Ctrl+C to stop following)
+head -n 20 <file> :: First 20 lines
+tail -f <file> :: Follow a growing log
+grep -rn "text" . :: Search recursively with line numbers
+grep -E "a|b" <file> :: Extended regex search
+sed 's/old/new/g' <file> :: Replace text and print the result
+sed -i 's/old/new/g' <file> :: Replace in place (macOS needs -i '')
+awk '{print $1}' <file> :: Print the first column
+cut -d, -f1 <file> :: First comma-separated field
+sort <file> | uniq -c | sort -nr :: Count duplicate lines, most common first
+wc -l <file> :: Count lines
+tr 'a-z' 'A-Z' :: Uppercase text from stdin
+xargs :: Turn stdin lines into command arguments
+## Pipes and redirects
+cmd > file :: Write output to a file (overwrites)
+cmd >> file :: Append output to a file
+cmd 2>&1 :: Send errors to the same place as output
+cmd1 | cmd2 :: Feed one command's output into another
+cmd | tee file :: Show output and save it
+$(cmd) :: Use a command's output inside another command
+## Processes
+ps aux | grep <name> :: Find a running process
+top :: Live process list
+kill <pid> :: Ask a process to stop
+kill -9 <pid> :: Force-kill a process !
+nohup <cmd> & :: Run in the background and survive logout
+jobs :: List background jobs
+Ctrl+C :: Interrupt the running command
+Ctrl+Z :: Suspend the running command (bg to resume in background)
+## Permissions
+chmod 755 <file> :: Owner read/write/execute, others read/execute
+chmod +x script.sh :: Make a script executable
+chown user:group <file> :: Change owner
+sudo <cmd> :: Run as administrator
+## Network
+curl -I <url> :: Fetch just the response headers
+curl -sS -X POST -d 'a=1' <url> :: POST form data quietly
+ss -tulpn :: Listening TCP/UDP ports and their processes
+ping -c 4 <host> :: Send 4 pings
+dig example.com :: DNS lookup
+ssh user@host :: Log in over SSH
+scp file user@host:/path :: Copy a file over SSH
+rsync -avz src/ user@host:dst/ :: Sync a folder efficiently
+## System
+uname -a :: Kernel and OS info
+free -h :: Memory usage
+uptime :: How long up, plus load average
+systemctl status <svc> :: Service status
+sudo systemctl restart <svc> :: Restart a service
+journalctl -u <svc> -f :: Follow a service's logs
+crontab -e :: Edit your scheduled jobs
+crontab -l :: List your scheduled jobs
+## Scripting
+#!/usr/bin/env bash :: First line of a bash script
+set -euo pipefail :: Stop on errors, unset variables and failed pipes
+$1 $2 "$@" $# :: Arguments, all arguments, argument count
+if [ -f file ]; then ...; fi :: Test whether a file exists
+for f in *.txt; do ...; done :: Loop over files
+$? :: Exit status of the last command
+export VAR=value :: Set an environment variable
+${VAR:-default} :: Use a default when VAR is unset or empty
+## History and shortcuts
+Ctrl+R :: Search command history
+!! :: Repeat the last command
+!$ :: The last argument of the previous command
+Ctrl+A / Ctrl+E :: Jump to start / end of the line
+date +%F :: Today's date as YYYY-MM-DD
+
+@@vim Vim
+## Modes
+i :: Insert before the cursor
+a :: Insert after the cursor
+o :: Open a new line below and insert
+Esc :: Back to normal mode
+v :: Visual mode (select characters)
+V :: Visual mode (select whole lines)
+Ctrl+v :: Visual block mode (select a column)
+## Save and quit
+:w :: Save
+:q :: Quit
+:wq :: Save and quit (ZZ does the same)
+:q! :: Quit and discard changes !
+:e! :: Reload the file from disk, dropping changes !
+:w !sudo tee % :: Save a file you opened without permission
+## Move
+h j k l :: Left, down, up, right
+w / b :: Next / previous word
+0 / ^ / $ :: Line start / first character / line end
+gg / G :: First / last line
+42G :: Go to line 42
+% :: Jump to the matching bracket
+Ctrl+d / Ctrl+u :: Half page down / up
+{ / } :: Previous / next paragraph
+Ctrl+o :: Jump back to the previous position
+zz :: Centre the screen on the cursor
+## Edit
+x :: Delete the character under the cursor
+dd :: Delete the line
+dw :: Delete to the end of the word
+D :: Delete to the end of the line
+yy :: Copy the line
+p / P :: Paste after / before the cursor
+u / Ctrl+r :: Undo / redo
+. :: Repeat the last change
+cw :: Change to the end of the word
+ciw :: Change the whole word
+ci" :: Change the text inside quotes
+>> / << :: Indent / unindent the line
+J :: Join the next line onto this one
+~ :: Toggle the case of a character
+ggVG :: Select the whole file
+gg=G :: Re-indent the whole file
+:sort :: Sort the selected lines
+## Search and replace
+/text :: Search forward
+n / N :: Next / previous match
+* :: Search for the word under the cursor
+:%s/old/new/g :: Replace everywhere
+:%s/old/new/gc :: Replace everywhere, confirming each one
+:noh :: Clear the search highlighting
+## Files and windows
+:e <file> :: Open a file
+:split / :vsplit :: Split the window horizontally / vertically
+Ctrl+w w :: Move to the next window
+:tabnew :: Open a new tab
+gt :: Next tab
+## Handy extras
+:set number :: Show line numbers
+:set paste :: Paste without auto-indent mangling
+:!<cmd> :: Run a shell command
+"+y :: Copy to the system clipboard (needs clipboard support)
+qa ... q :: Record a macro into register a (stop with q)
+@a :: Play the macro in register a
+
+@@regex Regex
+## Characters
+. :: Any character except a newline
+\d :: A digit (\D is anything else)
+\w :: A letter, digit or underscore (\W is anything else)
+\s :: Whitespace (\S is anything else)
+[abc] :: One of a, b or c
+[^abc] :: Anything except a, b or c
+[a-z0-9] :: A range
+\. :: A literal dot (escape special characters with a backslash)
+## Anchors
+^ :: Start of the text (or line with the m flag)
+$ :: End of the text (or line with the m flag)
+\b :: A word boundary
+\B :: Not a word boundary
+## Quantifiers
+* :: Zero or more
++ :: One or more
+? :: Zero or one
+{3} :: Exactly 3
+{2,} :: 2 or more
+{2,5} :: Between 2 and 5
+.*? :: Lazy: as few as possible
++? :: Lazy one-or-more
+## Groups
+(abc) :: Capture group
+(?:abc) :: Group without capturing
+(?<name>abc) :: Named capture group
+\1 :: Reference the first captured group
+a|b :: Either a or b
+## Lookaround
+(?=x) :: Followed by x
+(?!x) :: Not followed by x
+(?<=x) :: Preceded by x
+(?<!x) :: Not preceded by x
+## Flags
+g :: Find all matches, not just the first
+i :: Ignore case
+m :: ^ and $ match at each line
+s :: Dot also matches a newline
+u :: Full Unicode support
+## Common patterns
+\d{4}-\d{2}-\d{2} :: A date like 2026-11-13
+#[0-9a-fA-F]{3,8} :: A hex colour
+https?://[^\s]+ :: A web link (rough)
+[\w.+-]+@[\w-]+\.[\w.-]+ :: An email address (rough, not a validator)
+\b(?:\d{1,3}\.){3}\d{1,3}\b :: An IPv4-looking address (does not check 0-255)
+^\s+|\s+$ :: Leading and trailing whitespace
+^\d+$ :: Digits only
+(\w+)\s+\1 :: A repeated word
+
+@@sql SQL
+## Query
+SELECT a, b FROM t WHERE x > 5 ORDER BY a DESC LIMIT 10; :: Basic query
+SELECT DISTINCT a FROM t; :: Unique values
+WHERE name LIKE 'Al%' :: Starts with "Al" (% = any text, _ = one character)
+WHERE id IN (1, 2, 3) :: Matches any value in the list
+WHERE x BETWEEN 1 AND 10 :: Inclusive range
+WHERE x IS NULL :: Test for NULL (= NULL never matches)
+## Aggregate
+SELECT COUNT(*) FROM t; :: Count rows
+SELECT SUM(a), AVG(a), MIN(a), MAX(a) FROM t; :: Common aggregates
+SELECT a, COUNT(*) FROM t GROUP BY a HAVING COUNT(*) > 1; :: Find duplicates
+## Joins
+SELECT * FROM a JOIN b ON a.id = b.a_id; :: Rows that match in both tables
+SELECT * FROM a LEFT JOIN b ON a.id = b.a_id; :: Every row of a, plus matches from b
+FULL OUTER JOIN :: Every row of both (not available in MySQL)
+CROSS JOIN :: Every combination of rows
+## Change data
+INSERT INTO t (a, b) VALUES (1, 'x'); :: Add a row
+UPDATE t SET a = 1 WHERE id = 5; :: Change rows (never forget the WHERE) !
+DELETE FROM t WHERE id = 5; :: Delete rows (never forget the WHERE) !
+TRUNCATE TABLE t; :: Empty a table instantly (not in SQLite) !
+INSERT ... ON CONFLICT (id) DO UPDATE SET a = excluded.a; :: Upsert in PostgreSQL and SQLite
+INSERT ... ON DUPLICATE KEY UPDATE a = VALUES(a); :: Upsert in MySQL
+## Schema
+CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT NOT NULL); :: Create a table
+ALTER TABLE t ADD COLUMN c TEXT; :: Add a column
+CREATE INDEX idx_t_a ON t (a); :: Speed up lookups on a column
+DROP TABLE t; :: Delete a table and its data !
+## Advanced
+WITH x AS (SELECT ...) SELECT * FROM x; :: Common table expression (CTE)
+EXISTS (SELECT 1 FROM b WHERE b.a_id = a.id) :: True if any matching row exists
+ROW_NUMBER() OVER (PARTITION BY a ORDER BY b) :: Number rows within each group
+CASE WHEN x > 0 THEN 'pos' ELSE 'neg' END :: Conditional value
+COALESCE(a, b, 0) :: First value that is not NULL
+SELECT ... UNION ALL SELECT ... :: Stack two result sets (UNION also removes duplicates)
+EXPLAIN SELECT ... :: Show how the database will run a query
+BEGIN; ... COMMIT; :: Group statements into one transaction
+ROLLBACK; :: Cancel the current transaction
+
+@@http HTTP
+## Methods
+GET :: Read a resource
+POST :: Create something or submit data
+PUT :: Replace a resource entirely
+PATCH :: Change part of a resource
+DELETE :: Remove a resource
+HEAD :: Like GET but headers only
+OPTIONS :: Ask what a resource allows (also used for CORS preflight)
+## Success and redirects
+200 OK :: The request worked
+201 Created :: A new resource was created
+204 No Content :: Worked, nothing to return
+301 Moved Permanently :: Permanent redirect (clients may change method to GET)
+302 Found :: Temporary redirect
+304 Not Modified :: Your cached copy is still good
+307 Temporary Redirect :: Temporary, keeps the method
+308 Permanent Redirect :: Permanent, keeps the method
+## Client errors
+400 Bad Request :: Malformed request
+401 Unauthorized :: Not authenticated (log in first)
+403 Forbidden :: Authenticated but not allowed
+404 Not Found :: Nothing at this address
+405 Method Not Allowed :: Wrong method for this address
+409 Conflict :: Clashes with current state (e.g. duplicate)
+410 Gone :: Permanently removed
+413 Payload Too Large :: Body exceeds the server's limit
+415 Unsupported Media Type :: Server cannot read this Content-Type
+418 I'm a teapot :: A joke status from RFC 2324
+422 Unprocessable Content :: Understood but failed validation
+429 Too Many Requests :: Rate limited
+## Server errors
+500 Internal Server Error :: The server crashed handling it
+502 Bad Gateway :: A proxy got a bad answer from the app behind it
+503 Service Unavailable :: Overloaded or down for maintenance
+504 Gateway Timeout :: A proxy gave up waiting for the app
+## Headers
+Content-Type: application/json :: Format of the body you send
+Accept: application/json :: Format you want back
+Authorization: Bearer <token> :: Send an access token
+Cache-Control: no-store :: Never cache this response
+Cache-Control: max-age=3600 :: Cache for one hour
+ETag / If-None-Match :: Conditional requests (get a 304 if unchanged)
+Location :: Where a redirect or new resource lives
+Set-Cookie / Cookie :: Server sets a cookie / browser sends it back
+Origin :: Where a cross-site request came from
+Access-Control-Allow-Origin :: Which sites may read the response (CORS)
+Strict-Transport-Security :: Tell browsers to use HTTPS only
+Content-Security-Policy :: Restrict what a page may load or run
+## curl
+curl -i <url> :: Show response headers and body
+curl -L <url> :: Follow redirects
+curl -X POST -H "Content-Type: application/json" -d '{"a":1}' <url> :: POST JSON
+curl -u user:pass <url> :: Basic authentication
+curl -o file <url> :: Save the response to a file
+curl -sS -o /dev/null -w "%{http_code}" <url> :: Print only the status code
