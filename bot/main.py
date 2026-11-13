@@ -20,8 +20,10 @@ from aiohttp import web
 from telegram import Update
 from telegram.ext import Application
 
+from . import logsafe
 from .config import Config, load_config
 from .handlers import register_handlers
+from .store import UsageStore
 from .webapp import build_api_routes, h_webhook
 
 logging.basicConfig(
@@ -45,6 +47,11 @@ def build_web_app(cfg: Config, application: Application) -> web.Application:
     app["config"] = cfg
     app["application"] = application
     app["bot"] = application.bot
+    app["store"] = UsageStore(cfg.data_dir)
+
+    async def _close_store(a: web.Application) -> None:
+        a["store"].close()
+    app.on_cleanup.append(_close_store)
 
     app.add_routes(build_api_routes())
     # Telegram webhook (only meaningful in webhook mode, harmless otherwise).
@@ -57,6 +64,7 @@ def build_web_app(cfg: Config, application: Application) -> web.Application:
 
 
 async def run() -> None:
+    logsafe.install()  # redact secrets in every log handler + keep recent lines for the owner panel
     cfg = load_config()
     application = Application.builder().token(cfg.bot_token).updater(None).build()
     application.bot_data["config"] = cfg
@@ -83,7 +91,8 @@ async def run() -> None:
             allowed_updates=Update.ALL_TYPES,
             drop_pending_updates=True,
         )
-        log.info("Webhook set to %s", cfg.webhook_url)
+        # The secret is part of the webhook path, so never log the full URL.
+        log.info("Webhook set to %s/telegram/***", cfg.public_url.rstrip("/"))
 
     # Block until a termination signal arrives.
     stop = asyncio.Event()

@@ -17,6 +17,7 @@ import time
 from aiohttp import web
 from telegram import Update
 
+from . import logsafe, sysinfo
 from .config import Config
 from .telegram_auth import InvalidInitData, TelegramUser, verify_init_data
 from .tools import aidetect, media, network, osint, security
@@ -175,6 +176,62 @@ def _cooldown_ok(user_id: int, key: str, seconds: float) -> bool:
         for k in [k for k, t in _COOLDOWNS.items() if now - t > 3600]:
             _COOLDOWNS.pop(k, None)
     return True
+
+
+# --------------------------------------------------------------------------- #
+# Owner panel + anonymous usage counts
+# --------------------------------------------------------------------------- #
+_TOOL_ID = re.compile(r"[a-z0-9_]{1,32}")
+
+
+def _is_owner(request: web.Request, user: TelegramUser) -> bool:
+    cfg: Config = request.app["config"]
+    return bool(cfg.owner_id) and user.id == cfg.owner_id   # OWNER_ID unset -> nobody is the owner
+
+
+async def h_me(request):
+    user = _auth(request)
+    return _ok({"success": True, "owner": _is_owner(request, user)})
+
+
+async def h_usage(request):
+    """Count one open of a tool. Stores only (tool, day) -> count; never the user."""
+    _auth(request)
+    b = await _json_body(request)
+    tool = b.get("tool", "")
+    if not isinstance(tool, str) or not _TOOL_ID.fullmatch(tool):
+        return _ok({"success": False})
+    ok = await asyncio.to_thread(request.app["store"].record, tool)
+    return _ok({"success": ok})
+
+
+async def h_admin(request):
+    user = _auth(request)
+    if not _is_owner(request, user):
+        return _ok({"success": False, "error": "Owner only"})
+    bot = request.app["bot"]
+    try:
+        wh = await asyncio.wait_for(bot.get_webhook_info(), timeout=5)
+        # Deliberately NOT returning wh.url: it contains the webhook secret.
+        telegram = {"pending": wh.pending_update_count,
+                    "last_error": logsafe.redact(wh.last_error_message or ""),
+                    "last_error_date": wh.last_error_date.isoformat() if wh.last_error_date else None}
+    except Exception as e:
+        telegram = {"error": logsafe.redact(str(e))[:120]}
+    usage = await asyncio.to_thread(request.app["store"].summary)
+    return _ok({"success": True, "status": sysinfo.read_status(), "telegram": telegram, "usage": usage})
+
+
+async def h_admin_logs(request):
+    user = _auth(request)
+    if not _is_owner(request, user):
+        return _ok({"success": False, "error": "Owner only"})
+    b = await _json_body(request)
+    try:
+        n = int(b.get("lines", 150))
+    except (TypeError, ValueError):
+        n = 150
+    return _ok({"success": True, "lines": logsafe.RING.lines(max(10, min(n, 400)))})
 
 
 async def h_subdomains(request):
@@ -404,6 +461,10 @@ def build_api_routes() -> list:
         web.post("/api/ssl", h_ssl),
         web.post("/api/dns", h_dns),
         web.post("/api/subdomains", h_subdomains),
+        web.post("/api/me", h_me),
+        web.post("/api/usage", h_usage),
+        web.post("/api/admin", h_admin),
+        web.post("/api/admin/logs", h_admin_logs),
         web.post("/api/phone", h_phone),
         web.post("/api/username", h_username),
         web.post("/api/breach", h_breach),

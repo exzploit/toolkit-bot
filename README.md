@@ -72,8 +72,25 @@ python -m bot.main
   verifies the HMAC and derives the user from the *verified* payload. Opening
   the Mini App URL in a normal browser will (correctly) fail auth.
 - The webhook is protected by an unguessable path **and** Telegram's secret
-  token header.
+  token header. Because the secret is part of the path, logs are redacted
+  (`bot/logsafe.py`): the webhook secret, bot token and `key=value` secrets
+  never reach the journal or the owner panel.
+- Uploads are authenticated **before** any file byte is read and size-capped
+  while streaming (aiohttp's `client_max_size` does not apply to streamed
+  multipart parts), so an unauthenticated client can't exhaust memory.
 - `.env` holds all secrets and is git-ignored.
+
+## Owner panel and usage counts
+
+Set `OWNER_ID` in `.env` to your numeric Telegram id and a read-only **Server
+Status** tool appears for that one account: memory, swap, disk, load, uptime,
+webhook health, recent (redacted) logs and per-tool usage. With `OWNER_ID`
+unset the panel is disabled for everyone; the server re-checks ownership on
+every admin request, so hiding the UI is never the security boundary.
+
+Usage statistics are **anonymous counts**: the database
+(`data/usage.db`) stores only *(tool id, UTC day) → number of opens* — no user
+ids, no content. Users can switch it off in Settings.
 
 ## Responsible use
 

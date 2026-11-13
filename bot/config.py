@@ -30,6 +30,8 @@ class Config:
     hf_token: str
     sapling_api_key: str
     run_mode: str  # "webhook" | "polling"
+    owner_id: int = 0      # Telegram user id allowed to see the owner panel; 0 = panel disabled for everyone
+    data_dir: str = ""     # where the usage database lives
 
     @property
     def webhook_path(self) -> str:
@@ -39,6 +41,11 @@ class Config:
     @property
     def webhook_url(self) -> str:
         return f"{self.public_url.rstrip('/')}{self.webhook_path}"
+
+
+def _owner_id() -> int:
+    raw = _get("OWNER_ID").strip()
+    return int(raw) if raw.isdigit() else 0
 
 
 def load_config() -> Config:
@@ -52,4 +59,6 @@ def load_config() -> Config:
         hf_token=_get("HF_TOKEN"),
         sapling_api_key=_get("SAPLING_API_KEY"),
         run_mode=_get("RUN_MODE", "webhook").lower(),
+        owner_id=_owner_id(),
+        data_dir=_get("DATA_DIR") or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data"),
     )

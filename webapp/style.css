@@ -126,6 +126,7 @@ a { color: var(--link); text-decoration: none; }
 .card-btn[data-cat="text"]    .ico { color: #d29922; }
 .card-btn[data-cat="network"] .ico { color: #4b93ff; }
 .card-btn[data-cat="media"]   .ico { color: #f778ba; }
+.card-btn[data-cat="admin"]   .ico { color: #f85149; }
 
 /* ---------- Detail view ---------- */
 .detail-head { display: flex; align-items: center; gap: 12px; margin: 8px 0 18px; }

@@ -17,14 +17,16 @@ let recents = store.get("tk_recents", []);
 let soundOn = store.get("tk_sound", true);
 let activeCat = "all";
 let accent = store.get("tk_accent", "teal");
+let usageOn = store.get("tk_usage", true);   // anonymous per-tool open counts (tool + day only)
+let isOwner = false;
 const ACCENTS = { teal: ["#2dd4bf", "#0f2a2a", "#052e2b"], green: ["#3fb950", "#0d2615", "#04140a"], cyan: ["#22d3ee", "#07323f", "#021b23"], amber: ["#f59e0b", "#2a1e05", "#1a1304"], magenta: ["#e879f9", "#2a0f33", "#180820"] };
 function applyAccent() { const a = ACCENTS[accent] || ACCENTS.teal; const r = document.documentElement.style; r.setProperty("--accent", a[0]); r.setProperty("--accent-dim", a[1]); r.setProperty("--accent-text", a[2]); }
 let lang = store.get("tk_lang", (USER?.language_code === "ro" ? "ro" : "en"));
 
 /* ---------- i18n ---------- */
 const UI = {
-  en: { search: "Search tools…", all: "All", fav: "★ Favorites", recent: "Recent", results: "Results", noMatch: "No tools match", toolScreen: "Tool", settings: "Settings", sound: "Sound effects", language: "Language", clearFav: "Clear favorites", clearRec: "Clear recents", close: "Close app", tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media", share: "Send to chat", shared: "Sent to your chat" },
-  ro: { search: "Caută unelte…", all: "Toate", fav: "★ Favorite", recent: "Recente", results: "Rezultate", noMatch: "Nicio unealtă găsită", toolScreen: "Unealtă", settings: "Setări", sound: "Efecte sonore", language: "Limbă", clearFav: "Șterge favoritele", clearRec: "Șterge recentele", close: "Închide aplicația", tools: "Unelte", dev: "Developer", text: "Text", network: "Rețea", media: "Media", share: "Trimite în chat", shared: "Trimis în chat" },
+  en: { search: "Search tools…", all: "All", fav: "★ Favorites", recent: "Recent", results: "Results", noMatch: "No tools match", toolScreen: "Tool", settings: "Settings", sound: "Sound effects", language: "Language", clearFav: "Clear favorites", clearRec: "Clear recents", close: "Close app", tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media", share: "Send to chat", shared: "Sent to your chat", admin: "Admin", usage: "Share anonymous usage counts", usageNote: "Counts how often each tool is opened — no names, IDs or content." },
+  ro: { search: "Caută unelte…", all: "Toate", fav: "★ Favorite", recent: "Recente", results: "Rezultate", noMatch: "Nicio unealtă găsită", toolScreen: "Unealtă", settings: "Setări", sound: "Efecte sonore", language: "Limbă", clearFav: "Șterge favoritele", clearRec: "Șterge recentele", close: "Închide aplicația", tools: "Unelte", dev: "Developer", text: "Text", network: "Rețea", media: "Media", share: "Trimite în chat", shared: "Trimis în chat", admin: "Admin", usage: "Trimite statistici anonime de utilizare", usageNote: "Numără de câte ori e deschisă fiecare unealtă — fără nume, ID-uri sau conținut." },
 };
 const T = k => (UI[lang] && UI[lang][k]) ?? UI.en[k] ?? k;
 const catName = k => T(k);
@@ -206,7 +208,7 @@ function section(title, tools, extra = "") {
           <div class="grid">${tools.map(cardHTML).join("")}</div>`;
 }
 
-const CAT_ICON = { all: "layout-grid", tools: "wrench", dev: "code", text: "type", network: "globe", media: "clapperboard" };
+const CAT_ICON = { all: "layout-grid", tools: "wrench", dev: "code", text: "type", network: "globe", media: "clapperboard", admin: "shield-check" };
 function renderChips() {
   const bar = $("#cat-bar");
   const keys = ["all", ...Object.keys(CATS)];
@@ -255,6 +257,7 @@ function openTool(id) {
   const t = byId(id); if (!t) return;
   play("click"); haptic("medium");
   recents = [id, ...recents.filter(x => x !== id)].slice(0, 8); store.set("tk_recents", recents);
+  trackUse(id);
   show("detail");
   $("#view-title").textContent = tname(t);
   $("#detail-title").textContent = tname(t);
@@ -2407,6 +2410,76 @@ function rDocScrub(c) {
 }
 
 /* =========================================================================
+   OWNER PANEL + USAGE COUNTS (v7)
+   ========================================================================= */
+// Fire-and-forget: counts one open of a tool (tool id only — the server never stores who).
+function trackUse(id) {
+  if (!usageOn || !INIT_DATA || id === "admin") return;
+  try { fetch("/api/usage", { method: "POST", headers: { "Content-Type": "application/json", "X-Init-Data": INIT_DATA }, body: JSON.stringify({ tool: id }), keepalive: true }).catch(() => {}); } catch (_) {}
+}
+// The server decides who the owner is; this only reveals the panel. Every admin endpoint re-checks.
+async function checkOwner() {
+  if (!INIT_DATA || isOwner) return;
+  try {
+    const d = await api("me"); if (!d.success || !d.owner) return;
+    isOwner = true; CATS.admin = "Admin";
+    TOOLS.push({ id: "admin", cat: "admin", icon: "activity", name: "Server Status", sub: "RAM, disk, logs & usage", kw: "admin owner stats logs memory disk uptime usage", render: rAdmin });
+    if (!$("#home-view").classList.contains("hidden")) renderHome();
+  } catch (_) {}
+}
+const fmtBytes = n => n == null ? "—" : n >= 2 ** 30 ? (n / 2 ** 30).toFixed(1) + " GB" : n >= 2 ** 20 ? Math.round(n / 2 ** 20) + " MB" : Math.round(n / 1024) + " KB";
+const fmtDur = s => { if (s == null) return "—"; const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
+function meter(label, used, total) {
+  if (!total) return "";
+  const p = Math.round(used / total * 100), col = p >= 90 ? "var(--err)" : p >= 70 ? "var(--warn)" : "var(--ok)";
+  return `<div class="row" style="flex-direction:column;align-items:stretch;gap:6px"><div style="display:flex;justify-content:space-between;gap:10px"><span class="k">${esc(label)}</span><span class="v mono" style="font-size:12px">${fmtBytes(used)} / ${fmtBytes(total)} · ${p}%</span></div><div style="height:8px;border-radius:999px;background:var(--bg);overflow:hidden"><div style="height:100%;width:${p}%;background:${col}"></div></div></div>`;
+}
+async function rAdmin(c) {
+  c.innerHTML = `<div id="ad-box"><div class="card"><div class="skel skel-row"></div><div class="skel skel-row"></div><div class="skel skel-row"></div></div></div>`;
+  const load = async () => {
+    const box = $("#ad-box"); let d;
+    try { d = await api("admin"); } catch (e) { box.innerHTML = `<div class="card"><p class="status err">❌ ${esc(e.message)}</p></div>`; return; }
+    if (!d.success) { box.innerHTML = `<div class="card"><p class="status err">❌ ${esc(d.error || "Failed")}</p></div>`; return; }
+    const s = d.status, m = s.mem, dk = s.disk, u = d.usage, tg = d.telegram, nameOf = id => (TOOLS.find(t => t.id === id) || {}).name || id;
+    const max = Math.max(1, ...u.daily.map(x => x.n)), used30 = new Set(u.tools.filter(t => t.d30 > 0).map(t => t.tool));
+    const unused = TOOLS.filter(t => t.id !== "admin" && !used30.has(t.id)).map(t => t.name);
+    box.innerHTML = `
+      <div class="card"><div class="sec-title" style="margin:0 0 6px">system</div><div class="rows">
+        <div class="row"><span class="k">Host</span><span class="v mono">${esc(s.host || "—")}</span></div>
+        <div class="row"><span class="k">Server uptime</span><span class="v mono">${fmtDur(s.uptime)}</span></div>
+        <div class="row"><span class="k">Load 1 / 5 / 15 min</span><span class="v mono">${s.load ? s.load.join(" / ") : "—"} <span class="muted">· ${s.cpus || "?"} CPU</span></span></div>
+        ${m ? meter("Memory", m.total - m.available, m.total) : ""}${m && m.swap_total ? meter("Swap", m.swap_total - m.swap_free, m.swap_total) : ""}${dk ? meter("Disk", dk.used, dk.total) : ""}
+        <div class="row"><span class="k">Bot process</span><span class="v mono">${fmtBytes(s.rss)} · up ${fmtDur(s.process_uptime)}</span></div>
+        <div class="row"><span class="k">Python</span><span class="v mono">${esc(s.python)}</span></div></div></div>
+      <div class="card"><div class="sec-title" style="margin:0 0 6px">telegram</div><div class="rows">
+        ${tg.error ? `<div class="row"><span class="k">Webhook</span><span class="v"><span class="pill warn">unavailable</span></span></div><p class="muted">${esc(tg.error)}</p>`
+          : `<div class="row"><span class="k">Pending updates</span><span class="v">${tg.pending > 0 ? `<span class="pill warn">${tg.pending}</span>` : `<span class="pill ok">0</span>`}</span></div>
+             <div class="row"><span class="k">Last webhook error</span><span class="v" style="font-size:12px">${tg.last_error ? `<span class="pill err">error</span><div class="muted" style="margin-top:4px;word-break:break-word">${esc(tg.last_error)}${tg.last_error_date ? "<br>" + esc(tg.last_error_date.slice(0, 16).replace("T", " ")) + " UTC" : ""}</div>` : `<span class="pill ok">none</span>`}</span></div>`}</div></div>
+      <div class="card"><div class="sec-title" style="margin:0 0 6px">usage</div>
+        <div style="margin-bottom:10px"><span class="pill info">7d ${u.total.d7}</span> <span class="pill info">30d ${u.total.d30}</span> <span class="pill info">all ${u.total.all}</span></div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:54px;margin-bottom:6px" title="Opens per day, last 14 days">${u.daily.map(x => `<div style="flex:1;border-radius:3px 3px 0 0;background:${x.n ? "var(--accent)" : "var(--border)"};height:${Math.max(4, Math.round(x.n / max * 100))}%" title="${esc(x.day)}: ${x.n}"></div>`).join("")}</div>
+        <p class="muted" style="margin-bottom:10px">Opens per day, last 14 days. Counts only — no user IDs or content are stored.</p>
+        ${u.tools.length ? `<div style="overflow-x:auto"><table class="mini"><thead><tr><th>Tool</th><th>7d</th><th>30d</th><th>All</th></tr></thead><tbody>${u.tools.slice(0, 15).map(t => `<tr><td style="font-family:var(--sans)">${esc(nameOf(t.tool))}</td><td>${t.d7}</td><td>${t.d30}</td><td>${t.all}</td></tr>`).join("")}</tbody></table></div>${u.tools.length > 15 ? `<p class="muted">+${u.tools.length - 15} more</p>` : ""}` : `<p class="muted">No usage recorded yet.</p>`}
+        ${unused.length ? `<div class="sec-title" style="margin:14px 0 6px">not opened in 30 days (${unused.length})</div><p class="muted">${esc(unused.join(" · "))}</p>` : ""}</div>
+      <div class="card"><div class="sec-title" style="margin:0 0 6px">logs</div>
+        <div class="btn-row"><button class="btn ghost sm" id="ad-logs"><i data-lucide="scroll-text"></i> Load logs</button><button class="btn ghost sm" id="ad-refresh"><i data-lucide="refresh-cw"></i> Refresh all</button></div>
+        <div id="ad-log-out" style="margin-top:12px"></div><p class="muted" style="margin-top:10px">Read-only. Secrets are redacted before logs reach this screen. Shows activity since the last restart.</p></div>`;
+    iconsRefresh();
+    $("#ad-refresh").onclick = () => { play("click"); haptic(); load(); };
+    $("#ad-logs").onclick = async () => {
+      play("click"); haptic(); const out = $("#ad-log-out"); out.innerHTML = spin() + " Loading…";
+      try {
+        const l = await api("admin/logs", { lines: 150 }); if (!l.success) { out.innerHTML = `<p class="status err">❌ ${esc(l.error || "Failed")}</p>`; return; }
+        const text = l.lines.join("\n");
+        out.innerHTML = `<div class="out-area" id="ad-log-box" style="max-height:360px;font-size:11px;line-height:1.5">${esc(text) || "(no log lines yet)"}</div><div class="btn-row" style="margin-top:10px">${copyBtn(text, "Copy logs")}</div>`;
+        iconsRefresh(); const bx = $("#ad-log-box"); bx.scrollTop = bx.scrollHeight;
+      } catch (e) { out.innerHTML = `<p class="status err">❌ ${esc(e.message)}</p>`; }
+    };
+  };
+  load();
+}
+
+/* =========================================================================
    SETTINGS
    ========================================================================= */
 function renderSettings() {
@@ -2422,9 +2495,12 @@ function renderSettings() {
       <div class="list-row" id="setclearfav"><span>${T("clearFav")}</span><i data-lucide="star-off"></i></div>
       <div class="list-row" id="setclearrec"><span>${T("clearRec")}</span><i data-lucide="history"></i></div>
     </div>
+    <div class="group"><div class="switch-row"><span>${T("usage")}</span><input type="checkbox" class="sw" id="setusage" ${usageOn ? "checked" : ""}></div></div>
+    <p class="muted" style="margin:-4px 6px 14px">${T("usageNote")}</p>
     <div class="group"><div class="list-row" id="setclose"><span style="color:var(--err)">${T("close")}</span><i data-lucide="log-out"></i></div></div>
     <p class="foot">Toolkit v5 ${USER ? "· " + esc(USER.first_name) : ""}<br>self-hosted · ${TOOLS.length} tools</p>`;
   $("#setsound").onchange = e => { soundOn = e.target.checked; store.set("tk_sound", soundOn); if (soundOn) play("click"); };
+  $("#setusage").onchange = e => { usageOn = e.target.checked; store.set("tk_usage", usageOn); play("click"); haptic(); };
   $("#setlang").onclick = () => { lang = lang === "en" ? "ro" : "en"; store.set("tk_lang", lang); play("click"); haptic(); applyLang(); renderSettings(); };
   v.querySelectorAll("[data-acc]").forEach(btn => btn.addEventListener("click", () => { accent = btn.dataset.acc; store.set("tk_accent", accent); applyAccent(); play("click"); haptic(); renderSettings(); }));
   $("#setclearfav").onclick = () => { favorites = []; store.set("tk_favs", []); toast(T("clearFav")); haptic(); };
@@ -2440,4 +2516,5 @@ applyTheme(); tg?.onEvent?.("themeChanged", applyTheme);
 applyAccent();
 applyLang();
 renderHome();
+checkOwner();
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }

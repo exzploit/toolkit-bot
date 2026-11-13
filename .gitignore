@@ -19,3 +19,7 @@ tmp/
 
 # DuckDNS updater config (holds your token)
 duckdns.conf
+
+# Usage counters database (anonymous per-tool counts). Anchored to the repo root so it does NOT
+# match webapp/data/, which holds tracked reference data.
+/data/
