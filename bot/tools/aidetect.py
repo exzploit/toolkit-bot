@@ -107,7 +107,14 @@ async def _hf_one(session, name, model, text, token) -> dict:
             if r.status == 401:
                 return {"name": name, "score": None, "note": "invalid HF token"}
             if r.status != 200:
-                return {"name": name, "score": None, "note": f"HF {r.status}"}
+                msg = ""
+                try:
+                    msg = (await r.json()).get("error", "")
+                except Exception:
+                    pass
+                if "credit" in msg.lower() or "PRO" in msg:
+                    return {"name": name, "score": None, "note": "HF no longer free (needs credits/PRO)"}
+                return {"name": name, "score": None, "note": f"HF {r.status}: {msg[:50]}" if msg else f"HF {r.status}"}
             data = await r.json()
     except Exception as e:
         return {"name": name, "score": None, "note": str(e)[:60]}
@@ -135,7 +142,7 @@ async def _hf_one(session, name, model, text, token) -> dict:
 # --------------------------------------------------------------------------- #
 async def _sapling(session, text, key) -> dict:
     try:
-        async with session.post("https://api.sapling.com/api/v1/aidetect",
+        async with session.post("https://api.sapling.ai/api/v1/aidetect",
                                 json={"key": key, "text": text[:8000]},
                                 timeout=aiohttp.ClientTimeout(total=25)) as r:
             data = await r.json()
