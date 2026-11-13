@@ -150,6 +150,7 @@ const TOOLS = [
   { id: "ciphers", cat: "text", icon: "square-asterisk", name: "Classic Ciphers", sub: "Atbash & Vigenère", kw: "vigenere atbash encrypt", render: rCiphers },
   { id: "aidetect", cat: "text", icon: "bot", name: "AI Detector", sub: "Check text/files for AI authorship", kw: "chatgpt gpt detect plagiarism", render: rAiDetect },
   { id: "wordfreq", cat: "text", icon: "bar-chart-horizontal", name: "Word Frequency", sub: "Most-used words & phrases", kw: "count frequency top keywords ngram", render: rWordFreq },
+  { id: "mdpdf", cat: "text", icon: "file-down", name: "Markdown → PDF", sub: "Turn Markdown into a PDF", kw: "convert document export md pdf", render: rMdPdf },
 
   // --- NETWORK ---
   { id: "subnet", cat: "network", icon: "network", name: "Subnet Calc", sub: "IPv4/IPv6 CIDR breakdown", kw: "cidr netmask ip", render: rSubnet },
@@ -173,6 +174,7 @@ const TOOLS = [
   { id: "exif", cat: "media", icon: "image-off", name: "EXIF Stripper", sub: "Remove photo metadata", kw: "gps privacy image", render: rExif },
   { id: "exifview", cat: "media", icon: "scan-eye", name: "EXIF Viewer", sub: "See a photo's hidden metadata", kw: "gps camera inspect", render: rExifView },
   { id: "stego", cat: "media", icon: "image-plus", name: "Steganography", sub: "Hide a message in an image", kw: "secret hidden lsb", render: rStego },
+  { id: "docscrub", cat: "media", icon: "file-x", name: "Doc Metadata Scrubber", sub: "Strip hidden data from PDF & DOCX", kw: "privacy author metadata remove clean docx pdf anonymise", render: rDocScrub },
 ];
 const byId = id => TOOLS.find(t => t.id === id);
 const CATS = { tools: "Tools", dev: "Developer", text: "Text", network: "Network", media: "Media" };
@@ -1936,6 +1938,472 @@ function rWordFreq(c) {
   ["wf-in", "wf-stop", "wf-min", "wf-top", "wf-sort"].forEach(id => $("#" + id).addEventListener(id === "wf-in" ? "input" : "change", render));
   $("#wf-mode").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { $("#wf-mode .active").classList.remove("active"); b.classList.add("active"); play("click"); haptic(); render(); }));
   render();
+}
+
+/* =========================================================================
+   DOCUMENT TOOLS (v7) — Markdown → PDF, metadata scrubber
+   Everything runs in the browser; the heavy libraries load only when needed.
+   ========================================================================= */
+const PDFLIB_URL = "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js";
+const FONTKIT_URL = "https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js";
+const JSZIP_URL = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+const DEJAVU = "https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/";
+const FONT_FILES = { regular: "DejaVuSans.ttf", bold: "DejaVuSans-Bold.ttf", italic: "DejaVuSans-Oblique.ttf", bolditalic: "DejaVuSans-BoldOblique.ttf", mono: "DejaVuSansMono.ttf" };
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+function saveBlob(blob, name) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+async function sendDoc(blob, name, caption) {
+  const fd = new FormData(); fd.append("initData", INIT_DATA); fd.append("file", blob, name); if (caption) fd.append("caption", caption);
+  const r = await fetch("/api/senddoc", { method: "POST", body: fd });
+  if (r.status === 401) throw new Error("Open this app from inside Telegram.");
+  const d = await r.json(); if (!d.success) throw new Error(d.error || "Failed"); return d;
+}
+// Download + "send to chat" (downloads of blobs often don't work inside Telegram WebViews).
+function fileActions(host, blob, name, caption) {
+  const row = document.createElement("div"); row.className = "btn-row"; row.style.marginTop = "12px";
+  row.innerHTML = `<button class="btn sm" data-a="dl"><i data-lucide="download"></i> Download</button><button class="btn ghost sm" data-a="send"><i data-lucide="send"></i> Send to chat</button>`;
+  row.querySelector('[data-a="dl"]').onclick = () => { play("click"); haptic(); saveBlob(blob, name); toast("Saved " + name, "ok"); };
+  row.querySelector('[data-a="send"]').onclick = async e => {
+    const btn = e.currentTarget; play("click"); haptic(); btn.disabled = true;
+    try { await sendDoc(blob, name, caption); toast(T("shared"), "ok"); notify(); } catch (err) { toast(err.message || "Failed", "err"); play("error"); }
+    btn.disabled = false;
+  };
+  host.appendChild(row); iconsRefresh();
+}
+
+/* ---- Markdown parsing ---- */
+function splitTableRow(r) {
+  r = r.trim(); if (r.startsWith("|")) r = r.slice(1); if (r.endsWith("|") && !r.endsWith("\\|")) r = r.slice(0, -1);
+  const cells = []; let cur = "";
+  for (let i = 0; i < r.length; i++) {
+    if (r[i] === "\\" && r[i + 1] === "|") { cur += "|"; i++; }
+    else if (r[i] === "|") { cells.push(cur.trim()); cur = ""; }
+    else cur += r[i];
+  }
+  cells.push(cur.trim()); return cells;
+}
+function mdBlocks(src) { return parseMd(src.replace(/\r\n?/g, "\n").replace(/\t/g, "    ").split("\n")); }
+function parseMd(lines) {
+  const blocks = []; let i = 0;
+  const blank = l => /^\s*$/.test(l), listRe = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+  const hrRe = /^\s{0,3}([-*_])(\s*\1){2,}\s*$/;
+  const startsBlock = l => /^\s{0,3}(#{1,6}\s|>|```|~~~)/.test(l) || hrRe.test(l) || listRe.test(l);
+  while (i < lines.length) {
+    const line = lines[i]; let m;
+    if (blank(line)) { i++; continue; }
+    if ((m = line.match(/^\s{0,3}(```|~~~)\s*([\w+-]*)/))) {
+      const fence = m[1], code = []; i++;
+      while (i < lines.length && !lines[i].trim().startsWith(fence)) { code.push(lines[i]); i++; }
+      i++; blocks.push({ t: "code", lines: code, lang: m[2] }); continue;
+    }
+    if ((m = line.match(/^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/))) { blocks.push({ t: "h", level: m[1].length, text: m[2] }); i++; continue; }
+    if (hrRe.test(line)) { blocks.push({ t: "hr" }); i++; continue; }
+    if (/^\s{0,3}>/.test(line)) {
+      const q = []; while (i < lines.length && /^\s{0,3}>/.test(lines[i])) { q.push(lines[i].replace(/^\s{0,3}>\s?/, "")); i++; }
+      blocks.push({ t: "quote", blocks: parseMd(q) }); continue;
+    }
+    if (line.includes("|") && i + 1 < lines.length && lines[i + 1].includes("|") && /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+      const head = splitTableRow(line), aligns = splitTableRow(lines[i + 1]).map(c => c.startsWith(":") && c.endsWith(":") ? "c" : c.endsWith(":") ? "r" : "l");
+      i += 2; const rows = [];
+      while (i < lines.length && !blank(lines[i]) && lines[i].includes("|")) { rows.push(splitTableRow(lines[i])); i++; }
+      blocks.push({ t: "table", head, aligns, rows }); continue;
+    }
+    if (listRe.test(line)) {
+      const items = [];
+      while (i < lines.length) {
+        const mm = lines[i].match(listRe);
+        if (mm) {
+          let text = mm[3], task; const tk = text.match(/^\[( |x|X)\]\s+(.*)$/); if (tk) { task = tk[1] !== " "; text = tk[2]; }
+          items.push({ indent: mm[1].length, ordered: /\d/.test(mm[2]), num: parseInt(mm[2], 10) || 1, text, task }); i++;
+        } else if (!blank(lines[i]) && /^\s{2,}\S/.test(lines[i]) && items.length) { items[items.length - 1].text += " " + lines[i].trim(); i++; }
+        else if (blank(lines[i]) && i + 1 < lines.length && listRe.test(lines[i + 1])) i++;
+        else break;
+      }
+      blocks.push({ t: "list", items }); continue;
+    }
+    const para = [line]; i++;
+    while (i < lines.length && !blank(lines[i]) && !startsBlock(lines[i])) { para.push(lines[i]); i++; }
+    let text = "";
+    para.forEach((l, k) => { const last = k === para.length - 1, hard = !last && (/ {2,}$/.test(l) || /\\$/.test(l)); text += l.replace(/(?: {2,}|\\)$/, "").trim() + (last ? "" : hard ? "\n" : " "); });
+    blocks.push({ t: "p", text });
+  }
+  return blocks;
+}
+function mdInline(text, base = {}) {
+  const out = []; let i = 0, buf = "";
+  const flush = () => { if (buf) { out.push({ ...base, text: buf }); buf = ""; } };
+  while (i < text.length) {
+    const ch = text[i], rest = text.slice(i); let m;
+    if (ch === "\\" && i + 1 < text.length && /[\\`*_{}\[\]()#+\-.!|~<>]/.test(text[i + 1])) { buf += text[i + 1]; i += 2; continue; }
+    if (ch === "`" && (m = rest.match(/^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/))) { flush(); out.push({ ...base, text: m[2].replace(/^ (.*) $/, "$1"), code: true }); i += m[0].length; continue; }
+    if ((m = rest.match(/^!\[([^\]]*)\]\(([^)\s]*)[^)]*\)/))) { flush(); out.push({ ...base, text: "[image: " + (m[1] || "…") + "]", italic: true }); i += m[0].length; continue; }
+    if ((m = rest.match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/))) { flush(); out.push(...mdInline(m[1], { ...base, link: m[2] })); i += m[0].length; continue; }
+    if ((m = rest.match(/^<(https?:\/\/[^>\s]+)>/))) { flush(); out.push({ ...base, text: m[1], link: m[1] }); i += m[0].length; continue; }
+    if ((m = rest.match(/^(\*\*|__)(?=\S)([\s\S]*?\S)\1/))) { flush(); out.push(...mdInline(m[2], { ...base, bold: true })); i += m[0].length; continue; }
+    if ((m = rest.match(/^(\*|_)(?=\S)([\s\S]*?\S)\1/)) && !(ch === "_" && /\w/.test(text[i - 1] || ""))) { flush(); out.push(...mdInline(m[2], { ...base, italic: true })); i += m[0].length; continue; }
+    if ((m = rest.match(/^~~(?=\S)([\s\S]*?\S)~~/))) { flush(); out.push(...mdInline(m[1], { ...base, strike: true })); i += m[0].length; continue; }
+    buf += ch; i++;
+  }
+  flush(); return out;
+}
+const styleKey = (sp, baseBold) => { if (sp.code) return "mono"; const b = sp.bold || baseBold; return b && sp.italic ? "bolditalic" : b ? "bold" : sp.italic ? "italic" : "regular"; };
+function prepareBlocks(blocks, need) {
+  const add = (spans, bb) => spans.forEach(s => need.add(styleKey(s, bb)));
+  for (const b of blocks) {
+    if (b.t === "h") { b.spans = mdInline(b.text); add(b.spans, true); }
+    else if (b.t === "p") { b.spans = mdInline(b.text); add(b.spans, false); }
+    else if (b.t === "list") b.items.forEach(it => { it.spans = mdInline(it.text); add(it.spans, false); });
+    else if (b.t === "quote") prepareBlocks(b.blocks, need);
+    else if (b.t === "code") need.add("mono");
+    else if (b.t === "table") { b.headSpans = b.head.map(c => mdInline(c)); b.rowSpans = b.rows.map(r => r.map(c => mdInline(c))); b.headSpans.forEach(s => add(s, true)); b.rowSpans.forEach(r => r.forEach(s => add(s, false))); }
+  }
+}
+
+/* ---- Markdown → PDF layout engine (pdf-lib + embedded DejaVu) ---- */
+async function mdToPdf(md, { size = "a4", fontSize = 11 } = {}) {
+  await loadScript(PDFLIB_URL); await loadScript(FONTKIT_URL);
+  const { PDFDocument, rgb, StandardFonts, PDFString } = PDFLib;
+  const blocks = mdBlocks(md), need = new Set(["regular"]);
+  prepareBlocks(blocks, need);
+  const doc = await PDFDocument.create({ updateMetadata: false });
+  doc.registerFontkit(window.fontkit);
+  const fonts = {}, std = {}; let usedFallback = false;
+  await Promise.all([...need].map(async key => {
+    try { const r = await fetch(DEJAVU + FONT_FILES[key]); if (!r.ok) throw new Error("HTTP " + r.status); fonts[key] = await doc.embedFont(await r.arrayBuffer(), { subset: true }); }
+    catch (_) { usedFallback = true; std[key] = true; }
+  }));
+  const S = StandardFonts, stdMap = { regular: S.Helvetica, bold: S.HelveticaBold, italic: S.HelveticaOblique, bolditalic: S.HelveticaBoldOblique, mono: S.Courier };
+  for (const key of Object.keys(std)) fonts[key] = await doc.embedFont(stdMap[key]);
+
+  const [PW, PH] = size === "letter" ? [612, 792] : [595.28, 841.89];
+  const M = 56, BODY = fontSize, LH = 1.45, FOOT = 26;
+  const C = { text: rgb(.12, .12, .14), muted: rgb(.38, .4, .44), link: rgb(.1, .32, .8), rule: rgb(.82, .84, .87), codeBg: rgb(.95, .95, .96), head: rgb(.92, .93, .95) };
+  const pages = []; let page, y;
+  const newPage = () => { page = doc.addPage([PW, PH]); pages.push(page); y = PH - M; };
+  const bottom = () => M + FOOT / 2, ensure = h => { if (y - h < bottom()) newPage(); };
+  newPage();
+  const san = t => t.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\x09\x0A\x20-\x7E\xA0-\xFF]/g, "?");
+  const safe = (t, key) => std[key] ? san(t) : t;
+  const W = (t, key, sz) => fonts[key].widthOfTextAtSize(t, sz), spaceW = sz => W(" ", "regular", sz);
+
+  // spans -> unbreakable chunks (a chunk can mix styles: foo**bar** stays together)
+  function makeChunks(spans, sz, baseBold) {
+    const chunks = []; let cur = null, gap = false;
+    const push = () => { if (cur) { chunks.push(cur); cur = null; } };
+    for (const sp of spans) {
+      const key = styleKey(sp, baseBold);
+      sp.text.split("\n").forEach((part, pi) => {
+        if (pi > 0) { push(); chunks.push({ br: true }); gap = false; }
+        for (const tok of part.split(/(\s+)/)) {
+          if (tok === "") continue;
+          if (/^\s+$/.test(tok)) { push(); gap = true; continue; }
+          if (!cur) { cur = { pieces: [], w: 0, gap }; gap = false; }
+          const text = safe(tok, key), w = W(text, key, sz);
+          cur.pieces.push({ text, key, w, link: sp.link, strike: sp.strike, code: sp.code }); cur.w += w;
+        }
+      });
+    }
+    push(); return chunks;
+  }
+  function splitWide(ch, width, sz) {
+    const out = []; let cur = { pieces: [], w: 0, gap: ch.gap };
+    const flush = () => { if (cur.pieces.length) { out.push(cur); cur = { pieces: [], w: 0, gap: false }; } };
+    for (const p of ch.pieces) {
+      let txt = "", tw = 0;
+      const close = () => { if (txt) { cur.pieces.push({ ...p, text: txt, w: tw }); cur.w += tw; txt = ""; tw = 0; } };
+      for (const c of Array.from(p.text)) {
+        const cw = W(c, p.key, sz);
+        if (cur.w + tw + cw > width && cur.w + tw > 0) { close(); flush(); }
+        txt += c; tw += cw;
+      }
+      close();
+    }
+    flush(); return out;
+  }
+  function wrap(chunks, width, sz) {
+    const sp = spaceW(sz), lines = []; let line = { chunks: [], w: 0 };
+    const push = () => { lines.push(line); line = { chunks: [], w: 0 }; };
+    for (const ch of chunks) {
+      if (ch.br) { push(); continue; }
+      for (const pc of (ch.w > width ? splitWide(ch, width, sz) : [ch])) {
+        if (line.chunks.length && line.w + (pc.gap ? sp : 0) + pc.w > width) push();
+        const g = line.chunks.length && pc.gap ? sp : 0;
+        line.chunks.push({ pieces: pc.pieces, w: pc.w, gap: g > 0 }); line.w += g + pc.w;
+      }
+    }
+    if (line.chunks.length || !lines.length) lines.push(line);
+    return lines;
+  }
+  const addLink = (x, yb, w, h, url) => {
+    try {
+      const cx = doc.context, ref = cx.register(cx.obj({ Type: "Annot", Subtype: "Link", Rect: [x, yb, x + w, yb + h], Border: [0, 0, 0], A: { Type: "Action", S: "URI", URI: PDFString.of(url) } }));
+      page.node.addAnnot(ref);
+    } catch (_) {}
+  };
+  function drawLine(line, x, baseY, sz, color, align, width) {
+    const sp = spaceW(sz); let cx = x;
+    if (align === "c") cx = x + (width - line.w) / 2; else if (align === "r") cx = x + (width - line.w);
+    for (const ch of line.chunks) {
+      if (ch.gap) cx += sp;
+      for (const p of ch.pieces) {
+        if (p.code) page.drawRectangle({ x: cx - 1.5, y: baseY - sz * 0.26, width: p.w + 3, height: sz * 1.12, color: C.codeBg });
+        page.drawText(p.text, { x: cx, y: baseY, size: sz, font: fonts[p.key], color: p.link ? C.link : color });
+        if (p.link) {
+          page.drawLine({ start: { x: cx, y: baseY - 1.6 }, end: { x: cx + p.w, y: baseY - 1.6 }, thickness: 0.6, color: C.link });
+          if (/^(https?:|mailto:)/i.test(p.link)) addLink(cx, baseY - sz * 0.22, p.w, sz * 1.1, p.link);
+        }
+        if (p.strike) page.drawLine({ start: { x: cx, y: baseY + sz * 0.28 }, end: { x: cx + p.w, y: baseY + sz * 0.28 }, thickness: 0.7, color });
+        cx += p.w;
+      }
+    }
+  }
+  const drawBars = (h, bars) => bars.forEach(bx => page.drawRectangle({ x: bx, y: y - h, width: 2.5, height: h, color: C.rule }));
+  const vspace = (h, bars) => { if (y - h < bottom()) { newPage(); return; } drawBars(h, bars); y -= h; };
+  const emit = (lines, x, width, sz, color, align, bars, lh) => {
+    for (const line of lines) { ensure(lh); drawBars(lh, bars); drawLine(line, x, y - lh / 2 - sz * 0.35, sz, color, align, width); y -= lh; }
+  };
+  const marker = m => std.regular ? ({ "◦": "o", "▪": "-", "☑": "[x]", "☐": "[ ]" }[m] || m) : m;
+
+  function renderTable(b, x, width, bars) {
+    const sz = BODY - 0.5, padX = 5, padY = 4, lh = sz * 1.35, cols = b.head.length, sp = spaceW(sz);
+    const head = b.headSpans.map(s => makeChunks(s, sz, true));
+    const rows = b.rowSpans.map(r => Array.from({ length: cols }, (_, i) => makeChunks(r[i] || [], sz, false)));
+    const nat = Array(cols).fill(30), mn = Array(cols).fill(30);
+    for (const row of [head, ...rows]) row.forEach((chunks, i) => {
+      let w = 0, mw = 0; for (const ch of chunks) { if (ch.br) continue; w += (w ? sp : 0) + ch.w; mw = Math.max(mw, ch.w); }
+      nat[i] = Math.max(nat[i], w + padX * 2); mn[i] = Math.max(mn[i], Math.min(mw + padX * 2, 150));
+    });
+    const total = nat.reduce((a, v) => a + v, 0), minSum = mn.reduce((a, v) => a + v, 0); let widths;
+    if (total <= width) widths = nat.map(n => n + (width - total) * (n / total));
+    else if (minSum >= width) widths = mn.map(m => m * width / minSum);
+    else { const extra = width - minSum, want = nat.map((n, i) => Math.max(0, n - mn[i])), ws = want.reduce((a, v) => a + v, 0) || 1; widths = mn.map((m, i) => m + extra * want[i] / ws); }
+    const layout = row => row.map((chunks, i) => wrap(chunks, widths[i] - padX * 2, sz));
+    const heightOf = cl => Math.max(...cl.map(l => l.length)) * lh + padY * 2;
+    const draw = (cl, isHead) => {
+      const rowH = heightOf(cl); let cx = x;
+      cl.forEach((lines, i) => {
+        page.drawRectangle({ x: cx, y: y - rowH, width: widths[i], height: rowH, color: isHead ? C.head : undefined, borderColor: C.rule, borderWidth: 0.6 });
+        lines.forEach((line, j) => drawLine(line, cx + padX, y - padY - j * lh - lh / 2 - sz * 0.35, sz, C.text, b.aligns[i] || "l", widths[i] - padX * 2));
+        cx += widths[i];
+      });
+      y -= rowH;
+    };
+    const place = (cl, isHead) => { if (y - heightOf(cl) < bottom()) { newPage(); if (!isHead) draw(layout(head), true); } draw(cl, isHead); };
+    place(layout(head), true); rows.forEach(r => place(layout(r), false)); vspace(BODY * 0.6, bars);
+  }
+
+  function renderBlocks(list, x, width, color, bars) {
+    for (const b of list) {
+      if (b.t === "h") {
+        const sz = [0, 24, 19, 15, 13, 11.5, 11][b.level], lh = sz * 1.25, lines = wrap(makeChunks(b.spans, sz, true), width, sz);
+        if (y < PH - M - 1) vspace(sz * 0.55, bars);
+        ensure(lh * Math.min(lines.length, 2) + BODY * LH * 2);
+        emit(lines, x, width, sz, b.level === 6 ? C.muted : C.text, "l", bars, lh);
+        if (b.level <= 2) { vspace(3, bars); page.drawLine({ start: { x, y }, end: { x: x + width, y }, thickness: 0.6, color: C.rule }); vspace(4, bars); }
+        vspace(sz * 0.35, bars);
+      } else if (b.t === "p") {
+        emit(wrap(makeChunks(b.spans, BODY, false), width, BODY), x, width, BODY, color, "l", bars, BODY * LH); vspace(BODY * 0.55, bars);
+      } else if (b.t === "list") {
+        const cnt = {};
+        for (const it of b.items) {
+          const lvl = Math.min(3, Math.floor(it.indent / 2)), ix = x + lvl * 18, tx = ix + (it.ordered ? 22 : 15), lh = BODY * LH;
+          let mk;
+          if (it.task !== undefined) mk = it.task ? "☑" : "☐";
+          else if (it.ordered) { cnt[lvl] = (cnt[lvl] === undefined ? it.num - 1 : cnt[lvl]) + 1; mk = cnt[lvl] + "."; }
+          else { delete cnt[lvl]; mk = ["•", "◦", "▪", "▪"][lvl]; }
+          for (const k of Object.keys(cnt)) if (+k > lvl) delete cnt[k];
+          const lines = wrap(makeChunks(it.spans, BODY, false), width - (tx - x), BODY);
+          ensure(lh); drawBars(0, bars);
+          page.drawText(marker(mk), { x: ix, y: y - lh / 2 - BODY * 0.35, size: BODY, font: fonts.regular, color });
+          emit(lines, tx, width - (tx - x), BODY, color, "l", bars, lh); vspace(2, bars);
+        }
+        vspace(BODY * 0.45, bars);
+      } else if (b.t === "quote") {
+        renderBlocks(b.blocks, x + 14, width - 14, C.muted, [...bars, x + 3]); vspace(BODY * 0.2, bars);
+      } else if (b.t === "code") {
+        const sz = BODY - 1.5, lh = sz * 1.4, pad = 7, cw = W("M", "mono", sz), cols = Math.max(8, Math.floor((width - pad * 2) / cw)), rowsOut = [];
+        (b.lines.length ? b.lines : [""]).forEach(l => { l = std.mono ? san(l) : l; if (!l.length) rowsOut.push(""); else for (let k = 0; k < l.length; k += cols) rowsOut.push(l.slice(k, k + cols)); });
+        ensure(lh * Math.min(rowsOut.length, 3) + 8); vspace(2, bars);
+        page.drawRectangle({ x, y: y - 4, width, height: 4, color: C.codeBg }); y -= 4;
+        for (const r of rowsOut) {
+          ensure(lh); page.drawRectangle({ x, y: y - lh, width, height: lh, color: C.codeBg });
+          if (r) page.drawText(r, { x: x + pad, y: y - lh / 2 - sz * 0.35, size: sz, font: fonts.mono, color: C.text });
+          y -= lh;
+        }
+        page.drawRectangle({ x, y: y - 4, width, height: 4, color: C.codeBg }); y -= 4; vspace(BODY * 0.6, bars);
+      } else if (b.t === "hr") {
+        vspace(6, bars); page.drawLine({ start: { x, y }, end: { x: x + width, y }, thickness: 0.8, color: C.rule }); vspace(8, bars);
+      } else if (b.t === "table") renderTable(b, x, width, bars);
+    }
+  }
+  renderBlocks(blocks, M, PW - 2 * M, C.text, []);
+
+  const total = pages.length;
+  pages.forEach((pg, i) => { const t = `${i + 1} / ${total}`, w = W(t, "regular", 9); pg.drawText(t, { x: PW / 2 - w / 2, y: 26, size: 9, font: fonts.regular, color: C.muted }); });
+  const firstH = blocks.find(b => b.t === "h"), title = firstH ? firstH.text.replace(/[*_`~]/g, "").trim() : "Document";
+  doc.setTitle(title); doc.setProducer("Toolkit"); doc.setCreator("Toolkit"); doc.setCreationDate(new Date()); doc.setModificationDate(new Date());
+  return { bytes: await doc.save(), pages: total, usedFallback, title };
+}
+const fileSlug = s => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+function rMdPdf(c) {
+  const SAMPLE = ["# Project notes", "", "A short **bold**, *italic*, ~~struck~~ and `inline code` demo with a [link](https://example.com).", "", "## Checklist", "", "- [x] Parse Markdown", "- [ ] Ship it", "  - nested item", "", "1. First", "2. Second", "", "> Quotes get a bar down the side.", "", "```js", "const greet = name => `Hello, ${name}`;", "```", "", "| Tool | Where |", "|:-----|------:|", "| Cheat sheets | Dev |", "| Word frequency | Text |", "", "Romanian: ă â î ș ț — Ünïcödé works.", ""].join("\n");
+  c.innerHTML = `<div class="card">
+    <div class="field"><label>Markdown</label><textarea id="mp-in" class="mono" style="min-height:220px" placeholder="# Title&#10;&#10;Write or paste Markdown…"></textarea></div>
+    <div class="btn-row"><button class="btn ghost sm" id="mp-sample"><i data-lucide="sparkles"></i> Sample</button><button class="btn ghost sm" id="mp-open"><i data-lucide="file-up"></i> Open .md file</button></div>
+    <input type="file" id="mp-file" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
+    <div class="btn-row" style="margin-top:12px"><div class="field" style="flex:1"><label>Page</label><select id="mp-size"><option value="a4">A4</option><option value="letter">Letter</option></select></div><div class="field" style="flex:1"><label>Text size</label><select id="mp-fs"><option>10</option><option selected>11</option><option>12</option></select></div></div>
+    <button class="btn" id="mp-go" style="margin-top:6px"><i data-lucide="file-down"></i> Create PDF</button>
+    <div id="tool-status"></div><div id="tool-result" class="result"></div>
+    <p class="muted" style="margin-top:12px">Built in your browser. Supports headings, lists, task lists, quotes, code, tables and links. Images aren't supported (their alt text is shown), and emoji or CJK characters aren't in the built-in font.</p></div>`;
+  iconsRefresh();
+  $("#mp-sample").onclick = () => { $("#mp-in").value = SAMPLE; play("click"); haptic(); };
+  $("#mp-open").onclick = () => $("#mp-file").click();
+  $("#mp-file").onchange = async e => { const f = e.target.files[0]; if (!f) return; if (f.size > 2e6) return setStatus("That file is too large for a Markdown document", "err"); $("#mp-in").value = await f.text(); play("success"); };
+  $("#mp-go").onclick = async () => {
+    const md = $("#mp-in").value; if (!md.trim()) return setStatus("Write or paste some Markdown first", "err");
+    if (md.length > 400000) return setStatus("That's too long (limit about 400,000 characters)", "err");
+    play("click"); haptic(); $("#tool-result").innerHTML = ""; setStatus(spin() + " Loading libraries and fonts…");
+    try {
+      const { bytes, pages, usedFallback, title } = await mdToPdf(md, { size: $("#mp-size").value, fontSize: +$("#mp-fs").value });
+      setStatus("");
+      const blob = new Blob([bytes], { type: "application/pdf" }), name = (fileSlug(title) || "document") + ".pdf";
+      resultCard(`<div style="margin-bottom:10px"><span class="pill ok">${pages} page${pages === 1 ? "" : "s"}</span> <span class="pill info">${Math.max(1, Math.round(blob.size / 1024))} KB</span></div><p class="muted">${esc(name)}</p>${usedFallback ? `<p class="muted" style="margin-top:8px">⚠️ The font download failed, so a basic font was used and some accented letters were simplified.</p>` : ""}`, { actions: false });
+      fileActions($("#tool-result .card"), blob, name, "Markdown → PDF");
+      play("success"); notify();
+    } catch (e) { setStatus("❌ " + esc(e.message || "Could not create the PDF"), "err"); play("error"); }
+  };
+}
+
+/* ---- Document metadata scrubber (PDF + DOCX, entirely in the browser) ---- */
+const fmtPdfDate = d => d ? d.toISOString().slice(0, 19).replace("T", " ") + " UTC" : "";
+function pdfMeta(doc) {
+  const { PDFName, PDFDict } = PDFLib, authors = new Set();
+  for (const pg of doc.getPages()) {
+    const annots = pg.node.Annots(); if (!annots) continue;
+    for (let i = 0; i < annots.size(); i++) { try { const a = doc.context.lookup(annots.get(i), PDFDict), t = a && a.get(PDFName.of("T")); if (t && t.decodeText && !/widget/i.test(String(a.get(PDFName.of("Subtype"))))) authors.add(t.decodeText()); } catch (_) {} }
+  }
+  return [["Title", doc.getTitle() || ""], ["Author", doc.getAuthor() || ""], ["Subject", doc.getSubject() || ""], ["Keywords", doc.getKeywords() || ""], ["Creator (app)", doc.getCreator() || ""], ["Producer", doc.getProducer() || ""],
+    ["Created", fmtPdfDate(doc.getCreationDate())], ["Modified", fmtPdfDate(doc.getModificationDate())], ["XMP metadata", doc.catalog.has(PDFName.of("Metadata")) ? "present" : ""],
+    ["Annotation authors", [...authors].join(", ")], ["Document ID", doc.context.trailerInfo.ID ? "present" : ""]];
+}
+async function scrubPdf(file) {
+  await loadScript(PDFLIB_URL);
+  const { PDFDocument, PDFName, PDFDict, PDFRef, PDFStream } = PDFLib;
+  let doc;
+  try { doc = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()), { updateMetadata: false }); }
+  catch (e) { throw new Error(/encrypt/i.test(e.message || "") ? "This PDF is password-protected — remove the password first." : "Could not read this PDF (it may be damaged)."); }
+  const before = pdfMeta(doc), ctx = doc.context; let annots = 0;
+  const info = ctx.trailerInfo.Info; if (info instanceof PDFRef) ctx.delete(info);
+  ctx.trailerInfo.Info = undefined; ctx.trailerInfo.ID = undefined;
+  for (const [, obj] of ctx.enumerateIndirectObjects()) {
+    const dict = obj instanceof PDFStream ? obj.dict : obj instanceof PDFDict ? obj : null; if (!dict) continue;
+    for (const key of ["Metadata", "PieceInfo", "LastModified"]) { const k = PDFName.of(key), v = dict.get(k); if (v !== undefined) { if (v instanceof PDFRef) ctx.delete(v); dict.delete(k); } }
+    const sub = dict.get(PDFName.of("Subtype"));
+    if (sub && dict.has(PDFName.of("Rect")) && !/widget/i.test(String(sub))) for (const key of ["T", "M", "CreationDate"]) if (dict.has(PDFName.of(key))) { dict.delete(PDFName.of(key)); annots++; }
+  }
+  const out = await doc.save({ useObjectStreams: false, updateFieldAppearances: false });
+  const after = pdfMeta(await PDFDocument.load(out, { updateMetadata: false }));
+  const notes = ["Page content, bookmarks and form fields were left untouched.", "Metadata inside embedded images (such as EXIF in photos) isn't touched."];
+  if (annots) notes.unshift(`Removed author/date details from ${annots} annotation field${annots === 1 ? "" : "s"}.`);
+  return { blob: new Blob([out], { type: "application/pdf" }), before, after, notes };
+}
+
+const decXml = s => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n)).replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&amp;/g, "&");
+const xmlTag = (xml, t) => { const m = xml.match(new RegExp("<(?:[\\w-]+:)?" + t + "(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[\\w-]+:)?" + t + ">")); return m ? decXml(m[1]).trim() : ""; };
+const XML_HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+const EMPTY_CORE = XML_HEAD + '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>';
+const EMPTY_APP = XML_HEAD + '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"/>';
+const EMPTY_CUSTOM = XML_HEAD + '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"/>';
+const EMPTY_PEOPLE = XML_HEAD + '<w15:people xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml"/>';
+async function docxMeta(zip) {
+  const rd = async p => zip.file(p) ? await zip.file(p).async("string") : "";
+  const core = await rd("docProps/core.xml"), app = await rd("docProps/app.xml"), custom = await rd("docProps/custom.xml"), names = Object.keys(zip.files);
+  const authors = new Set(); let rsid = 0, comments = 0;
+  for (const p of names) if (/^word\/[^/]+\.xml$/.test(p)) {
+    const x = await rd(p); for (const m of x.matchAll(/\bw:author="([^"]*)"/g)) authors.add(decXml(m[1]));
+    rsid += (x.match(/\bw:rsid[A-Za-z]*="/g) || []).length; if (p === "word/comments.xml") comments = (x.match(/<w:comment\b/g) || []).length;
+  }
+  rsid += ((await rd("word/settings.xml")).match(/<w:rsid\b/g) || []).length;
+  const tplRel = (await rd("word/_rels/settings.xml.rels")).match(/<Relationship\b[^>]*attachedTemplate[^>]*>/), tpl = tplRel && tplRel[0].match(/Target="([^"]*)"/);
+  const people = zip.file("word/people.xml") ? /w15:person\b/.test(await rd("word/people.xml")) : false, nCustom = (custom.match(/<(?:\w+:)?property\b/g) || []).length;
+  const fields = [["Author", xmlTag(core, "creator")], ["Last modified by", xmlTag(core, "lastModifiedBy")], ["Title", xmlTag(core, "title")], ["Subject", xmlTag(core, "subject")], ["Keywords", xmlTag(core, "keywords")], ["Description", xmlTag(core, "description")], ["Category", xmlTag(core, "category")],
+    ["Created", xmlTag(core, "created")], ["Modified", xmlTag(core, "modified")], ["Revision", xmlTag(core, "revision")],
+    ["Application", xmlTag(app, "Application")], ["Company", xmlTag(app, "Company")], ["Manager", xmlTag(app, "Manager")], ["Template", xmlTag(app, "Template")],
+    ["Custom properties", nCustom ? String(nCustom) : ""], ["Thumbnail", names.some(p => /^docProps\/thumbnail\./i.test(p)) ? "embedded preview image" : ""],
+    ["Attached template path", tpl ? decXml(tpl[1]) : ""], ["Reviewer names", [...authors].filter(a => a && a !== "Author").join(", ")], ["Edit-session IDs", rsid ? `${rsid} (rsid)` : ""], ["Reviewer list", people ? "present" : ""]];
+  return { fields, comments, customXml: names.filter(p => /^customXml\/item\d*\.xml$/.test(p)).length };
+}
+async function scrubDocx(file, anon, dropCustomXml) {
+  await loadScript(JSZIP_URL);
+  // createFolders:false keeps the package byte-for-byte structurally identical (JSZip would otherwise add directory entries)
+  let zip; try { zip = await JSZip.loadAsync(await file.arrayBuffer(), { createFolders: false }); } catch (_) { throw new Error("Could not open this file — it may be damaged or not a real .docx."); }
+  if (!zip.file("[Content_Types].xml") || !zip.file("word/document.xml")) throw new Error("This doesn't look like a Word (.docx) document.");
+  // JSZip's zip.file(path, data) silently adds parent directory entries; a scrubber must not restructure the package.
+  const _read = zip.file.bind(zip);
+  zip.file = (name, data, opts) => data === undefined ? _read(name) : _read(name, data, { createFolders: false, ...opts });
+  const rd = p => zip.file(p).async("string"), before = await docxMeta(zip);
+  const dropRel =(xml, typeRe) => xml.replace(/<Relationship\b[^>]*\/>/g, m => typeRe.test(m) ? "" : m);
+  if (zip.file("docProps/core.xml")) zip.file("docProps/core.xml", EMPTY_CORE);
+  if (zip.file("docProps/app.xml")) zip.file("docProps/app.xml", EMPTY_APP);
+  if (zip.file("docProps/custom.xml")) zip.file("docProps/custom.xml", EMPTY_CUSTOM);
+  Object.keys(zip.files).filter(p => /^docProps\/thumbnail\./i.test(p)).forEach(p => zip.remove(p));
+  if (zip.file("_rels/.rels")) zip.file("_rels/.rels", dropRel(await rd("_rels/.rels"), /Type="[^"]*\/thumbnail"/i));
+  if (zip.file("word/settings.xml")) { let s = (await rd("word/settings.xml")).replace(/<w:attachedTemplate\b[^>]*\/>/g, ""); if (anon) s = s.replace(/<w:rsids>[\s\S]*?<\/w:rsids>/g, ""); zip.file("word/settings.xml", s); }
+  if (zip.file("word/_rels/settings.xml.rels")) zip.file("word/_rels/settings.xml.rels", dropRel(await rd("word/_rels/settings.xml.rels"), /Type="[^"]*\/attachedTemplate"/i));
+  if (anon) {
+    if (zip.file("word/people.xml")) zip.file("word/people.xml", EMPTY_PEOPLE);
+    for (const p of Object.keys(zip.files)) if (/^word\/[^/]+\.xml$/.test(p) && p !== "word/people.xml") {
+      const x = await rd(p), y = x.replace(/\bw:author="[^"]*"/g, 'w:author="Author"').replace(/\bw:initials="[^"]*"/g, 'w:initials="A"').replace(/\s+w:date="[^"]*"/g, "").replace(/\s+w:rsid[A-Za-z]*="[0-9A-Fa-f]+"/g, "");
+      if (y !== x) zip.file(p, y);
+    }
+  }
+  if (dropCustomXml) {  // opt-in: these parts can hold real content (e.g. bibliography sources), so never removed by default
+    Object.keys(zip.files).filter(p => /^customXml\//i.test(p)).forEach(p => zip.remove(p));
+    const rp = "word/_rels/document.xml.rels"; if (zip.file(rp)) zip.file(rp, dropRel(await rd(rp), /Type="[^"]*\/customXml"/i));
+    zip.file("[Content_Types].xml", (await rd("[Content_Types].xml")).replace(/<Override\b[^>]*PartName="\/customXml\/[^"]*"[^>]*\/>/g, ""));
+  }
+  zip.forEach((p, entry) => { entry.date = new Date(Date.UTC(1980, 0, 1)); });  // zip entry timestamps also reveal when the file was made
+  const blob = await zip.generateAsync({ type: "blob", mimeType: DOCX_MIME, compression: "DEFLATE", compressionOptions: { level: 6 } });
+  const after = await docxMeta(await JSZip.loadAsync(await blob.arrayBuffer(), { createFolders: false }));
+  const notes = [], n = before.comments, cx = before.customXml;
+  if (n) notes.push(`${n} comment${n === 1 ? " remains" : "s remain"} in the document${anon ? " (author names anonymised)" : ""} — comments are content, so they're kept.`);
+  if (cx && dropCustomXml) notes.push(`Removed ${cx} custom XML part${cx === 1 ? "" : "s"}. If the document used citations or data-bound fields, re-check them.`);
+  else if (cx) notes.push(`${cx} custom XML part${cx === 1 ? " was" : "s were"} left in place (SharePoint and add-ins store data there, and it can include names). Turn on "Remove custom XML" to drop ${cx === 1 ? "it" : "them"}.`);
+  notes.push("Visible content isn't changed, and metadata inside embedded images (such as EXIF in photos) isn't touched.");
+  return { blob, before: before.fields, after: after.fields, notes };
+}
+function rDocScrub(c) {
+  let file = null;
+  c.innerHTML = `<div class="card"><div class="upload" id="ds-drop"><i data-lucide="file-x"></i><div id="ds-name">Choose a PDF or DOCX</div></div>
+    <input type="file" id="ds-file" accept=".pdf,.docx,application/pdf,${DOCX_MIME}" hidden>
+    <div class="switch-row" style="margin-top:12px"><span>DOCX: anonymise reviewer names &amp; edit IDs</span><input type="checkbox" class="sw" id="ds-anon" checked></div>
+    <div class="switch-row"><span>DOCX: also remove custom XML <span class="muted">(may affect citations)</span></span><input type="checkbox" class="sw" id="ds-cxml"></div>
+    <button class="btn" id="ds-go" style="margin-top:14px"><i data-lucide="eraser"></i> Remove metadata</button>
+    <div id="tool-status"></div><div id="tool-result" class="result"></div>
+    <p class="muted" style="margin-top:12px">Works entirely in your browser — the file isn't uploaded unless you tap "Send to chat". It removes document properties and hidden data; it doesn't change what's written in the document.</p></div>`;
+  iconsRefresh();
+  $("#ds-drop").onclick = () => $("#ds-file").click();
+  $("#ds-file").onchange = e => { file = e.target.files[0]; if (file) { $("#ds-name").textContent = `${file.name} · ${(file.size / 1024).toFixed(0)} KB`; $("#ds-drop").classList.add("active"); play("success"); $("#tool-result").innerHTML = ""; setStatus(""); } };
+  $("#ds-go").onclick = async () => {
+    if (!file) return setStatus("Choose a file first", "err");
+    if (file.size > 30e6) return setStatus("That file is too large (limit 30 MB)", "err");
+    const isPdf = /\.pdf$/i.test(file.name) || file.type === "application/pdf", isDocx = /\.docx$/i.test(file.name);
+    if (!isPdf && !isDocx) return setStatus("Only .pdf and .docx files are supported", "err");
+    play("click"); haptic(); $("#tool-result").innerHTML = ""; setStatus(spin() + " Cleaning…");
+    try {
+      const r = isPdf ? await scrubPdf(file) : await scrubDocx(file, $("#ds-anon").checked, $("#ds-cxml").checked);
+      setStatus("");
+      const aft = Object.fromEntries(r.after), found = r.before.filter(([, v]) => v);
+      const rows = found.map(([k, v]) => `<div class="row" style="flex-direction:column;align-items:stretch;gap:4px"><div style="display:flex;justify-content:space-between;gap:10px"><span class="k">${esc(k)}</span>${aft[k] ? `<span class="pill warn">still present</span>` : `<span class="pill ok">removed</span>`}</div><div class="v mono" style="text-align:left;font-size:12px;opacity:.85;word-break:break-word">${esc(v)}</div></div>`).join("");
+      resultCard(`<div style="margin-bottom:10px"><span class="pill ${found.length ? "warn" : "ok"}">${found.length} item${found.length === 1 ? "" : "s"} found</span></div>${found.length ? `<div class="rows">${rows}</div>` : `<p class="status ok">✅ No identifying metadata found</p>`}${r.notes.map(n => `<p class="muted" style="margin-top:8px">• ${esc(n)}</p>`).join("")}`, { actions: false });
+      const name = file.name.replace(/\.(pdf|docx)$/i, "") + "-clean." + (isPdf ? "pdf" : "docx");
+      fileActions($("#tool-result .card"), r.blob, name, "Metadata removed");
+      play("success"); notify();
+    } catch (e) { setStatus("❌ " + esc(e.message || "Could not clean this file"), "err"); play("error"); }
+  };
 }
 
 /* =========================================================================
