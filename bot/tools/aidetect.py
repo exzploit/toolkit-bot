@@ -96,7 +96,7 @@ def heuristic_score(text: str) -> dict:
 # Hugging Face inference
 # --------------------------------------------------------------------------- #
 async def _hf_one(session, name, model, text, token) -> dict:
-    url = f"https://api-inference.huggingface.co/models/{model}"
+    url = f"https://router.huggingface.co/hf-inference/models/{model}"
     headers = {"Authorization": f"Bearer {token}"}
     payload = {"inputs": text[:2000], "options": {"wait_for_model": True}}
     try:
