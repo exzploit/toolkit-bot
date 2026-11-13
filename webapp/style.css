@@ -166,6 +166,7 @@ textarea.mono, input.mono { font-family: var(--mono); font-size: 14px; }
 .btn:active { transform: scale(.98); box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 25%, transparent); }
 .btn[disabled] { opacity: .5; pointer-events: none; }
 .btn.ghost { background: #111b2b; color: var(--text); border-color: var(--border); }
+.card > .muted + .btn { margin-top: 14px; }  /* breathing room between a hint paragraph and the action button */
 .btn.sm { width: auto; padding: 9px 13px; font-size: 13px; }
 .btn svg { width: 17px; height: 17px; }
 .btn-row { display: flex; gap: 10px; }

@@ -9,12 +9,15 @@ from __future__ import annotations
 import asyncio
 import datetime
 import ipaddress
+import re
 import socket
 import ssl
+import time
 from urllib.parse import urlparse
 
 import aiohttp
 import dns.asyncresolver
+import dns.resolver
 from bs4 import BeautifulSoup
 
 # Standard, well-known ports. Deliberately a small fixed set (dual-use tool kept
@@ -184,6 +187,156 @@ async def ip_info(ip: str | None = None) -> dict:
 # --------------------------------------------------------------------------- #
 # URL inspector: final URL, status, server header, resolved IP, page title
 # --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# Subdomain finder — PASSIVE. Reads public certificate-transparency data; it
+# never touches the target. (The optional resolve step only issues ordinary DNS
+# lookups for names that were already found.)
+# --------------------------------------------------------------------------- #
+_DOMAIN_RE = re.compile(r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
+_LABEL_RE = re.compile(r"^[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?$")
+
+# (name, url template, timeout seconds, max bytes read)
+_SUB_SOURCES = [
+    ("crt.sh", "https://crt.sh/?q=%25.{d}&output=json", 28, 12_000_000),
+    ("certspotter", "https://api.certspotter.com/v1/issuances?domain={d}&include_subdomains=true&expand=dns_names", 20, 8_000_000),
+]
+_SUB_CACHE: dict[str, tuple[float, dict]] = {}
+_SUB_CACHE_TTL = 600
+_SUB_MAX_NAMES = 500
+_SUB_RESOLVE_LIMIT = 100
+
+
+def normalize_domain(raw: str) -> str | None:
+    d = (raw or "").strip().lower()
+    d = d.removeprefix("http://").removeprefix("https://").split("/")[0].split(":")[0].lstrip("*.").rstrip(".")
+    return d if _DOMAIN_RE.match(d) else None
+
+
+def extract_hosts(text: str, domain: str) -> tuple[set[str], set[str]]:
+    """Pull hostnames under ``domain`` out of any text body (JSON or otherwise).
+
+    Returns (concrete subdomains, distinct wildcard patterns such as
+    ``*.dev.example.com``). Works on truncated or oddly-shaped responses
+    because it scans for hostnames rather than parsing a particular schema.
+    """
+    text = text.replace("\\n", "\n")  # crt.sh packs several SANs into one JSON string
+    # After the domain, reject more name characters AND a dot that continues into
+    # further labels (evil.example.com.attacker.net) — but allow a bare trailing dot.
+    pat = re.compile(r"[A-Za-z0-9*_.-]*" + re.escape(domain) + r"(?![A-Za-z0-9_-])(?!\.[A-Za-z0-9_-])", re.I)
+    hosts: set[str] = set()
+    wildcards: set[str] = set()
+    suffix = "." + domain
+    for m in pat.finditer(text):
+        name = m.group(0).lower().strip(".")
+        if name.startswith("*."):
+            wildcards.add(name)
+            continue
+        if "*" in name or not name.endswith(suffix):
+            continue  # apex, look-alikes such as notexample.com, or junk
+        if all(_LABEL_RE.match(lbl) for lbl in name[: -len(suffix)].split(".")):
+            hosts.add(name)
+    return hosts, wildcards
+
+
+async def _read_capped(resp: aiohttp.ClientResponse, cap: int) -> tuple[bytes, bool]:
+    chunks, total = [], 0
+    async for chunk in resp.content.iter_chunked(65536):
+        chunks.append(chunk)
+        total += len(chunk)
+        if total >= cap:
+            return b"".join(chunks)[:cap], True
+    return b"".join(chunks), False
+
+
+async def _fetch_sub_source(session, name: str, url: str, timeout: int, cap: int, domain: str) -> dict:
+    out = {"name": name, "ok": False, "count": 0, "error": None, "truncated": False, "hosts": set(), "wildcards": set()}
+    try:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=timeout)) as resp:
+            if resp.status == 429:
+                out["error"] = "rate limited"
+                return out
+            if resp.status != 200:
+                out["error"] = f"HTTP {resp.status}"
+                return out
+            body, out["truncated"] = await _read_capped(resp, cap)
+    except asyncio.TimeoutError:
+        out["error"] = "timed out"
+        return out
+    except Exception as e:
+        out["error"] = (str(e) or e.__class__.__name__)[:60]
+        return out
+    hosts, wild = extract_hosts(body.decode("utf-8", "replace"), domain)
+    if not hosts and body.lstrip()[:1] == b"<":
+        out["error"] = "unexpected response"  # an HTML error page, not data
+        return out
+    out.update(ok=True, count=len(hosts), hosts=hosts, wildcards=wild)
+    return out
+
+
+async def _resolve_names(names: list[str]) -> dict[str, list[str] | None]:
+    """name -> IPs; [] = exists without an A record; None = does not resolve."""
+    resolver = dns.asyncresolver.Resolver()
+    resolver.lifetime = 2.5
+    sem = asyncio.Semaphore(25)
+
+    async def one(n: str):
+        async with sem:
+            try:
+                return n, [r.to_text() for r in await resolver.resolve(n, "A")][:2]
+            except dns.resolver.NoAnswer:
+                return n, []
+            except Exception:
+                return n, None
+
+    return dict(await asyncio.gather(*(one(n) for n in names)))
+
+
+async def subdomain_lookup(raw_domain: str, resolve: bool = False) -> dict:
+    domain = normalize_domain(raw_domain)
+    if not domain:
+        return {"success": False, "error": "Enter a valid domain, e.g. example.com"}
+
+    cached = _SUB_CACHE.get(domain)
+    if cached and time.monotonic() - cached[0] < _SUB_CACHE_TTL:
+        data = cached[1]
+    else:
+        async with aiohttp.ClientSession(headers={"User-Agent": _UA}, trust_env=True) as session:
+            results = await asyncio.gather(*(
+                _fetch_sub_source(session, n, u.format(d=domain), t, c, domain)
+                for n, u, t, c in _SUB_SOURCES
+            ))
+        if not any(r["ok"] for r in results):
+            reasons = "; ".join(f"{r['name']}: {r['error']}" for r in results)
+            return {"success": False, "error": f"All sources failed ({reasons}). Try again shortly."}
+        data = {
+            "hosts": sorted(set().union(*(r["hosts"] for r in results))),
+            "wildcards": len(set().union(*(r["wildcards"] for r in results))),
+            "truncated": any(r["truncated"] for r in results),
+            "sources": [{"name": r["name"], "ok": r["ok"], "count": r["count"], "error": r["error"]} for r in results],
+        }
+        if len(_SUB_CACHE) >= 64:
+            _SUB_CACHE.pop(min(_SUB_CACHE, key=lambda k: _SUB_CACHE[k][0]))
+        _SUB_CACHE[domain] = (time.monotonic(), data)
+
+    shown = data["hosts"][:_SUB_MAX_NAMES]
+    resolved = None
+    if resolve and shown:
+        resolved = await _resolve_names(shown[:_SUB_RESOLVE_LIMIT])
+    names = [{"name": n, "ips": (resolved.get(n) if resolved is not None and n in resolved else "skip")} for n in shown]
+    return {
+        "success": True,
+        "domain": domain,
+        "count": len(data["hosts"]),
+        "shown": len(shown),
+        "names": names,
+        "wildcards": data["wildcards"],
+        "truncated": data["truncated"],
+        "resolved": resolved is not None,
+        "resolve_limit": _SUB_RESOLVE_LIMIT,
+        "sources": data["sources"],
+    }
+
+
 async def dns_query(domain: str, rtype: str) -> dict:
     domain = (domain or "").strip().lower().removeprefix("http://").removeprefix("https://").split("/")[0]
     rtype = (rtype or "A").upper()

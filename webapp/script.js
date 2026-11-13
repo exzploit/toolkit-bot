@@ -31,7 +31,7 @@ const catName = k => T(k);
 // Romanian name/sub per tool id: [name, sub]
 const RO = {
   password:["Parole","Generator de parole sigure"], vault:["Seif Securizat","Criptează fișiere local"], qr:["Cod QR","Text sau link → QR"], hashgen:["Generator Hash","MD5 / SHA-1 / SHA-256 / 512"], hashcrack:["Spargere Hash","Testează cu parole comune"], decision:["Decizie","Ban sau zar"], pwcheck:["Putere Parolă","Entropie și slăbiciuni"], currency:["Valută","Cursuri live"], passphrase:["Frază-parolă","Parolă din cuvinte ușor de ținut minte"], units:["Conversie Unități","Lungime, masă, temp, date"], datecalc:["Calc. Date","Zile între / adaugă zile"], countdown:["Numărătoare","Timp rămas până la o dată"], calc:["Calculatoare","IMC · Credit · Bacșiș"], fakeid:["Identitate Falsă","Persoană de test aleatorie"], worldclock:["Ceas Mondial","Ora în diferite fusuri"], picker:["Alegere Aleatorie","Alege sau amestecă o listă"], stopwatch:["Cronometru","Cronometru cu ture"], tts:["Text în Voce","Mesaj vocal în chat"],
-  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"], pwned:["Parolă Compromisă","E parola în scurgeri de date?"], hmac:["HMAC","Hash cu cheie (SHA-1/256/384/512)"], bcrypt:["Bcrypt","Hash și verificare parole"], jwtsign:["Semnare JWT","Creează și semnează un token"],
+  base64:["Base64","Codare / decodare"], json:["Format JSON","Formatează și validează"], jwt:["Decodor JWT","Inspectează un token"], urlcode:["Codare URL","Percent-encode / decode"], timestamp:["Timestamp","Unix ⇄ oră umană"], uuid:["UUID","Generează UUID v4"], color:["Culoare","HEX ⇄ RGB ⇄ HSL"], diff:["Diferență Text","Compară două blocuri"], baseconv:["Conversie Bază","bin ⇄ oct ⇄ dec ⇄ hex"], cron:["Explică Cron","Expresie cron → română"], regex:["Tester Regex","Potriviri live & grupuri"], binascii:["Text ⇄ Binar","ASCII în binar / hex"], filechecksum:["Checksum Fișier","Hash pentru orice fișier"], csvjson:["CSV ⇄ JSON","Conversie date tabelare"], validator:["Validator","IBAN & card (Luhn)"], markdown:["Markdown","Previzualizare live"], hashid:["Identificator Hash","Ce tip de hash este?"], escapes:["Escape-uri","HTML / Unicode / Punycode"], basex:["Base32 / Base58","Codare / decodare"], pwned:["Parolă Compromisă","E parola în scurgeri de date?"], hmac:["HMAC","Hash cu cheie (SHA-1/256/384/512)"], bcrypt:["Bcrypt","Hash și verificare parole"], jwtsign:["Semnare JWT","Creează și semnează un token"], textcrypt:["Criptare Text","Criptează / decriptează text (AES-256)"], subdomains:["Căutare Subdomenii","Pasiv, din jurnale de certificate"],
   text:["Stiluri Text","Fancy, Zalgo, întors, leet"], morse:["Morse","Text ⇄ cod Morse"], caseconv:["Schimbă Caps","MARE / mic / Titlu / camel"], counter:["Număr Cuvinte","Caractere, cuvinte, linii"], lorem:["Lorem Ipsum","Generator de text demo"], cipher:["Caesar / ROT13","Cifru cu deplasare"], linetools:["Unelte Linii","Sortează, elimină dubluri…"], findreplace:["Caută & Înlocuiește","Înlocuire cu regex"], textanalysis:["Analiză Text","Lizibilitate & cuvinte cheie"], textclean:["Curăță Text","Diacritice, ghilimele, spații"], ciphers:["Cifruri Clasice","Atbash & Vigenère"], aidetect:["Detector AI","Verifică text/fișiere pentru AI"],
   subnet:["Calc. Subnet","Detalii CIDR IPv4/IPv6"], speedtest:["Test Viteză","Viteza conexiunii tale"], portscan:["Scan Porturi","Porturi comune deschise"], domain:["Info Domeniu","DNS + WHOIS/RDAP"], ipinfo:["Info IP","Geolocație și ASN"], inspect:["Inspector URL","Status, server, IP, titlu"], ssl:["Verificare SSL","Expirare certificat & emitent"], dns:["Căutare DNS","Orice tip de înregistrare"], phone:["Căutare Telefon","Operator, regiune, fus"], username:["Caută Utilizator","Pe platforme publice"], dork:["Generator Dork","Interogări Google recon"], breach:["Verificare Leak","Email prin HaveIBeenPwned"], tgprofile:["Profil Telegram","Previzualizare publică t.me"],
   download:["Descărcări","YouTube / Instagram / TikTok"], exif:["Șterge EXIF","Elimină metadatele foto"], exifview:["Vizor EXIF","Vezi metadatele ascunse"], stego:["Steganografie","Ascunde un mesaj în imagine"],
@@ -76,6 +76,7 @@ const TOOLS = [
   // --- TOOLS ---
   { id: "password", cat: "tools", icon: "key-round", name: "Password", sub: "Strong password generator", kw: "random secure", render: rPassword },
   { id: "vault", cat: "tools", icon: "lock", name: "Secure Vault", sub: "Encrypt files in-browser", kw: "aes encrypt decrypt", render: rVault },
+  { id: "textcrypt", cat: "tools", icon: "file-lock", name: "Text Encrypt", sub: "AES-256 encrypt / decrypt text", kw: "aes gcm password secret message cipher", render: rTextCrypt },
   { id: "qr", cat: "tools", icon: "qr-code", name: "QR Code", sub: "Text or link → QR", kw: "barcode", render: rQR },
   { id: "hashgen", cat: "tools", icon: "hash", name: "Hash Generator", sub: "MD5 / SHA-1 / SHA-256 / 512", kw: "checksum digest", render: rHashGen },
   { id: "hashcrack", cat: "tools", icon: "fingerprint", name: "Hash Cracker", sub: "Test hash vs common list", kw: "md5 sha reverse", render: rHashCrack },
@@ -141,6 +142,7 @@ const TOOLS = [
   { id: "inspect", cat: "network", icon: "search-code", name: "URL Inspector", sub: "Status, server, IP, title", kw: "headers redirect", render: rInspect },
   { id: "ssl", cat: "network", icon: "lock", name: "SSL Checker", sub: "Cert expiry & issuer", kw: "https certificate tls", render: rSSL },
   { id: "dns", cat: "network", icon: "list-tree", name: "DNS Lookup", sub: "Any record type", kw: "resolve a mx txt cname", render: rDns },
+  { id: "subdomains", cat: "network", icon: "binoculars", name: "Subdomain Finder", sub: "Passive, via certificate logs", kw: "recon enumerate crt.sh certificate transparency osint", render: rSubdomains },
   { id: "phone", cat: "network", icon: "phone", name: "Phone Lookup", sub: "Carrier, region, timezone", kw: "number osint", render: rPhone },
   { id: "username", cat: "network", icon: "users", name: "Username Check", sub: "Across public platforms", kw: "social osint", render: rUsername },
   { id: "dork", cat: "network", icon: "search", name: "Dork Builder", sub: "Google recon queries", kw: "osint google", render: rDork },
@@ -266,7 +268,7 @@ function form(fieldsHTML, btnLabel, onRun, icon = "play") {
   iconsRefresh();
 }
 const rowsHTML = o => `<div class="rows">${Object.entries(o).map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${v}</span></div>`).join("")}</div>`;
-function resultCard(inner) { $("#tool-result").innerHTML = `<div class="card">${inner}</div>`; addActions($("#tool-result .card")); iconsRefresh(); }
+function resultCard(inner, opts = {}) { $("#tool-result").innerHTML = `<div class="card">${inner}</div>`; if (opts.actions !== false) addActions($("#tool-result .card")); iconsRefresh(); }
 async function shareToChat(text) {
   if (!text) return; play("click"); haptic();
   try { const d = await api("share", { text }); if (d.success) { toast(T("shared"), "ok"); notify(); } else toast(d.error || "Failed", "err"); }
@@ -1508,7 +1510,7 @@ function rAiDetect(c) {
    All client-side: secrets never leave the device.
    ========================================================================= */
 const toHex = bytes => [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, "0")).join("");
-const b64 = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+const b64 = bytes => { const u = new Uint8Array(bytes); let s = ""; for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192)); return btoa(s); };
 const b64u = bytes => b64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 async function hmacBytes(algo, key, msg) {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), { name: "HMAC", hash: algo }, false, ["sign"]);
@@ -1613,6 +1615,79 @@ function rJwtSign(c) {
     resultCard(`<div class="out-area" style="word-break:break-all">${esc(token)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(token, "Copy token")}</div><p class="muted" style="margin-top:10px">Signed in your browser — the secret never leaves your device. HS* only (RS/ES need a private key).</p>`);
     play("success");
   }, "stamp");
+}
+
+/* ---- Text encrypt / decrypt (AES-256-GCM, PBKDF2 — same scheme as the Vault) ---- */
+function rTextCrypt(c) {
+  form(`<div class="seg" id="tx-seg"><button data-m="enc" class="active">Encrypt</button><button data-m="dec">Decrypt</button></div>
+    <div class="field"><label id="tx-lbl">Text to encrypt</label><textarea id="tx-in" class="mono" placeholder="Your message…"></textarea></div>
+    <div class="field"><label>Password</label><input type="password" id="tx-pw" autocomplete="off"></div>
+    <div class="field" id="tx-conf-wrap"><label>Confirm password</label><input type="password" id="tx-pw2" autocomplete="off"></div>
+    <p class="muted">AES-256-GCM with a PBKDF2-derived key (200,000 iterations), entirely in your browser. There is no recovery: if the password is forgotten, the text can't be decrypted.</p>`, "Encrypt", async () => {
+    $("#tool-result").innerHTML = "";  // never leave a previous result (esp. decrypted plaintext) under a new attempt
+    const m = $("#tx-seg .active").dataset.m, pw = $("#tx-pw").value, v = $("#tx-in").value;
+    if (!v.trim()) { setStatus("Enter some text", "err"); return; }
+    if (!pw) { setStatus("Enter a password", "err"); return; }
+    if (m === "enc") {
+      if (pw !== $("#tx-pw2").value) { setStatus("❌ Passwords don't match", "err"); play("error"); return; }
+      setStatus(spin() + " Encrypting…");
+      const out = "tk1:" + b64(await vEnc(new TextEncoder().encode(v), pw));
+      setStatus("");
+      resultCard(`<label>Encrypted text</label><div class="out-area" style="word-break:break-all">${esc(out)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(out)}</div>${pw.length < 8 ? `<p class="muted" style="margin-top:10px">⚠️ Short password — anyone holding this text can try to guess it offline. Use a longer one.</p>` : ""}`);
+      play("success"); notify();
+    } else {
+      let bytes;
+      try { bytes = Uint8Array.from(atob(v.trim().replace(/^tk1:/, "").replace(/\s+/g, "")), ch => ch.charCodeAt(0)); }
+      catch (_) { setStatus("❌ That doesn't look like encrypted text", "err"); play("error"); return; }
+      if (bytes.length < 28 + 16) { setStatus("❌ That doesn't look like encrypted text", "err"); play("error"); return; }
+      setStatus(spin() + " Decrypting…");
+      try {
+        const text = new TextDecoder("utf-8", { fatal: true }).decode(await vDec(bytes, pw));
+        setStatus("");
+        // Plaintext: deliberately NO share/download buttons, so it can't be routed through the server.
+        resultCard(`<label>Decrypted text</label><div class="out-area">${esc(text)}</div><div class="btn-row" style="margin-top:12px">${copyBtn(text)}</div><p class="muted" style="margin-top:10px">Decrypted locally — not sent anywhere.</p>`, { actions: false });
+        play("success"); notify();
+      } catch (_) { setStatus("❌ Wrong password, or the text was altered", "err"); play("error"); }
+    }
+  }, "lock");
+  const seg = $("#tx-seg");
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    seg.querySelector(".active").classList.remove("active"); b.classList.add("active"); play("click"); haptic();
+    const enc = b.dataset.m === "enc";
+    $("#tx-conf-wrap").classList.toggle("hidden", !enc);
+    $("#tx-lbl").textContent = enc ? "Text to encrypt" : "Encrypted text";
+    $("#tx-in").placeholder = enc ? "Your message…" : "Paste encrypted text (tk1:…)";
+    $("#run-btn").innerHTML = `<i data-lucide="${enc ? "lock" : "unlock"}"></i> ${enc ? "Encrypt" : "Decrypt"}`;
+    setStatus(""); $("#tool-result").innerHTML = ""; iconsRefresh();
+  }));
+}
+
+/* ---- Subdomain finder (server, passive: certificate-transparency logs) ---- */
+function rSubdomains(c) {
+  form(`<div class="field"><label>Domain</label><input type="text" class="mono" id="sd-in" placeholder="example.com" autocapitalize="off" autocomplete="off"></div>
+    <div class="switch-row"><span>Check which names resolve (DNS)</span><input type="checkbox" class="sw" id="sd-res"></div>
+    <p class="muted" style="margin-top:10px">Passive: reads public certificate-transparency logs and never contacts the target. Use it on domains you own or are authorised to assess. Can take up to ~30s.</p>`, "Find", async () => {
+    await serverRun("Querying certificate logs…", async () => {
+      const d = await api("subdomains", { domain: $("#sd-in").value, resolve: $("#sd-res").checked });
+      if (!d.success) return setStatus("❌ " + esc(d.error), "err");
+      setStatus("");
+      // ips: array = resolved (empty = name exists but has no A record), null = does not resolve, anything else = not checked
+      const mark = ips => Array.isArray(ips) ? (ips.length ? "✓ " + ips[0] : "• no A record") : ips === null ? "✗ no DNS" : "";
+      const lines = d.names.map(n => d.resolved ? `${n.name}  ${mark(n.ips)}`.trimEnd() : n.name);
+      const failed = d.sources.filter(s => !s.ok);
+      const notes = [];
+      if (failed.length) notes.push(`${failed.map(s => s.name).join(", ")} didn't answer — results may be incomplete. Try again shortly.`);
+      if (d.truncated) notes.push("A source returned more data than was read — the list may be incomplete.");
+      if (d.count > d.shown) notes.push(`Showing the first ${d.shown.toLocaleString()} of ${d.count.toLocaleString()}.`);
+      if (d.resolved && d.shown > d.resolve_limit) notes.push(`DNS was checked for the first ${d.resolve_limit} names only.`);
+      const head = `<div style="margin-bottom:10px"><span class="pill ${d.count ? "ok" : "warn"}">${d.count.toLocaleString()} subdomain${d.count === 1 ? "" : "s"}</span>${d.wildcards ? ` <span class="pill info">${d.wildcards} wildcard pattern${d.wildcards === 1 ? "" : "s"}</span>` : ""}</div>`;
+      const src = `<div class="rows">${d.sources.map(s => `<div class="row"><span class="k">${esc(s.name)}</span><span class="v">${s.ok ? `<span class="pill ok">${s.count} found</span>` : `<span class="pill warn">${esc(s.error || "failed")}</span>`}</span></div>`).join("")}</div>`;
+      resultCard(head + (d.count ? `<div class="out-area">${lines.map(esc).join("\n")}</div>` : `<p class="muted center">No subdomains found in certificate logs for ${esc(d.domain)}.</p>`)
+        + `<label style="margin-top:14px">Sources</label>${src}`
+        + notes.map(n => `<p class="muted" style="margin-top:8px">⚠️ ${esc(n)}</p>`).join(""));
+      play("success"); notify();
+    });
+  }, "binoculars");
 }
 
 /* =========================================================================

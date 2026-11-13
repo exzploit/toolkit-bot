@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import time
 
 from aiohttp import web
 from telegram import Update
@@ -93,6 +94,29 @@ async def h_ssl(request):
     _auth(request)
     b = await _json_body(request)
     return _ok(await network.ssl_check(b.get("host", "")))
+
+
+_COOLDOWNS: dict[tuple[int, str], float] = {}
+
+
+def _cooldown_ok(user_id: int, key: str, seconds: float) -> bool:
+    """Per-user minimum gap between calls to an expensive endpoint."""
+    now = time.monotonic()
+    if now - _COOLDOWNS.get((user_id, key), -1e9) < seconds:
+        return False
+    _COOLDOWNS[(user_id, key)] = now
+    if len(_COOLDOWNS) > 5000:  # keep the map bounded
+        for k in [k for k, t in _COOLDOWNS.items() if now - t > 3600]:
+            _COOLDOWNS.pop(k, None)
+    return True
+
+
+async def h_subdomains(request):
+    user = _auth(request)
+    b = await _json_body(request)
+    if not _cooldown_ok(user.id, "subdomains", 8):
+        return _ok({"success": False, "error": "Please wait a few seconds between lookups."})
+    return _ok(await network.subdomain_lookup(b.get("domain", ""), bool(b.get("resolve"))))
 
 
 async def h_dns(request):
@@ -291,6 +315,7 @@ def build_api_routes() -> list:
         web.post("/api/inspect", h_inspect),
         web.post("/api/ssl", h_ssl),
         web.post("/api/dns", h_dns),
+        web.post("/api/subdomains", h_subdomains),
         web.post("/api/phone", h_phone),
         web.post("/api/username", h_username),
         web.post("/api/breach", h_breach),
